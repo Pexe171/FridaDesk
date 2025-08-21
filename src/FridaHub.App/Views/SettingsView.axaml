@@ -3,5 +3,7 @@
              xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
              x:Class="FridaHub.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
-    <Grid/>
+    <Grid>
+        <TextBlock Text="Configurações" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Grid>
 </UserControl>
