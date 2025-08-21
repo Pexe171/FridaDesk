@@ -1,7 +1,25 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
              x:Class="FridaHub.App.Views.ScriptsView"
              x:DataType="vm:ScriptsViewModel">
-    <Grid/>
+    <StackPanel Margin="8">
+        <TextBox x:Name="SearchBox"
+                 Watermark="Buscar scripts..."
+                 Margin="0,0,0,8"/>
+        <ListBox Items="{Binding Scripts}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:ScriptRef">
+                    <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Author}" FontStyle="Italic"/>
+                            <TextBlock Text="{Binding Source}" FontSize="10" Foreground="Gray"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
 </UserControl>
