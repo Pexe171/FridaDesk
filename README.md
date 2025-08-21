@@ -14,11 +14,5 @@ Solução inicial contendo os projetos base para o aplicativo Avalonia.
 dotnet build
 ```
 
-## Teste do banco de dados
-```csharp
-using var db = new FridaHub.Infrastructure.FridaHubDbContext();
-await db.Database.CanConnectAsync();
-```
-
 ## Autor
 Pexe — [instagram.com/David.devloli](https://www.instagram.com/David.devloli)
