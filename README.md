@@ -14,5 +14,13 @@ Solução inicial contendo os projetos base para o aplicativo Avalonia.
 dotnet build
 ```
 
+## Teste de conexão
+
+```csharp
+// using var provider = services.BuildServiceProvider();
+// using var db = provider.GetRequiredService<FridaHubDbContext>();
+// await db.Database.CanConnectAsync();
+```
+
 ## Autor
 Pexe — [instagram.com/David.devloli](https://www.instagram.com/David.devloli)
