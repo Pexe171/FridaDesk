@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DC46D3D9-71A0-478C-BFE0-40A3062AB29A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridaHub.App", "src\FridaHub.App\FridaHub.App.csproj", "{41A90419-F9E2-4362-A51B-700C3BE7632C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridaHub.Core", "src\FridaHub.Core\FridaHub.Core.csproj", "{8402AAB4-DCA7-430C-BB42-43CC6966428F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridaHub.Infrastructure", "src\FridaHub.Infrastructure\FridaHub.Infrastructure.csproj", "{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridaHub.Processes", "src\FridaHub.Processes\FridaHub.Processes.csproj", "{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridaHub.Codeshare", "src\FridaHub.Codeshare\FridaHub.Codeshare.csproj", "{232D0A72-C778-4451-A66C-10A13E20B135}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{41A90419-F9E2-4362-A51B-700C3BE7632C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41A90419-F9E2-4362-A51B-700C3BE7632C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41A90419-F9E2-4362-A51B-700C3BE7632C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41A90419-F9E2-4362-A51B-700C3BE7632C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8402AAB4-DCA7-430C-BB42-43CC6966428F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8402AAB4-DCA7-430C-BB42-43CC6966428F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8402AAB4-DCA7-430C-BB42-43CC6966428F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8402AAB4-DCA7-430C-BB42-43CC6966428F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{232D0A72-C778-4451-A66C-10A13E20B135}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{232D0A72-C778-4451-A66C-10A13E20B135}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{232D0A72-C778-4451-A66C-10A13E20B135}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{232D0A72-C778-4451-A66C-10A13E20B135}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{41A90419-F9E2-4362-A51B-700C3BE7632C} = {DC46D3D9-71A0-478C-BFE0-40A3062AB29A}
+		{8402AAB4-DCA7-430C-BB42-43CC6966428F} = {DC46D3D9-71A0-478C-BFE0-40A3062AB29A}
+		{8008D25A-CF0F-4902-8B9B-A5C88FDA12F7} = {DC46D3D9-71A0-478C-BFE0-40A3062AB29A}
+		{2F1829D7-D13D-4AE4-B215-4AC3F0A4200C} = {DC46D3D9-71A0-478C-BFE0-40A3062AB29A}
+		{232D0A72-C778-4451-A66C-10A13E20B135} = {DC46D3D9-71A0-478C-BFE0-40A3062AB29A}
+	EndGlobalSection
+EndGlobal
