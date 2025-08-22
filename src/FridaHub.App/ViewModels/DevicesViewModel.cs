@@ -16,6 +16,7 @@ public partial class DevicesViewModel : ObservableObject
     private readonly IAdbBackend _adb;
     private readonly IFridaBackend _frida;
     private readonly IDiagnosticsService _diagnostics;
+    private readonly IFridaInstaller _installer;
 
     [ObservableProperty]
     private ObservableCollection<DeviceInfo> devices = new();
@@ -23,11 +24,12 @@ public partial class DevicesViewModel : ObservableObject
     [ObservableProperty]
     private DeviceInfo? selectedDevice;
 
-    public DevicesViewModel(IAdbBackend adb, IFridaBackend frida, IDiagnosticsService diagnostics)
+    public DevicesViewModel(IAdbBackend adb, IFridaBackend frida, IDiagnosticsService diagnostics, IFridaInstaller installer)
     {
         _adb = adb;
         _frida = frida;
         _diagnostics = diagnostics;
+        _installer = installer;
     }
 
     [RelayCommand]
@@ -95,5 +97,13 @@ public partial class DevicesViewModel : ObservableObject
     {
         _diagnostics.RecordCommand($"retest {device.Serial}");
         RefreshCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private async Task InstallFrida(DeviceInfo device)
+    {
+        device.Status = FridaStatus.Installing;
+        var result = await _installer.InstallAsync(device.Serial);
+        device.Status = result.IsSuccess ? FridaStatus.Ready : FridaStatus.Error;
     }
 }

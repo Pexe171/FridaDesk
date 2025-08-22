@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FridaHub.Processes\FridaHub.Processes.csproj" />
     <ProjectReference Include="..\..\src\FridaHub.Infrastructure\FridaHub.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\FridaHub.App\FridaHub.App.csproj" />
   </ItemGroup>
 
 </Project>

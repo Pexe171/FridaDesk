@@ -22,6 +22,7 @@ public static class ServiceConfigurator
         services.AddSingleton<IAdbBackend, AdbService>();
         services.AddSingleton<IFridaBackend, FridaService>();
         services.AddSingleton<IFridaVersionChecker, FridaVersionChecker>();
+        services.AddSingleton<IFridaInstaller, FridaInstaller>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<DevicesViewModel>();

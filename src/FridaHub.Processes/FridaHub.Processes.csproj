@@ -8,4 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="..\FridaHub.Core\FridaHub.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpCompress" Version="0.36.0" />
+  </ItemGroup>
 </Project>
