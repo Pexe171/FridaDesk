@@ -1,7 +1,27 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
              x:Class="FridaHub.App.Views.DevicesView"
              x:DataType="vm:DevicesViewModel">
-    <Grid/>
+    <StackPanel Margin="8">
+        <Button Content="Atualizar" Command="{Binding RefreshCommand}" Margin="0,0,0,8"/>
+        <ListBox ItemsSource="{Binding Devices}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:DeviceInfo">
+                    <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Model}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Serial}" FontSize="10" Foreground="Gray"/>
+                            </StackPanel>
+                            <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="{Binding IsEmulator}">
+                                <TextBlock Text="Emulador" FontSize="10"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
 </UserControl>
