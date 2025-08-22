@@ -25,12 +25,14 @@ public static class ServiceConfigurator
         services.AddSingleton<DevicesViewModel>();
         services.AddSingleton<ScriptsViewModel>();
         services.AddSingleton<RunViewModel>();
+        services.AddSingleton<HistoryViewModel>();
         services.AddSingleton<SettingsViewModel>();
 
         services.AddTransient<MainView>();
         services.AddTransient<DevicesView>();
         services.AddTransient<ScriptsView>();
         services.AddTransient<RunView>();
+        services.AddTransient<HistoryView>();
         services.AddTransient<SettingsView>();
 
         var provider = services.BuildServiceProvider();

@@ -11,16 +11,18 @@ public partial class MainViewModel : ObservableObject
     public DevicesViewModel Devices { get; }
     public ScriptsViewModel Scripts { get; }
     public RunViewModel Run { get; }
+    public HistoryViewModel History { get; }
     public SettingsViewModel Settings { get; }
 
     [ObservableProperty]
     private ObservableCollection<string> logs = new();
 
-    public MainViewModel(DevicesViewModel devices, ScriptsViewModel scripts, RunViewModel run, SettingsViewModel settings)
+    public MainViewModel(DevicesViewModel devices, ScriptsViewModel scripts, RunViewModel run, HistoryViewModel history, SettingsViewModel settings)
     {
         Devices = devices;
         Scripts = scripts;
         Run = run;
+        History = history;
         Settings = settings;
 
         AddLog("Aplicação iniciada");
