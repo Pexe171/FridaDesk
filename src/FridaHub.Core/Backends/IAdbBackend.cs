@@ -8,5 +8,6 @@ public interface IAdbBackend
     Task<Result> StartServerAsync();
     Task<Result<IEnumerable<DeviceInfo>>> ListDevicesAsync();
     Task<Result<Dictionary<string, string>>> GetPropsAsync(string serial);
+    Task<Result<string>> GetPropAsync(string serial, string key);
     Task<Result> ForwardPortsAsync(string serial, int localPort, int remotePort);
 }

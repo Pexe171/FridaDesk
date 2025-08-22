@@ -7,6 +7,9 @@
              x:DataType="vm:DevicesViewModel">
     <UserControl.Resources>
         <conv:IosVisibilityConverter x:Key="IosVisibilityConverter"/>
+        <conv:FridaStatusToColorConverter x:Key="FridaStatusColorConverter"/>
+        <conv:FridaStatusTextConverter x:Key="FridaStatusTextConverter"/>
+        <conv:FridaStatusEnabledConverter x:Key="FridaStatusEnabledConverter"/>
     </UserControl.Resources>
     <StackPanel Margin="8">
         <Button Content="Atualizar" Command="{Binding RefreshCommand}" Margin="0,0,0,8"/>
@@ -33,6 +36,11 @@
                                 </Border>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Content="{Binding Status, Converter={StaticResource FridaStatusTextConverter}}"
+                                        Background="{Binding Status, Converter={StaticResource FridaStatusColorConverter}}"
+                                        IsEnabled="{Binding Status, Converter={StaticResource FridaStatusEnabledConverter}}"
+                                        Command="{Binding $parent[UserControl].DataContext.InstallFridaCommand}"
+                                        CommandParameter="{Binding}"/>
                                 <Button Content="Listar processos"
                                         Command="{Binding $parent[UserControl].DataContext.ListProcessesCommand}"
                                         CommandParameter="{Binding}"/>

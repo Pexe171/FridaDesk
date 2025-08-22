@@ -107,7 +107,46 @@ public class AdbService : IAdbBackend
         }
     }
 
-    public Task<Result> ForwardPortsAsync(string serial, int localPort, int remotePort)
-        => Task.FromResult(Result.Success());
+    public async Task<Result<string>> GetPropAsync(string serial, string key)
+    {
+        try
+        {
+            var run = _runner.Run("adb", $"-s {serial} shell getprop {key}");
+            string? value = null;
+            await foreach (var line in run.Output)
+            {
+                if (!string.IsNullOrWhiteSpace(line.Line))
+                {
+                    value = line.Line.Trim();
+                    break;
+                }
+            }
+            var exit = await run.WaitForExitAsync();
+            return exit == 0
+                ? Result<string>.Success(value ?? string.Empty)
+                : Result<string>.Failure($"adb retornou código {exit}");
+        }
+        catch (Exception ex)
+        {
+            return Result<string>.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result> ForwardPortsAsync(string serial, int localPort, int remotePort)
+    {
+        try
+        {
+            var run = _runner.Run("adb", $"-s {serial} forward tcp:{localPort} tcp:{remotePort}");
+            await foreach (var _ in run.Output) { }
+            var exit = await run.WaitForExitAsync();
+            return exit == 0
+                ? Result.Success()
+                : Result.Failure($"adb retornou código {exit}");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ex.Message);
+        }
+    }
 }
 
