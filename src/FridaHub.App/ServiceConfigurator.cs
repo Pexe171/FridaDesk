@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using FridaHub.Infrastructure;
 using FridaHub.Processes;
 using FridaHub.Core.Backends;
@@ -44,6 +45,9 @@ public static class ServiceConfigurator
 
         using (var scope = provider.CreateScope())
         {
+            var context = scope.ServiceProvider.GetRequiredService<FridaHubDbContext>();
+            context.Database.Migrate();
+
             var seeder = scope.ServiceProvider.GetRequiredService<CodeshareSeedLoader>();
             seeder.LoadAsync().GetAwaiter().GetResult();
         }
