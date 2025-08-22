@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FridaHub.Core.Models;
 using FridaHub.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace FridaHub.App.ViewModels;
 

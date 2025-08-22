@@ -4,7 +4,7 @@ using FridaHub.Core.Models;
 
 namespace FridaHub.Infrastructure.Entities;
 
-internal class ScriptEntity
+public class ScriptEntity
 {
     public Guid Id { get; set; }
     public ScriptSource Source { get; set; }

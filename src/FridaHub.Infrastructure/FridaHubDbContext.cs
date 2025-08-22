@@ -9,7 +9,7 @@ public class FridaHubDbContext : DbContext
     {
     }
 
-    internal DbSet<ScriptEntity> Scripts => Set<ScriptEntity>();
+    public DbSet<ScriptEntity> Scripts => Set<ScriptEntity>();
     internal DbSet<FavoriteEntity> Favorites => Set<FavoriteEntity>();
     internal DbSet<RunRecordEntity> Runs => Set<RunRecordEntity>();
     internal DbSet<DeviceEntity> Devices => Set<DeviceEntity>();
