@@ -14,11 +14,11 @@
         <ListBox ItemsSource="{Binding Scripts}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:ScriptRef">
-                    <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                    <Border Margin="0,0,0,8" Classes="card">
                         <StackPanel>
-                            <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding Author}" FontStyle="Italic"/>
-                            <TextBlock Text="{Binding Source}" FontSize="10" Foreground="Gray"/>
+                            <TextBlock Text="{Binding Title}" FontWeight="Bold" Classes="h3"/>
+                            <TextBlock Text="{Binding Author}" FontStyle="Italic" Classes="body"/>
+                            <TextBlock Text="{Binding Source}" Classes="caption" Foreground="Gray"/>
                         </StackPanel>
                     </Border>
                 </DataTemplate>

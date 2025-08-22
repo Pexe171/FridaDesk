@@ -16,23 +16,20 @@
         <ListBox ItemsSource="{Binding Devices}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:DeviceInfo">
-                    <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
+                    <Border Margin="0,0,0,8" Classes="card">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Model}" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding Serial}" FontSize="10" Foreground="Gray"/>
+                                    <TextBlock Text="{Binding Model}" FontWeight="Bold" Classes="h3"/>
+                                    <TextBlock Text="{Binding Serial}" Classes="caption" Foreground="Gray"/>
                                 </StackPanel>
-                                <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="{Binding IsEmulator}">
-                                    <TextBlock Text="Emulador" FontSize="10"/>
+                                <Border Classes="chip" IsVisible="{Binding IsEmulator}">
+                                    <TextBlock Text="Emulador"/>
                                 </Border>
-                                <Border Background="LightGray"
-                                        Padding="4"
-                                        CornerRadius="4"
-                                        Margin="8,0,0,0"
+                                <Border Classes="chip"
                                         IsVisible="{Binding Platform, Converter={StaticResource IosVisibilityConverter}}">
                                     <!-- TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada -->
-                                    <TextBlock Text="Jailbreak (futuro)" FontSize="10"/>
+                                    <TextBlock Text="Jailbreak (futuro)"/>
                                 </Border>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="4">
