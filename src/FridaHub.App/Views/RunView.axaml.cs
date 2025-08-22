@@ -10,7 +10,7 @@ public partial class RunView : UserControl
     public RunView()
     {
         InitializeComponent();
-        AttachedToVisualTree += OnAttachedToVisualTree;
+        Loaded += OnLoaded;
     }
 
     public RunView(RunViewModel viewModel) : this()
@@ -18,9 +18,9 @@ public partial class RunView : UserControl
         DataContext = viewModel;
     }
 
-    private async void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        AttachedToVisualTree -= OnAttachedToVisualTree;
+        Loaded -= OnLoaded;
         if (DataContext is RunViewModel vm && !vm.IsAuthorized)
         {
             var dialog = new AuthorizationDialog { DataContext = vm };
