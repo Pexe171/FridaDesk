@@ -16,4 +16,5 @@ public class Settings
     public string ResourcesFolder { get; set; } = string.Empty;
     public bool ShowElevatedTargets { get; set; }
     public bool EnableJailbreakFeature { get; set; } = false;
+    public bool AuthorizedUseAccepted { get; set; }
 }

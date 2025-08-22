@@ -1,7 +1,21 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
              x:Class="FridaHub.App.Views.RunView"
              x:DataType="vm:RunViewModel">
-    <Grid/>
+    <StackPanel Margin="8">
+        <Button Content="Executar"
+                IsEnabled="{Binding IsAuthorized}"
+                Width="100"
+                HorizontalAlignment="Left"
+                Margin="0,0,0,8"/>
+        <ListBox ItemsSource="{Binding Output}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:ProcessLine">
+                    <TextBlock Text="{Binding Line}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
 </UserControl>
