@@ -23,6 +23,11 @@ public partial class App : Application
             var mainView = Services.GetRequiredService<MainView>();
             desktop.MainWindow = mainView;
         }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        {
+            var mainView = Services.GetRequiredService<MainView>();
+            singleView.MainView = mainView;
+        }
 
         base.OnFrameworkInitializationCompleted();
     }
