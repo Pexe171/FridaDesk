@@ -16,6 +16,8 @@ public class FridaService : IFridaBackend
         _runner = runner;
     }
 
+    // TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada.
+
     public IAsyncEnumerable<ProcessLine> RunCodeshareAsync(string author, string slug, string package, string? selector = null, CancellationToken cancellationToken = default)
     {
         var args = $"--codeshare {author}/{slug} -f {package} --no-pause";
