@@ -17,6 +17,9 @@
         </Border>
         <TabControl x:Name="MainTabs"
                     TabStripPlacement="Left">
+            <TabItem Header="Dispositivos">
+                <views:DevicesView DataContext="{Binding Devices}"/>
+            </TabItem>
             <TabItem Header="Favoritos">
                 <views:ScriptsView DataContext="{Binding Scripts}"/>
             </TabItem>
