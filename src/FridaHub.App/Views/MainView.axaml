@@ -29,6 +29,9 @@
             <TabItem Header="Configurações">
                 <views:SettingsView DataContext="{Binding Settings}"/>
             </TabItem>
+            <TabItem Header="Diagnósticos">
+                <views:DiagnosticsView DataContext="{Binding Diagnostics}"/>
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

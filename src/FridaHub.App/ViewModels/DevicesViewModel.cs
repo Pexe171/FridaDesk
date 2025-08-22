@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FridaHub.Core.Backends;
+using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
 using FridaHub.Core.Results;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace FridaHub.App.ViewModels;
 public partial class DevicesViewModel : ObservableObject
 {
     private readonly IAdbBackend _adb;
+    private readonly IFridaBackend _frida;
+    private readonly IDiagnosticsService _diagnostics;
 
     [ObservableProperty]
     private ObservableCollection<DeviceInfo> devices = new();
@@ -20,9 +23,11 @@ public partial class DevicesViewModel : ObservableObject
     [ObservableProperty]
     private DeviceInfo? selectedDevice;
 
-    public DevicesViewModel(IAdbBackend adb)
+    public DevicesViewModel(IAdbBackend adb, IFridaBackend frida, IDiagnosticsService diagnostics)
     {
         _adb = adb;
+        _frida = frida;
+        _diagnostics = diagnostics;
     }
 
     [RelayCommand]
@@ -54,9 +59,10 @@ public partial class DevicesViewModel : ObservableObject
         }
 
         if (list.IsSuccess && list.Value != null)
-        {   
+        {
             foreach (var device in list.Value)
                 Devices.Add(device);
+            _diagnostics.RecordDevices(list.Value);
             return;
         }
 
@@ -68,5 +74,26 @@ public partial class DevicesViewModel : ObservableObject
             Platform = DevicePlatform.Android,
             LastSeenUtc = DateTime.UtcNow
         });
+    }
+
+    [RelayCommand]
+    private async Task ListProcesses(DeviceInfo device)
+    {
+        _diagnostics.RecordCommand($"frida-ps {device.Serial}");
+        await _frida.ListProcessesAsync(device.Serial);
+    }
+
+    [RelayCommand]
+    private void ForwardPorts(DeviceInfo device)
+    {
+        _diagnostics.RecordCommand($"forward {device.Serial}");
+        // placeholder
+    }
+
+    [RelayCommand]
+    private void RetestTools(DeviceInfo device)
+    {
+        _diagnostics.RecordCommand($"retest {device.Serial}");
+        RefreshCommand.Execute(null);
     }
 }

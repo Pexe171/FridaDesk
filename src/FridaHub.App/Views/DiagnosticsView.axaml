@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
+             x:Class="FridaHub.App.Views.DiagnosticsView"
+             x:DataType="vm:DiagnosticsViewModel">
+    <ScrollViewer>
+        <StackPanel Margin="8" Spacing="8">
+            <TextBlock Text="Último erro:" FontWeight="Bold"/>
+            <TextBlock Text="{Binding LastError}"/>
+            <TextBlock Text="Últimos comandos:" FontWeight="Bold" Margin="0,8,0,0"/>
+            <ListBox ItemsSource="{Binding LastCommands}"/>
+            <TextBlock Text="Tempo de attach:" FontWeight="Bold" Margin="0,8,0,0"/>
+            <TextBlock Text="{Binding LastAttachTime}"/>
+            <TextBlock Text="Tempo de spawn:" FontWeight="Bold" Margin="0,8,0,0"/>
+            <TextBlock Text="{Binding LastSpawnTime}"/>
+            <TextBlock Text="Últimos devices:" FontWeight="Bold" Margin="0,8,0,0"/>
+            <ListBox ItemsSource="{Binding LastDevices}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:DeviceInfo">
+                        <TextBlock Text="{Binding Serial}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Button Content="Exportar relatório" Command="{Binding ExportReportCommand}" Margin="0,8,0,0"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

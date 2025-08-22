@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FridaHub.Core.Interfaces;
@@ -23,14 +24,16 @@ public partial class RunViewModel : ObservableObject
     private readonly IFridaBackend _backend;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IFridaVersionChecker _versionChecker;
+    private readonly IDiagnosticsService _diagnostics;
     private CancellationTokenSource? _cts;
 
-    public RunViewModel(ISettingsService settingsService, IFridaBackend backend, IServiceScopeFactory scopeFactory, IFridaVersionChecker versionChecker)
+    public RunViewModel(ISettingsService settingsService, IFridaBackend backend, IServiceScopeFactory scopeFactory, IFridaVersionChecker versionChecker, IDiagnosticsService diagnostics)
     {
         _settingsService = settingsService;
         _backend = backend;
         _scopeFactory = scopeFactory;
         _versionChecker = versionChecker;
+        _diagnostics = diagnostics;
 
         var result = _settingsService.LoadAsync().GetAwaiter().GetResult();
         if (result.IsSuccess && result.Value is { } settings)
@@ -88,6 +91,9 @@ public partial class RunViewModel : ObservableObject
         IsRunning = true;
         _cts = new CancellationTokenSource();
         Output.Clear();
+
+        _diagnostics.RecordCommand($"{Mode} {Script} {Target}");
+        var sw = Stopwatch.StartNew();
 
         var parts = (Script ?? string.Empty).Split('/', 2, StringSplitOptions.RemoveEmptyEntries);
         var author = parts.Length > 1 ? parts[0] : "Pexe (instagram David.devloli)";
@@ -164,6 +170,7 @@ public partial class RunViewModel : ObservableObject
             Output.Add(pl);
             sink.AppendLine(JsonSerializer.Serialize(new { timestampUtc = pl.TimestampUtc, origin = "stderr", text = pl.Line }));
             record.Status = RunStatus.Error;
+            _diagnostics.RecordError(msg);
         }
         catch (Exception ex)
         {
@@ -171,10 +178,16 @@ public partial class RunViewModel : ObservableObject
             Output.Add(pl);
             sink.AppendLine(JsonSerializer.Serialize(new { timestampUtc = pl.TimestampUtc, origin = "stderr", text = pl.Line }));
             record.Status = RunStatus.Error;
+            _diagnostics.RecordError(ex.Message);
         }
         finally
         {
             record.EndedAtUtc = DateTime.UtcNow;
+            sw.Stop();
+            if (Mode == "Attach")
+                _diagnostics.RecordAttachTime(sw.Elapsed);
+            else
+                _diagnostics.RecordSpawnTime(sw.Elapsed);
             await sink.FlushAsync();
             await runsRepo.UpdateAsync(record);
             IsRunning = false;
@@ -204,6 +217,9 @@ public partial class RunViewModel : ObservableObject
     {
         // futuro
     }
+
+    [RelayCommand]
+    private void ClearOutput() => Output.Clear();
 
     partial void OnSelectedDeviceChanged(DeviceInfo? value) => RunCommand.NotifyCanExecuteChanged();
     partial void OnTargetChanged(string value) => RunCommand.NotifyCanExecuteChanged();

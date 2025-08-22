@@ -5,6 +5,9 @@
              xmlns:conv="clr-namespace:FridaHub.App.Converters"
              x:Class="FridaHub.App.Views.RunView"
              x:DataType="vm:RunViewModel">
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding ClearOutputCommand}"/>
+    </UserControl.InputBindings>
     <UserControl.Resources>
         <conv:OriginConverter x:Key="OriginConverter"/>
     </UserControl.Resources>

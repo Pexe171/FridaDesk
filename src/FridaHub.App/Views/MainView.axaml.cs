@@ -25,6 +25,13 @@ public partial class MainView : Window
             return;
         }
 
+        if (e.KeyModifiers == KeyModifiers.Control && e.Key == Key.L && DataContext is MainViewModel vm2)
+        {
+            vm2.ClearConsoleCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
         if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Oem2)
         {
             var tabs = this.FindControl<TabControl>("MainTabs");
