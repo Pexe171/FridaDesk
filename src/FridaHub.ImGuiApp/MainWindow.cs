@@ -25,7 +25,7 @@ public class MainWindow : GameWindow
 
     public MainWindow(IServiceProvider provider) : base(GameWindowSettings.Default, new NativeWindowSettings
     {
-        Size = new Vector2i(1280, 720),
+        ClientSize = new Vector2i(1280, 720),
         Title = "FridaDesk - Painel"
     })
     {
