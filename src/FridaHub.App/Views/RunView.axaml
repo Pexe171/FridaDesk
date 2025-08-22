@@ -2,8 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
              xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
+             xmlns:conv="clr-namespace:FridaHub.App.Converters"
              x:Class="FridaHub.App.Views.RunView"
              x:DataType="vm:RunViewModel">
+    <UserControl.Resources>
+        <conv:OriginConverter x:Key="OriginConverter"/>
+    </UserControl.Resources>
     <SplitView IsPaneOpen="{Binding IsDrawerOpen}"
                PanePlacement="Right"
                DisplayMode="Overlay">
@@ -51,7 +55,11 @@
                 <ListBox ItemsSource="{Binding Output}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="models:ProcessLine">
-                            <TextBlock Text="{Binding Line}"/>
+                            <TextBlock>
+                                <Run Text="{Binding TimestampUtc, StringFormat='[{0:HH:mm:ss}] '}"/>
+                                <Run Text="{Binding IsError, Converter={StaticResource OriginConverter}, StringFormat='[{0}] '}"/>
+                                <Run Text="{Binding Line}"/>
+                            </TextBlock>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
