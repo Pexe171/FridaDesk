@@ -4,18 +4,58 @@
              xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
              x:Class="FridaHub.App.Views.RunView"
              x:DataType="vm:RunViewModel">
-    <StackPanel Margin="8">
-        <Button Content="Executar"
-                IsEnabled="{Binding IsAuthorized}"
-                Width="100"
-                HorizontalAlignment="Left"
-                Margin="0,0,0,8"/>
-        <ListBox ItemsSource="{Binding Output}">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:ProcessLine">
-                    <TextBlock Text="{Binding Line}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </StackPanel>
+    <SplitView IsPaneOpen="{Binding IsDrawerOpen}"
+               PanePlacement="Right"
+               DisplayMode="Overlay">
+        <SplitView.Pane>
+            <Border Width="300">
+                <ScrollViewer>
+                    <StackPanel Margin="8" Spacing="8">
+                        <TextBlock Text="Device"/>
+                        <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:DeviceInfo">
+                                    <TextBlock Text="{Binding Serial}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Target"/>
+                        <TextBox Text="{Binding Target}"/>
+
+                        <TextBlock Text="Modo"/>
+                        <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}"/>
+
+                        <TextBlock Text="Script"/>
+                        <TextBox Text="{Binding Script}"/>
+
+                        <TextBlock Text="Selector"/>
+                        <ComboBox ItemsSource="{Binding Selectors}" SelectedItem="{Binding Selector}"/>
+
+                        <TextBlock Text="Parâmetros"/>
+                        <TextBox Text="{Binding Parameters}" Watermark="Parâmetros"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Executar" Command="{Binding RunCommand}"/>
+                            <Button Content="Parar" Command="{Binding StopCommand}"/>
+                            <Button Content="Salvar preset" Command="{Binding SavePresetCommand}" IsEnabled="False"/>
+                            <Button Content="Fechar" Command="{Binding CloseDrawerCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </SplitView.Pane>
+        <SplitView.Content>
+            <StackPanel Margin="8">
+                <Button Content="Abrir painel" Command="{Binding OpenDrawerCommand}" Width="120" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                <ListBox ItemsSource="{Binding Output}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ProcessLine">
+                            <TextBlock Text="{Binding Line}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </SplitView.Content>
+    </SplitView>
 </UserControl>
