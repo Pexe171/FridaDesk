@@ -8,7 +8,7 @@
         <TextBox x:Name="SearchBox"
                  Watermark="Buscar scripts..."
                  Margin="0,0,0,8"/>
-        <ListBox Items="{Binding Scripts}">
+        <ListBox ItemsSource="{Binding Scripts}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:ScriptRef">
                     <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
