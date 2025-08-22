@@ -1,0 +1,82 @@
+[
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "anti-root",
+    "title": "Bypass Root Detection",
+    "tags": ["android", "root", "bypass"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "bypass-ssl",
+    "title": "Bypass SSL Pinning",
+    "tags": ["android", "ssl", "network"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "trace-crypto",
+    "title": "Trace Crypto Operations",
+    "tags": ["android", "crypto"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "hook-http",
+    "title": "Hook HTTP Requests",
+    "tags": ["android", "http"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "dump-strings",
+    "title": "Dump Loaded Strings",
+    "tags": ["android", "strings"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "list-classes",
+    "title": "List Loaded Classes",
+    "tags": ["android", "classes"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "monitor-files",
+    "title": "Monitor File Access",
+    "tags": ["android", "file", "monitor"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "intercept-sms",
+    "title": "Intercept SMS Messages",
+    "tags": ["android", "sms"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "detect-frida",
+    "title": "Detect Frida Presence",
+    "tags": ["android", "frida", "detection"],
+    "platforms": ["Android"]
+  },
+  {
+    "source": "Codeshare",
+    "author": "Pexe (Instagram: David.devloli)",
+    "slug": "hide-debugger",
+    "title": "Hide Debugger",
+    "tags": ["android", "debug"],
+    "platforms": ["Android"]
+  }
+]
