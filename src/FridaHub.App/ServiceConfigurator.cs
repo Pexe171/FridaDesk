@@ -5,6 +5,7 @@ using FridaHub.Processes;
 using FridaHub.Core.Backends;
 using FridaHub.App.ViewModels;
 using FridaHub.App.Views;
+using FridaHub.Codeshare;
 
 namespace FridaHub.App;
 
@@ -15,6 +16,7 @@ public static class ServiceConfigurator
         var services = new ServiceCollection();
 
         services.AddFridaHubInfrastructure();
+        services.AddScoped<CodeshareSeedLoader>();
         services.AddSingleton<ProcessRunner>();
         services.AddSingleton<IAdbBackend, AdbService>();
         services.AddSingleton<IFridaBackend, FridaService>();
@@ -31,6 +33,14 @@ public static class ServiceConfigurator
         services.AddTransient<RunView>();
         services.AddTransient<SettingsView>();
 
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+
+        using (var scope = provider.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<CodeshareSeedLoader>();
+            seeder.LoadAsync().GetAwaiter().GetResult();
+        }
+
+        return provider;
     }
 }

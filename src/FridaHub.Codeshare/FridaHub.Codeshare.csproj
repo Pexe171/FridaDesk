@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="seed.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FridaHub.Core\FridaHub.Core.csproj" />
+    <ProjectReference Include="..\FridaHub.Infrastructure\FridaHub.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
