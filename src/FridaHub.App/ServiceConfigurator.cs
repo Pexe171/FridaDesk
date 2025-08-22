@@ -6,6 +6,7 @@ using FridaHub.Core.Backends;
 using FridaHub.App.ViewModels;
 using FridaHub.App.Views;
 using FridaHub.Codeshare;
+using FridaHub.Core.Interfaces;
 
 namespace FridaHub.App;
 
@@ -20,6 +21,7 @@ public static class ServiceConfigurator
         services.AddSingleton<ProcessRunner>();
         services.AddSingleton<IAdbBackend, AdbService>();
         services.AddSingleton<IFridaBackend, FridaService>();
+        services.AddSingleton<IFridaVersionChecker, FridaVersionChecker>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<DevicesViewModel>();

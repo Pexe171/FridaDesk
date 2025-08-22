@@ -16,6 +16,7 @@ public class ScriptEntity
     public string PlatformsJson { get; set; } = "[]";
     public string Fingerprint { get; set; } = string.Empty;
     public int? Popularity { get; set; }
+    public string FilePath { get; set; } = string.Empty;
 
     [NotMapped]
     public List<string> Tags

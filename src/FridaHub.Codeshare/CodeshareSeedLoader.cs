@@ -38,7 +38,8 @@ public class CodeshareSeedLoader
                 Slug = seed.Slug,
                 Title = seed.Title,
                 Tags = seed.Tags,
-                Platforms = seed.Platforms
+                Platforms = seed.Platforms,
+                FilePath = string.Empty
             });
         }
 

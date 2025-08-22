@@ -43,6 +43,9 @@ public partial class SettingsViewModel : ObservableObject
     private bool showElevatedTargets;
 
     [ObservableProperty]
+    private string? expectedFridaVersion;
+
+    [ObservableProperty]
     private string toolsTestResult = string.Empty;
 
     private async Task LoadAsync()
@@ -58,6 +61,7 @@ public partial class SettingsViewModel : ObservableObject
             ResourcesFolder = s.ResourcesFolder;
             Theme = s.Theme;
             ShowElevatedTargets = s.ShowElevatedTargets;
+            ExpectedFridaVersion = s.ExpectedFridaVersion;
         }
     }
 
@@ -72,6 +76,7 @@ public partial class SettingsViewModel : ObservableObject
             ResourcesFolder = ResourcesFolder,
             Theme = Theme,
             ShowElevatedTargets = ShowElevatedTargets,
+            ExpectedFridaVersion = ExpectedFridaVersion,
             EnableJailbreakFeature = false,
             AuthorizedUseAccepted = _settingsService.Current?.AuthorizedUseAccepted ?? false
         };

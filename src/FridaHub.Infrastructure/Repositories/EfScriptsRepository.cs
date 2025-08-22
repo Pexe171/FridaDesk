@@ -23,7 +23,7 @@ public class EfScriptsRepository : IScriptsRepository
     public async Task<Result<IEnumerable<ScriptRef>>> SearchAsync(string query)
     {
         var entities = await _db.Scripts
-            .Where(s => s.Title.Contains(query) || s.Author.Contains(query))
+            .Where(s => s.Title.Contains(query) || s.Author.Contains(query) || s.Slug.Contains(query))
             .ToListAsync();
         return Result<IEnumerable<ScriptRef>>.Success(entities.Select(ToModel));
     }
@@ -76,7 +76,8 @@ public class EfScriptsRepository : IScriptsRepository
         Tags = e.Tags,
         Platforms = e.Platforms,
         Fingerprint = e.Fingerprint,
-        Popularity = e.Popularity
+        Popularity = e.Popularity,
+        FilePath = e.FilePath
     };
 
     private static ScriptEntity ToEntity(ScriptRef m) => new()
@@ -90,6 +91,7 @@ public class EfScriptsRepository : IScriptsRepository
         Tags = m.Tags,
         Platforms = m.Platforms,
         Fingerprint = m.Fingerprint,
-        Popularity = m.Popularity
+        Popularity = m.Popularity,
+        FilePath = m.FilePath
     };
 }
