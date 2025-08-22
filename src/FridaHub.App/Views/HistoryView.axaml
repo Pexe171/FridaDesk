@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:models="clr-namespace:FridaHub.Core.Models;assembly=FridaHub.Core"
+             x:Class="FridaHub.App.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+    <StackPanel Margin="8" Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <DatePicker SelectedDate="{Binding StartDate}" Width="140"/>
+            <DatePicker SelectedDate="{Binding EndDate}" Width="140"/>
+            <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" Width="120"/>
+            <TextBox Text="{Binding ScriptFilter}" Watermark="Script" Width="140"/>
+            <TextBox Text="{Binding DeviceFilter}" Watermark="Device" Width="140"/>
+        </StackPanel>
+        <DataGrid ItemsSource="{Binding Records}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Início" Binding="{Binding StartedAtUtc}"/>
+                <DataGridTextColumn Header="Fim" Binding="{Binding EndedAtUtc}"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}"/>
+                <DataGridTextColumn Header="Script" Binding="{Binding ScriptId}"/>
+                <DataGridTextColumn Header="Device" Binding="{Binding DeviceSerial}"/>
+                <DataGridTemplateColumn Header="Ações">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:RunRecord">
+                            <Button Content="Abrir log"
+                                    Command="{Binding $parent[UserControl].DataContext.OpenLogCommand}"
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
+</UserControl>

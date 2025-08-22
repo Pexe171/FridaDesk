@@ -24,7 +24,7 @@
                 <views:ScriptsView DataContext="{Binding Scripts}"/>
             </TabItem>
             <TabItem Header="Histórico">
-                <views:ScriptsView DataContext="{Binding Scripts}"/>
+                <views:HistoryView DataContext="{Binding History}"/>
             </TabItem>
             <TabItem Header="Configurações">
                 <views:SettingsView DataContext="{Binding Settings}"/>

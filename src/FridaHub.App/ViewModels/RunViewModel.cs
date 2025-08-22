@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
 using FridaHub.Infrastructure;
+using FridaHub.Core.Backends;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FridaHub.App.ViewModels;
