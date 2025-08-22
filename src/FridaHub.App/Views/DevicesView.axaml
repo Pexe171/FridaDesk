@@ -18,6 +18,19 @@
                             <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="{Binding IsEmulator}">
                                 <TextBlock Text="Emulador" FontSize="10"/>
                             </Border>
+                            <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="False">
+                                <!-- TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada -->
+                                <Border.Styles>
+                                    <Style Selector="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Platform}" Value="IOS">
+                                                <Setter Property="IsVisible" Value="True"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Styles>
+                                <TextBlock Text="Jailbreak (futuro)" FontSize="10"/>
+                            </Border>
                         </StackPanel>
                     </Border>
                 </DataTemplate>
