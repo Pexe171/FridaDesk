@@ -133,6 +133,10 @@ namespace FridaHub.Infrastructure.Migrations
                     b.Property<int?>("Popularity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasColumnType("TEXT");

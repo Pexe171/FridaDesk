@@ -18,4 +18,5 @@ public class ScriptRef
     public List<string> Platforms { get; set; } = new();
     public string Fingerprint { get; set; } = string.Empty;
     public int? Popularity { get; set; }
+    public string FilePath { get; set; } = string.Empty;
 }

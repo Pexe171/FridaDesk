@@ -17,4 +17,5 @@ public class Settings
     public bool ShowElevatedTargets { get; set; }
     public bool EnableJailbreakFeature { get; set; } = false;
     public bool AuthorizedUseAccepted { get; set; }
+    public string? ExpectedFridaVersion { get; set; }
 }

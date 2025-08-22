@@ -76,7 +76,8 @@ namespace FridaHub.Infrastructure.Migrations
                     TagsJson = table.Column<string>(type: "TEXT", nullable: false),
                     PlatformsJson = table.Column<string>(type: "TEXT", nullable: false),
                     Fingerprint = table.Column<string>(type: "TEXT", nullable: false),
-                    Popularity = table.Column<int>(type: "INTEGER", nullable: true)
+                    Popularity = table.Column<int>(type: "INTEGER", nullable: true),
+                    FilePath = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

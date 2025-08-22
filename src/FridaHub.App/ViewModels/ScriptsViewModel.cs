@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FridaHub.Core.Models;
 using FridaHub.Core.Interfaces;
@@ -54,5 +55,24 @@ public partial class ScriptsViewModel : ObservableObject
                 s.Tags.Any(t => t.Contains(query, StringComparison.OrdinalIgnoreCase)));
 
         Scripts = new ObservableCollection<ScriptRef>(filtered);
+    }
+
+    public async Task AddLocalScriptAsync(string filePath, string title, List<string> tags)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IScriptsRepository>();
+        var script = new ScriptRef
+        {
+            Id = Guid.NewGuid(),
+            Source = ScriptSource.Internal,
+            Author = "Pexe (instagram David.devloli)",
+            Slug = Path.GetFileNameWithoutExtension(filePath),
+            Title = title,
+            Tags = tags,
+            FilePath = filePath
+        };
+        await repo.AddAsync(script);
+        allScripts.Add(script);
+        ApplyFilter();
     }
 }

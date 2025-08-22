@@ -18,6 +18,11 @@
             </StackPanel>
 
             <StackPanel>
+                <TextBlock Text="Versão esperada do frida-server"/>
+                <TextBox Text="{Binding ExpectedFridaVersion}"/>
+            </StackPanel>
+
+            <StackPanel>
                 <TextBlock Text="Pasta de recursos"/>
                 <TextBox Text="{Binding ResourcesFolder}"/>
             </StackPanel>
