@@ -9,9 +9,17 @@ Solução inicial contendo os projetos base para o aplicativo Avalonia.
 - **FridaHub.Processes**: processos de negócio.
 - **FridaHub.Codeshare**: componentes compartilhados.
 
+## Pré-requisitos
+- SDK do .NET 8 instalado.
+
 ## Como compilar
 ```bash
 dotnet build
+```
+
+## Como executar os testes
+```bash
+dotnet test
 ```
 
 ## Teste de conexão
