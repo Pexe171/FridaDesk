@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRunsRepository, EfRunsRepository>();
         services.AddScoped<IDevicesRepository, EfDevicesRepository>();
         services.AddSingleton<ISettingsService, JsonSettingsService>();
+        services.AddSingleton<IDiagnosticsService, DiagnosticsService>();
 
         return services;
     }

@@ -13,17 +13,19 @@ public partial class MainViewModel : ObservableObject
     public RunViewModel Run { get; }
     public HistoryViewModel History { get; }
     public SettingsViewModel Settings { get; }
+    public DiagnosticsViewModel Diagnostics { get; }
 
     [ObservableProperty]
     private ObservableCollection<string> logs = new();
 
-    public MainViewModel(DevicesViewModel devices, ScriptsViewModel scripts, RunViewModel run, HistoryViewModel history, SettingsViewModel settings)
+    public MainViewModel(DevicesViewModel devices, ScriptsViewModel scripts, RunViewModel run, HistoryViewModel history, SettingsViewModel settings, DiagnosticsViewModel diagnostics)
     {
         Devices = devices;
         Scripts = scripts;
         Run = run;
         History = history;
         Settings = settings;
+        Diagnostics = diagnostics;
 
         AddLog("Aplicação iniciada");
     }
@@ -39,6 +41,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void RefreshDevices()
     {
+        Devices.RefreshCommand.Execute(null);
         AddLog("Dispositivos atualizados");
+    }
+
+    [RelayCommand]
+    private void ClearConsole()
+    {
+        Logs.Clear();
+        OnPropertyChanged(nameof(ConsoleText));
     }
 }

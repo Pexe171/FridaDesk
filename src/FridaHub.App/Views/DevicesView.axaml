@@ -10,27 +10,40 @@
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:DeviceInfo">
                     <Border Margin="0,0,0,8" Padding="8" BorderThickness="1" BorderBrush="Gray" CornerRadius="4">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Model}" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Serial}" FontSize="10" Foreground="Gray"/>
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Model}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Serial}" FontSize="10" Foreground="Gray"/>
+                                </StackPanel>
+                                <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="{Binding IsEmulator}">
+                                    <TextBlock Text="Emulador" FontSize="10"/>
+                                </Border>
+                                <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="False">
+                                    <!-- TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada -->
+                                    <Border.Styles>
+                                        <Style Selector="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Platform}" Value="IOS">
+                                                    <Setter Property="IsVisible" Value="True"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Styles>
+                                    <TextBlock Text="Jailbreak (futuro)" FontSize="10"/>
+                                </Border>
                             </StackPanel>
-                            <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="{Binding IsEmulator}">
-                                <TextBlock Text="Emulador" FontSize="10"/>
-                            </Border>
-                            <Border Background="LightGray" Padding="4" CornerRadius="4" Margin="8,0,0,0" IsVisible="False">
-                                <!-- TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada -->
-                                <Border.Styles>
-                                    <Style Selector="Border">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Platform}" Value="IOS">
-                                                <Setter Property="IsVisible" Value="True"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Styles>
-                                <TextBlock Text="Jailbreak (futuro)" FontSize="10"/>
-                            </Border>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Content="Listar processos"
+                                        Command="{Binding $parent[UserControl].DataContext.ListProcessesCommand}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Content="Forward portas"
+                                        Command="{Binding $parent[UserControl].DataContext.ForwardPortsCommand}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Content="Re-testar ferramentas"
+                                        Command="{Binding $parent[UserControl].DataContext.RetestToolsCommand}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </DataTemplate>

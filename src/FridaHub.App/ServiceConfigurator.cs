@@ -29,6 +29,7 @@ public static class ServiceConfigurator
         services.AddSingleton<RunViewModel>();
         services.AddSingleton<HistoryViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<DiagnosticsViewModel>();
 
         services.AddTransient<MainView>();
         services.AddTransient<DevicesView>();
@@ -36,6 +37,7 @@ public static class ServiceConfigurator
         services.AddTransient<RunView>();
         services.AddTransient<HistoryView>();
         services.AddTransient<SettingsView>();
+        services.AddTransient<DiagnosticsView>();
 
         var provider = services.BuildServiceProvider();
 
