@@ -10,7 +10,15 @@ class Program
     {
         var services = ServiceConfigurator.Configure();
         App.Services = services;
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex) when (ex.Message.Contains("XOpenDisplay"))
+        {
+            Console.Error.WriteLine("Interface gráfica não disponível. Certifique-se de executar em um ambiente com servidor gráfico.");
+            Console.Error.WriteLine(ex.Message);
+        }
     }
 
     public static AppBuilder BuildAvaloniaApp()

@@ -10,7 +10,6 @@ using System.Linq;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
 using FridaHub.Infrastructure;
 using FridaHub.Core.Backends;
@@ -122,10 +121,12 @@ public partial class RunViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(slug))
         {
             var search = await scriptsRepo.SearchAsync(slug);
-            if (search.IsSuccess)
+            if (search.IsSuccess && search.Value is not null)
+            {
                 localScript = search.Value.FirstOrDefault(s => s.Source == ScriptSource.Internal && s.Slug == slug);
-            if (localScript is not null)
-                record.ScriptId = localScript.Id;
+                if (localScript is not null)
+                    record.ScriptId = localScript.Id;
+            }
         }
         await runsRepo.AddAsync(record);
 
