@@ -11,6 +11,7 @@ using FridaHub.Core.Interfaces;
 
 namespace FridaHub.App;
 
+// Autor: Pexe (instagram David.devloli)
 public static class ServiceConfigurator
 {
     public static IServiceProvider Configure()
@@ -21,7 +22,7 @@ public static class ServiceConfigurator
         services.AddScoped<CodeshareSeedLoader>();
         services.AddSingleton<ProcessRunner>();
         services.AddSingleton<IAdbBackend, AdbService>();
-        services.AddSingleton<IFridaBackend, FridaService>();
+        services.AddSingleton<IFridaBackend, CliFridaBackend>();
         services.AddSingleton<IFridaVersionChecker, FridaVersionChecker>();
         services.AddSingleton<IFridaInstaller, FridaInstaller>();
 

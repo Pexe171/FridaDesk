@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using FridaHub.Core.Models;
 
 namespace FridaHub.App.Converters;
 
@@ -8,7 +9,7 @@ public class IosVisibilityConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return string.Equals(value as string, "IOS", StringComparison.OrdinalIgnoreCase);
+        return value is DevicePlatform platform && platform == DevicePlatform.IOS;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

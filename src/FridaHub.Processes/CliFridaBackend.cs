@@ -2,16 +2,17 @@ using FridaHub.Core.Backends;
 using FridaHub.Core.Models;
 using FridaHub.Core.Results;
 
+// Autor: Pexe (instagram David.devloli)
 namespace FridaHub.Processes;
 
 /// <summary>
 /// Backend que executa o binário do Frida CLI.
 /// </summary>
-public class FridaService : IFridaBackend
+public class CliFridaBackend : IFridaBackend
 {
     private readonly ProcessRunner _runner;
 
-    public FridaService(ProcessRunner runner)
+    public CliFridaBackend(ProcessRunner runner)
     {
         _runner = runner;
     }
