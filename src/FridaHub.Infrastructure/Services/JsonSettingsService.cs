@@ -10,14 +10,23 @@ public class JsonSettingsService : ISettingsService
     private readonly string _filePath;
     public Settings? Current { get; private set; }
 
-    public JsonSettingsService()
+    public JsonSettingsService(string? filePath = null)
     {
-        var baseDir = OperatingSystem.IsWindows()
-            ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
-        var appDir = Path.Combine(baseDir, "FridaHub");
-        Directory.CreateDirectory(appDir);
-        _filePath = Path.Combine(appDir, "settings.json");
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            var baseDir = OperatingSystem.IsWindows()
+                ? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
+            var appDir = Path.Combine(baseDir, "FridaHub");
+            Directory.CreateDirectory(appDir);
+            _filePath = Path.Combine(appDir, "settings.json");
+        }
+        else
+        {
+            _filePath = filePath;
+            var dir = Path.GetDirectoryName(_filePath)!;
+            Directory.CreateDirectory(dir);
+        }
     }
 
     public async Task<Result<Settings>> LoadAsync()
