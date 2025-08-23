@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Threading.Channels;
+using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
 
 namespace FridaHub.Processes;
@@ -9,6 +10,13 @@ namespace FridaHub.Processes;
 /// </summary>
 public class ProcessRunner
 {
+    private readonly ISettingsService _settings;
+
+    public ProcessRunner(ISettingsService settings)
+    {
+        _settings = settings;
+    }
+
     /// <summary>
     /// Inicia o processo e retorna um <see cref="ProcessRun"/> que permite acompanhar a saída.
     /// </summary>
@@ -16,7 +24,7 @@ public class ProcessRunner
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = fileName,
+            FileName = Resolve(fileName),
             Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -50,6 +58,22 @@ public class ProcessRunner
 
         return new ProcessRun(process, channel.Reader);
     }
+
+    private string Resolve(string fileName)
+    {
+        var s = _settings.Current;
+        if (s is not null)
+        {
+            if (fileName == "adb" && !string.IsNullOrWhiteSpace(s.AdbPath))
+                return ResolveRelative(s.AdbPath, s.ResourcesFolder);
+            if ((fileName == "frida" || fileName == "frida-ps") && !string.IsNullOrWhiteSpace(s.FridaPath))
+                return ResolveRelative(s.FridaPath, s.ResourcesFolder);
+        }
+        return fileName;
+    }
+
+    private static string ResolveRelative(string path, string baseDir)
+        => Path.IsPathRooted(path) ? path : Path.Combine(baseDir, path);
 }
 
 /// <summary>

@@ -5,12 +5,12 @@ using FridaHub.Core.Results;
 
 namespace FridaHub.Infrastructure.Services;
 
-public class JsonSettingsService : ISettingsService
+public class JsonFeatureFlagsService : IFeatureFlagsService
 {
     private readonly string _filePath;
-    public Settings? Current { get; private set; }
+    public FeatureFlags? Current { get; private set; }
 
-    public JsonSettingsService(string? filePath = null)
+    public JsonFeatureFlagsService(string? filePath = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -19,7 +19,7 @@ public class JsonSettingsService : ISettingsService
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
             var appDir = Path.Combine(baseDir, "FridaHub");
             Directory.CreateDirectory(appDir);
-            _filePath = Path.Combine(appDir, "settings.json");
+            _filePath = Path.Combine(appDir, "featureflags.json");
         }
         else
         {
@@ -29,36 +29,36 @@ public class JsonSettingsService : ISettingsService
         }
     }
 
-    public async Task<Result<Settings>> LoadAsync()
+    public async Task<Result<FeatureFlags>> LoadAsync()
     {
         try
         {
             if (!File.Exists(_filePath))
             {
-                Current = new Settings();
-                return Result<Settings>.Success(Current);
+                Current = new FeatureFlags();
+                return Result<FeatureFlags>.Success(Current);
             }
 
             await using var stream = File.OpenRead(_filePath);
-            var settings = await JsonSerializer.DeserializeAsync<Settings>(stream) ?? new Settings();
-            Current = settings;
-            return Result<Settings>.Success(settings);
+            var flags = await JsonSerializer.DeserializeAsync<FeatureFlags>(stream) ?? new FeatureFlags();
+            Current = flags;
+            return Result<FeatureFlags>.Success(flags);
         }
         catch (Exception ex)
         {
-            return Result<Settings>.Failure(ex.Message);
+            return Result<FeatureFlags>.Failure(ex.Message);
         }
     }
 
-    public async Task<Result> SaveAsync(Settings settings)
+    public async Task<Result> SaveAsync(FeatureFlags flags)
     {
         try
         {
             var dir = Path.GetDirectoryName(_filePath)!;
             Directory.CreateDirectory(dir);
             await using var stream = File.Create(_filePath);
-            await JsonSerializer.SerializeAsync(stream, settings, new JsonSerializerOptions { WriteIndented = true });
-            Current = settings;
+            await JsonSerializer.SerializeAsync(stream, flags, new JsonSerializerOptions { WriteIndented = true });
+            Current = flags;
             return Result.Success();
         }
         catch (Exception ex)

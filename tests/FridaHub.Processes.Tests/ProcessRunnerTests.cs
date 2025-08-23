@@ -1,5 +1,8 @@
 using FridaHub.Infrastructure;
 using FridaHub.Processes;
+using FridaHub.Core.Interfaces;
+using FridaHub.Core.Models;
+using FridaHub.Core.Results;
 
 namespace FridaHub.Processes.Tests;
 
@@ -8,7 +11,7 @@ public class ProcessRunnerTests
     [Fact]
     public async Task RunAsync_CapturaSaida()
     {
-        var runner = new ProcessRunner();
+        var runner = new ProcessRunner(new FakeSettingsService());
         var run = runner.Run("dotnet", "--version");
         var linhas = new List<string>();
         await foreach (var line in run.Output)
@@ -34,4 +37,5 @@ public class ProcessRunnerTests
         Assert.Contains("\"msg\":\"ok\"", content);
     }
 }
+
 

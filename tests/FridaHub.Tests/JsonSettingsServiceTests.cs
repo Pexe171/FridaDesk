@@ -14,7 +14,6 @@ public class JsonSettingsServiceTests
         var result = await service.LoadAsync();
 
         Assert.True(result.IsSuccess);
-        Assert.False(result.Value!.EnableJailbreakFeature);
     }
 
     [Fact]

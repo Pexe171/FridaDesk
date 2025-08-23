@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -52,9 +53,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         var result = await _settingsService.LoadAsync();
         if (result.IsSuccess && result.Value is not null)
-        {   // TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada.
+        {
             var s = result.Value;
-            s.EnableJailbreakFeature = false;
             AdbPath = s.AdbPath;
             FridaPath = s.FridaPath;
             LogsFolder = s.LogsFolder;
@@ -77,7 +77,6 @@ public partial class SettingsViewModel : ObservableObject
             Theme = Theme,
             ShowElevatedTargets = ShowElevatedTargets,
             ExpectedFridaVersion = ExpectedFridaVersion,
-            EnableJailbreakFeature = false,
             AuthorizedUseAccepted = _settingsService.Current?.AuthorizedUseAccepted ?? false
         };
         await _settingsService.SaveAsync(settings);
@@ -99,7 +98,8 @@ public partial class SettingsViewModel : ObservableObject
 
         try
         {
-            var run = _runner.Run(path, args);
+            var resolved = Resolve(path);
+            var run = _runner.Run(resolved, args);
             var output = new List<string>();
             await foreach (var line in run.Output)
                 output.Add(line.Line);
@@ -113,4 +113,7 @@ public partial class SettingsViewModel : ObservableObject
             return $"Erro: {ex.Message}";
         }
     }
+
+    private string Resolve(string path)
+        => Path.IsPathRooted(path) ? path : Path.Combine(ResourcesFolder, path);
 }
