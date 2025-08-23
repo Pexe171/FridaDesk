@@ -31,9 +31,10 @@ public class FridaInstallerTests
     public async Task EscolheBinarioCorreto(string abi, string esperado)
     {
         var adb = new FakeAdb(abi);
-        var installer = new FridaInstaller(adb, new ProcessRunner(), new HttpClient(new HttpClientHandler()));
+        var installer = new FridaInstaller(adb, new ProcessRunner(new FakeSettingsService()), new HttpClient(new HttpClientHandler()));
         var result = await installer.GetServerBinaryNameAsync("abc");
         Assert.True(result.IsSuccess);
         Assert.Equal(esperado, result.Value);
     }
 }
+

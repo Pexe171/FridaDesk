@@ -15,7 +15,6 @@ public class Settings
     public string LogsFolder { get; set; } = string.Empty;
     public string ResourcesFolder { get; set; } = string.Empty;
     public bool ShowElevatedTargets { get; set; }
-    public bool EnableJailbreakFeature { get; set; } = false;
     public bool AuthorizedUseAccepted { get; set; }
     public string? ExpectedFridaVersion { get; set; }
 }

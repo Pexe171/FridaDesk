@@ -14,6 +14,8 @@ using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
 using FridaHub.Infrastructure;
 using FridaHub.Core.Backends;
+using FridaHub.Core.Interfaces;
+using FridaHub.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FridaHub.App.ViewModels;
@@ -25,15 +27,17 @@ public partial class RunViewModel : ObservableObject
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IFridaVersionChecker _versionChecker;
     private readonly IDiagnosticsService _diagnostics;
+    private readonly IMetricsService _metrics;
     private CancellationTokenSource? _cts;
 
-    public RunViewModel(ISettingsService settingsService, IFridaBackend backend, IServiceScopeFactory scopeFactory, IFridaVersionChecker versionChecker, IDiagnosticsService diagnostics)
+    public RunViewModel(ISettingsService settingsService, IFridaBackend backend, IServiceScopeFactory scopeFactory, IFridaVersionChecker versionChecker, IDiagnosticsService diagnostics, IMetricsService metrics)
     {
         _settingsService = settingsService;
         _backend = backend;
         _scopeFactory = scopeFactory;
         _versionChecker = versionChecker;
         _diagnostics = diagnostics;
+        _metrics = metrics;
 
         var result = _settingsService.LoadAsync().GetAwaiter().GetResult();
         if (result.IsSuccess && result.Value is { } settings)
@@ -92,6 +96,7 @@ public partial class RunViewModel : ObservableObject
         _cts = new CancellationTokenSource();
         Output.Clear();
 
+        _metrics.IncrementRuns();
         _diagnostics.RecordCommand($"{Mode} {Script} {Target}");
         var sw = Stopwatch.StartNew();
 
@@ -149,11 +154,12 @@ public partial class RunViewModel : ObservableObject
             await foreach (var line in exec.WithCancellation(_cts.Token))
             {
                 Output.Add(line);
+                var text = LogSanitizer.Sanitize(line.Line);
                 var json = JsonSerializer.Serialize(new
                 {
                     timestampUtc = line.TimestampUtc,
                     origin = line.IsError ? "stderr" : "stdout",
-                    text = line.Line
+                    text
                 });
                 sink.AppendLine(json);
             }
@@ -174,7 +180,7 @@ public partial class RunViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            var pl = new ProcessLine(DateTime.UtcNow, true, ex.Message);
+            var pl = new ProcessLine(DateTime.UtcNow, true, LogSanitizer.Sanitize(ex.Message));
             Output.Add(pl);
             sink.AppendLine(JsonSerializer.Serialize(new { timestampUtc = pl.TimestampUtc, origin = "stderr", text = pl.Line }));
             record.Status = RunStatus.Error;
@@ -190,6 +196,8 @@ public partial class RunViewModel : ObservableObject
                 _diagnostics.RecordSpawnTime(sw.Elapsed);
             await sink.FlushAsync();
             await runsRepo.UpdateAsync(record);
+            if (record.Status == RunStatus.Error)
+                _metrics.IncrementRunErrors();
             IsRunning = false;
         }
     }

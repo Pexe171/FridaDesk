@@ -1,4 +1,5 @@
 using FridaHub.Core.Interfaces;
+using FridaHub.Core.Utils;
 
 namespace FridaHub.Infrastructure;
 
@@ -17,7 +18,7 @@ public class JsonlLogSink : ILogSink
         _filePath = Path.Combine(folder, $"{runId}.jsonl");
     }
 
-    public void AppendLine(string line) => _buffer.Add(line);
+    public void AppendLine(string line) => _buffer.Add(LogSanitizer.Sanitize(line));
 
     public async Task FlushAsync()
     {

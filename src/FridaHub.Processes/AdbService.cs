@@ -1,7 +1,9 @@
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 using FridaHub.Core.Backends;
 using FridaHub.Core.Models;
 using FridaHub.Core.Results;
+using FridaHub.Core.Interfaces;
 
 namespace FridaHub.Processes;
 
@@ -11,10 +13,12 @@ namespace FridaHub.Processes;
 public class AdbService : IAdbBackend
 {
     private readonly ProcessRunner _runner;
+    private readonly IMetricsService _metrics;
 
-    public AdbService(ProcessRunner runner)
+    public AdbService(ProcessRunner runner, IMetricsService metrics)
     {
         _runner = runner;
+        _metrics = metrics;
     }
 
     public static DeviceInfo Parse(string serial, Dictionary<string, string> props)
@@ -55,11 +59,14 @@ public class AdbService : IAdbBackend
     {
         try
         {
+            var sw = Stopwatch.StartNew();
             var run = _runner.Run("adb", "devices -l");
             var lines = new List<string>();
             await foreach (var line in run.Output)
                 lines.Add(line.Line);
             var exit = await run.WaitForExitAsync();
+            sw.Stop();
+            _metrics.RecordAdbLatency(sw.Elapsed);
             if (exit != 0)
                 return Result<IEnumerable<DeviceInfo>>.Failure($"adb retornou código {exit}");
 
