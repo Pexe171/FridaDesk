@@ -2,8 +2,8 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
 using FridaHub.App.Views;
+using FridaHub.App.ViewModels;
 
 namespace FridaHub.App;
 
@@ -20,13 +20,17 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mainView = Services.GetRequiredService<MainView>();
-            desktop.MainWindow = mainView;
+            desktop.MainWindow = new MainWindow
+            {
+                DataContext = new MainWindowViewModel()
+            };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
-            var mainView = Services.GetRequiredService<MainView>();
-            singleView.MainView = mainView;
+            singleView.MainView = new MainWindow
+            {
+                DataContext = new MainWindowViewModel()
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
