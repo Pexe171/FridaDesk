@@ -29,7 +29,7 @@
                                 <Border Classes="chip"
                                         IsVisible="{Binding Platform, Converter={StaticResource IosVisibilityConverter}}">
                                     <!-- TODO(Jailbreak): implementar suporte futuro de forma segura e autorizada -->
-                                    <TextBlock Text="Jailbreak (futuro)"/>
+                                    <TextBlock Text="iOS (Gadget/JB futuro)"/>
                                 </Border>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="4">

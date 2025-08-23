@@ -62,6 +62,11 @@ public class MainWindow : GameWindow
                 foreach (var d in _devices)
                 {
                     ImGui.Text($"{d.Serial} - {d.Model}");
+                    if (d.Platform == DevicePlatform.IOS)
+                    {
+                        ImGui.SameLine();
+                        ImGui.Text("iOS (Gadget/JB futuro)");
+                    }
                     ImGui.SameLine();
                     if (ImGui.Button($"Instalar##{d.Serial}"))
                     {
