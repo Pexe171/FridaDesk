@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Avalonia.VisualTree;
+using Avalonia.Platform.Storage;
 
 namespace FridaHub.App.Views;
 
@@ -27,17 +28,17 @@ public partial class ScriptsView : UserControl
         var window = this.GetVisualRoot() as Window;
         if (window is null) return;
 
-        var ofd = new OpenFileDialog
+        var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             AllowMultiple = false,
-            Filters =
+            FileTypeFilter = new[]
             {
-                new FileDialogFilter { Name = "Scripts", Extensions = { "js" } }
+                new FilePickerFileType("Scripts") { Patterns = new[] { "*.js" } }
             }
-        };
+        });
 
-        var paths = await ofd.ShowAsync(window);
-        var path = paths?.FirstOrDefault();
+        var file = files.FirstOrDefault();
+        var path = file?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
         var titleDialog = new TextInputDialog();

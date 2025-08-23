@@ -15,6 +15,6 @@ public class Settings
     public string LogsFolder { get; set; } = string.Empty;
     public string ResourcesFolder { get; set; } = string.Empty;
     public bool ShowElevatedTargets { get; set; }
-    public bool AuthorizedUseAccepted { get; set; }
+    public bool AuthorizedUseAccepted { get; set; } = true;
     public string? ExpectedFridaVersion { get; set; }
 }
