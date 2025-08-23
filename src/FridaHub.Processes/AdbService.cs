@@ -17,6 +17,23 @@ public class AdbService : IAdbBackend
         _runner = runner;
     }
 
+    public static DeviceInfo Parse(string serial, Dictionary<string, string> props)
+    {
+        var isEmu = props.TryGetValue("ro.kernel.qemu", out var qemu) && qemu == "1";
+        var model = props.TryGetValue("ro.product.manufacturer", out var manuf) ? manuf + " " : string.Empty;
+        if (props.TryGetValue("ro.product.model", out var m))
+            model += m;
+        return new DeviceInfo
+        {
+            Serial = serial,
+            Model = model.Trim(),
+            IsEmulator = isEmu,
+            Platform = DevicePlatform.Android,
+            Props = props,
+            LastSeenUtc = DateTime.UtcNow
+        };
+    }
+
     public async Task<Result> StartServerAsync()
     {
         try
@@ -54,20 +71,7 @@ public class AdbService : IAdbBackend
                 var serial = match.Groups["serial"].Value;
                 var propsResult = await GetPropsAsync(serial);
                 var props = propsResult.IsSuccess ? propsResult.Value! : new Dictionary<string, string>();
-                var isEmu = props.TryGetValue("ro.kernel.qemu", out var qemu) && qemu == "1";
-                var model = props.TryGetValue("ro.product.manufacturer", out var manuf) ? manuf + " " : string.Empty;
-                if (props.TryGetValue("ro.product.model", out var m))
-                    model += m;
-
-                devices.Add(new DeviceInfo
-                {
-                    Serial = serial,
-                    Model = model.Trim(),
-                    IsEmulator = isEmu,
-                    Platform = DevicePlatform.Android,
-                    Props = props,
-                    LastSeenUtc = DateTime.UtcNow
-                });
+                devices.Add(Parse(serial, props));
             }
 
             return Result<IEnumerable<DeviceInfo>>.Success(devices);
