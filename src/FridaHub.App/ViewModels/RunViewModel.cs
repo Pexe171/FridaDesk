@@ -39,11 +39,7 @@ public partial class RunViewModel : ObservableObject
         _diagnostics = diagnostics;
         _metrics = metrics;
 
-        var result = _settingsService.LoadAsync().GetAwaiter().GetResult();
-        if (result.IsSuccess && result.Value is { } settings)
-        {
-            IsAuthorized = settings.AuthorizedUseAccepted;
-        }
+        _settingsService.LoadAsync().GetAwaiter().GetResult();
     }
 
     public ObservableCollection<DeviceInfo> Devices { get; } = new();
@@ -54,9 +50,6 @@ public partial class RunViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<ProcessLine> output = new();
-
-    [ObservableProperty]
-    private bool isAuthorized;
 
     [ObservableProperty]
     private bool isDrawerOpen;
@@ -81,13 +74,6 @@ public partial class RunViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isRunning;
-
-    public async Task SaveAuthorizationAsync()
-    {
-        var settings = _settingsService.Current ?? new Settings();
-        settings.AuthorizedUseAccepted = IsAuthorized;
-        await _settingsService.SaveAsync(settings);
-    }
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task RunAsync()
