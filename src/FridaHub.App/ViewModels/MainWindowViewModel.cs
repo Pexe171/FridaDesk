@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
@@ -13,7 +14,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string currentButtonLabel = string.Empty;
-    public IRelayCommand NextPage { get; }
+
+    public ICommand NextPage { get; }
 
     public MainWindowViewModel()
     {
