@@ -4,13 +4,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:FridaDesk.Wpf.Controls">
     <StackPanel Margin="10">
-        <TextBlock Text="Dispositivos" FontSize="16" FontWeight="Bold"/>
-        <ItemsControl ItemsSource="{Binding Devices}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <controls:StatusBadge Text="{Binding}"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <Button Content="Atualizar" Command="{Binding RefreshAsyncCommand}" Width="120" Margin="0,0,0,10" />
+        <ListView ItemsSource="{Binding Devices}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Serial}" />
+                    <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Model}" />
+                    <GridViewColumn Header="Emulador" DisplayMemberBinding="{Binding IsEmulator}" />
+                    <GridViewColumn Header="Status">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <controls:StatusBadge Status="{Binding Status}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Ações">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Instalar frida-server"
+                                            Command="{Binding DataContext.EnsureFridaAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                            CommandParameter="{Binding}" Margin="0,0,5,0" />
+                                    <Button Content="Executar"
+                                            Command="{Binding DataContext.RunAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
     </StackPanel>
 </UserControl>
