@@ -1,0 +1,107 @@
+using System.Diagnostics;
+using System.Threading.Channels;
+using FridaDesk.Core.Interfaces;
+using FridaDesk.Core.Models;
+
+namespace FridaDesk.Processes;
+
+/// <summary>
+/// Executa binários externos e expõe as linhas produzidas via <see cref="IAsyncEnumerable{T}"/>.
+/// </summary>
+public class ProcessRunner
+{
+    private readonly ISettingsService _settings;
+
+    public ProcessRunner(ISettingsService settings)
+    {
+        _settings = settings;
+    }
+
+    /// <summary>
+    /// Inicia o processo e retorna um <see cref="ProcessRun"/> que permite acompanhar a saída.
+    /// </summary>
+    public ProcessRun Run(string fileName, string arguments = "")
+    {
+#if DEBUG
+        arguments = string.IsNullOrEmpty(arguments) ? fileName : $"{fileName} {arguments}";
+        fileName = "echo";
+#endif
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = Resolve(fileName),
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        var channel = Channel.CreateUnbounded<ProcessLine>();
+
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data != null)
+                channel.Writer.TryWrite(new ProcessLine(DateTime.UtcNow, false, e.Data));
+        };
+
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data != null)
+                channel.Writer.TryWrite(new ProcessLine(DateTime.UtcNow, true, e.Data));
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        _ = Task.Run(async () =>
+        {
+            await process.WaitForExitAsync();
+            channel.Writer.TryComplete();
+        });
+
+        return new ProcessRun(process, channel.Reader);
+    }
+
+    private string Resolve(string fileName)
+    {
+        var s = _settings.Current;
+        if (s is not null)
+        {
+            if (fileName == "adb" && !string.IsNullOrWhiteSpace(s.AdbPath))
+                return ResolveRelative(s.AdbPath, s.ResourcesFolder);
+            if ((fileName == "frida" || fileName == "frida-ps") && !string.IsNullOrWhiteSpace(s.FridaPath))
+                return ResolveRelative(s.FridaPath, s.ResourcesFolder);
+        }
+        return fileName;
+    }
+
+    private static string ResolveRelative(string path, string baseDir)
+        => Path.IsPathRooted(path) ? path : Path.Combine(baseDir, path);
+}
+
+/// <summary>
+/// Resultado da execução de um processo externo.
+/// </summary>
+public class ProcessRun
+{
+    private readonly Process _process;
+    private readonly ChannelReader<ProcessLine> _reader;
+
+    internal ProcessRun(Process process, ChannelReader<ProcessLine> reader)
+    {
+        _process = process;
+        _reader = reader;
+    }
+
+    /// <summary>Fluxo assíncrono de linhas produzidas pelo processo.</summary>
+    public IAsyncEnumerable<ProcessLine> Output => _reader.ReadAllAsync();
+
+    /// <summary>Espera a finalização do processo e retorna o código de saída.</summary>
+    public async Task<int> WaitForExitAsync(CancellationToken cancellationToken = default)
+    {
+        await _process.WaitForExitAsync(cancellationToken);
+        return _process.ExitCode;
+    }
+}
+

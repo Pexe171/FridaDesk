@@ -11,6 +11,7 @@
             <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
             <ToggleSwitch Content="Mostrar alvos elevados" IsChecked="{Binding ShowElevatedTargets}" Margin="0,8,0,0"/>
             <ToggleSwitch Content="Habilitar recurso de jailbreak" IsChecked="{Binding EnableJailbreakFeature}" IsEnabled="False"/>
+            <Button Content="Testar Ferramentas" Margin="0,8,0,0" Click="OnTestTools"/>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

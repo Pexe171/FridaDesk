@@ -16,4 +16,8 @@
       <AvaloniaResource Include="Styles/Theme.xaml" />
     </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FridaDesk.Core\FridaDesk.Core.csproj" />
+    <ProjectReference Include="..\FridaDesk.Processes\FridaDesk.Processes.csproj" />
+  </ItemGroup>
 </Project>
