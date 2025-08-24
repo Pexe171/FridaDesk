@@ -1,60 +1,44 @@
-# FridaHub
+# FridaDesk
 
-Solução inicial contendo os projetos base para o aplicativo Avalonia.
+FridaDesk é um projeto inicial para experimentos com Electron, React, sql.js e frida.
 
-## Estrutura
-- **FridaHub.App**: aplicativo Avalonia.
-- **FridaHub.Core**: biblioteca de classes principal.
-- **FridaHub.Infrastructure**: acesso a dados e configurações.
-- **FridaHub.Processes**: processos de negócio.
-- **FridaHub.Codeshare**: componentes compartilhados.
+## Visão
 
-## Pré-requisitos
-- SDK do .NET 8 instalado.
-- ADB disponível no PATH.
-- Frida CLI instalada.
+Criar uma plataforma de desenvolvimento segura e colaborativa para integrar ferramentas de análise e automação.
 
-## Como compilar
-```bash
-dotnet build
-```
+## Requisitos
 
-## Como executar
-```bash
-dotnet run --project src/FridaHub.App
-```
+- Node.js 18+
+- NPM
+- Git
 
-## Como executar os testes
-```bash
-dotnet test
-```
+## Começando
 
-## Como publicar (preview)
-Execute todos os scripts de uma vez para gerar os binários de pré-visualização:
+1. Instale dependências: `npm install`
+2. Copie `.env.example` para `.env` e ajuste os valores.
+3. Execute em desenvolvimento: `npm run dev`
 
-```bash
-bash build/publish-linux.sh && bash build/publish-macos.sh && pwsh build/publish-win.ps1
-```
+## Scripts
 
-## Execução do CodeShare
-```bash
-dotnet run --project src/FridaHub.Codeshare
-```
+- `npm run dev` – executa o ambiente de desenvolvimento
+- `npm run build` – gera build (placeholder)
+- `npm run lint` – roda ESLint e Prettier
+- `npm test` – executa testes com Jest
 
-## Logs
-Os logs são gravados na pasta configurada em *Settings* (padrão: diretório `FridaHub` dentro de `~/.local/share`).
+## Branching
 
-## Limitações
-- Funções de jailbreak desabilitadas por padrão.
-- Scripts e instaladores fornecidos apenas como placeholders.
+- `main`: código estável
+- `dev`: integração
+- `feature/*`: novas funcionalidades
 
-## Teste de conexão
+## ADR
 
-```csharp
-// using var provider = services.BuildServiceProvider();
-// using var db = provider.GetRequiredService<FridaHubDbContext>();
-// await db.Database.CanConnectAsync();
-```
+As decisões de arquitetura estão em [`docs/adr`](docs/adr).
 
 ## Autor
-Pexe — [instagram.com/David.devloli](https://www.instagram.com/David.devloli)
+
+Mantido por **Pexe** (Instagram [@David.devloli](https://instagram.com/David.devloli)).
+
+## Licença
+
+MIT - veja [LICENSE](LICENSE).
