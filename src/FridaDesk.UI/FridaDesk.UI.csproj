@@ -6,13 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.4" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Avalonia" Version="11.3.4" />
+      <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.4" />
+      <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <AvaloniaResource Include="Styles/Theme.xaml" />
-  </ItemGroup>
+    <ItemGroup>
+      <AvaloniaResource Include="Styles/Theme.xaml" />
+    </ItemGroup>
 
 </Project>
