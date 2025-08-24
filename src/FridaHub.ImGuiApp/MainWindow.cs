@@ -70,10 +70,9 @@ public class MainWindow : GameWindow
                     ImGui.SameLine();
                     if (ImGui.Button($"Instalar##{d.Serial}"))
                     {
-                        var res = _installer.InstallAsync(d.Serial).GetAwaiter().GetResult();
-                        var ok = res.IsSuccess;
+                        var ok = _installer.EnsureAsync(d.Serial).GetAwaiter().GetResult();
                         _installStatus[d.Serial] = ok;
-                        LogService.Append(ok ? $"> frida-server pronto em {d.Serial}" : $"! erro em {d.Serial}: {res.Error?.Message}");
+                        LogService.Append(ok ? $"> frida-server pronto em {d.Serial}" : $"! erro em {d.Serial}");
                     }
                     if (_installStatus.TryGetValue(d.Serial, out var st))
                     {

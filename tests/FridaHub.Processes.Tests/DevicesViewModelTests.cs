@@ -62,7 +62,7 @@ public class DevicesViewModelTests
     {
         private readonly bool _ok;
         public FakeInstaller(bool ok) => _ok = ok;
-        public Task<Result> InstallAsync(string serial) => Task.FromResult(_ok ? Result.Success() : Result.Failure("erro"));
+        public Task<bool> EnsureAsync(string serial, string version = "16.7.7") => Task.FromResult(_ok);
     }
 
     [Fact]
