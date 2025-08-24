@@ -1,6 +1,4 @@
 using System.Windows;
-using Microsoft.Extensions.DependencyInjection;
-using FridaDesk.Wpf.ViewModels;
 
 namespace FridaDesk.Wpf;
 
@@ -10,6 +8,5 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = App.Services.GetRequiredService<MainViewModel>();
     }
 }
