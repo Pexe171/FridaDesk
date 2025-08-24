@@ -1,9 +1,10 @@
 import React from 'react';
+import Titulo from '../components/Titulo.jsx';
 
 export default function Execucao() {
   return (
     <div className="content">
-      <h2>Execução</h2>
+      <Titulo>Execução</Titulo>
       <div>
         <select>
           <option>Device 1</option>

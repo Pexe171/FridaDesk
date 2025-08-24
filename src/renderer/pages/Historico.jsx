@@ -1,9 +1,10 @@
 import React from 'react';
+import Titulo from '../components/Titulo.jsx';
 
 export default function Historico() {
   return (
     <div className="content">
-      <h2>Histórico</h2>
+      <Titulo>Histórico</Titulo>
       <div className="table-container">
         <table>
           <thead>
