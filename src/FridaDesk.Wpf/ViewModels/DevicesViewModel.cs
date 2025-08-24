@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.Input;
 using FridaHub.Core.Backends;
 using FridaHub.Core.Interfaces;
 using FridaHub.Core.Models;
-using FridaDesk.Wpf.Extensions;
 
 namespace FridaDesk.Wpf.ViewModels;
 
@@ -39,8 +38,8 @@ public partial class DevicesViewModel : ObservableObject
     private async Task EnsureFridaAsync(DeviceInfo device)
     {
         device.Status = FridaStatus.Installing;
-        var result = await fridaInstaller.EnsureAsync(device.Serial);
-        device.Status = result.IsSuccess ? FridaStatus.Ready : FridaStatus.Error;
+        var ok = await fridaInstaller.EnsureAsync(device.Serial);
+        device.Status = ok ? FridaStatus.Ready : FridaStatus.Error;
     }
 
     [RelayCommand]

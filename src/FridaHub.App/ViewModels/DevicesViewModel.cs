@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace FridaHub.App.ViewModels;
 
+// Autor: Pexe (instagram David.devloli)
 public partial class DevicesViewModel : ObservableObject
 {
     private readonly IAdbBackend _adb;
@@ -103,7 +104,7 @@ public partial class DevicesViewModel : ObservableObject
     private async Task InstallFrida(DeviceInfo device)
     {
         device.Status = FridaStatus.Installing;
-        var result = await _installer.InstallAsync(device.Serial);
-        device.Status = result.IsSuccess ? FridaStatus.Ready : FridaStatus.Error;
+        var ok = await _installer.EnsureAsync(device.Serial);
+        device.Status = ok ? FridaStatus.Ready : FridaStatus.Error;
     }
 }
