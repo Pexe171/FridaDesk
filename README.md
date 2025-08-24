@@ -29,6 +29,13 @@ dotnet run --project src/FridaHub.App
 dotnet test
 ```
 
+## Como publicar (preview)
+Execute todos os scripts de uma vez para gerar os binários de pré-visualização:
+
+```bash
+bash build/publish-linux.sh && bash build/publish-macos.sh && pwsh build/publish-win.ps1
+```
+
 ## Execução do CodeShare
 ```bash
 dotnet run --project src/FridaHub.Codeshare
