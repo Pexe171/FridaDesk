@@ -3,6 +3,7 @@ export function soma(a, b) {
 }
 
 export { Database } from './db.js';
+export { ScriptsService } from './scriptsService.js';
 export {
   listDevices,
   connectAdb,

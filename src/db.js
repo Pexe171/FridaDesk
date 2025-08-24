@@ -61,6 +61,9 @@ export class Database {
         name TEXT,
         tags TEXT,
         source TEXT,
+        origin TEXT,
+        favorite INTEGER DEFAULT 0,
+        checksum TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -83,6 +86,21 @@ export class Database {
       CREATE INDEX IF NOT EXISTS idx_exec_script_id ON executions(script_id);
     `;
     this.db.exec(statements);
+    try {
+      this.db.exec('ALTER TABLE scripts ADD COLUMN origin TEXT');
+    } catch (e) {
+      // coluna já existe
+    }
+    try {
+      this.db.exec('ALTER TABLE scripts ADD COLUMN favorite INTEGER DEFAULT 0');
+    } catch (e) {
+      // coluna já existe
+    }
+    try {
+      this.db.exec('ALTER TABLE scripts ADD COLUMN checksum TEXT');
+    } catch (e) {
+      // coluna já existe
+    }
   }
 
   async save() {
@@ -92,6 +110,65 @@ export class Database {
       fs.writeFileSync(this.dbPath, buffer);
     });
     return this.lock;
+  }
+
+  insertScript(script) {
+    const stmt = this.db.prepare(
+      `INSERT INTO scripts (name, tags, source, origin, favorite, checksum)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    );
+    stmt.run([
+      script.name,
+      JSON.stringify(script.tags || []),
+      script.source,
+      script.origin,
+      script.favorite ? 1 : 0,
+      script.checksum,
+    ]);
+    stmt.free();
+    const id = this.db.exec('SELECT last_insert_rowid() as id')[0].values[0][0];
+    return this.save().then(() => id);
+  }
+
+  updateScriptFavorite(id, favorite) {
+    const stmt = this.db.prepare(
+      'UPDATE scripts SET favorite = ? WHERE id = ?'
+    );
+    stmt.run([favorite ? 1 : 0, id]);
+    stmt.free();
+    return this.save();
+  }
+
+  getScriptById(id) {
+    const stmt = this.db.prepare('SELECT * FROM scripts WHERE id = ?');
+    const result = stmt.getAsObject([id]);
+    stmt.free();
+    if (result.tags) {
+      try {
+        result.tags = JSON.parse(result.tags);
+      } catch (e) {
+        // ignore erro de parse
+      }
+    }
+    return result;
+  }
+
+  listScripts() {
+    const stmt = this.db.prepare('SELECT * FROM scripts');
+    const results = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      if (row.tags) {
+        try {
+          row.tags = JSON.parse(row.tags);
+        } catch (e) {
+          // ignore erro de parse
+        }
+      }
+      results.push(row);
+    }
+    stmt.free();
+    return results;
   }
 
   insertExecution(exec) {
