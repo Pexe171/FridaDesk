@@ -1,0 +1,43 @@
+:root {
+  /* Cores principais */
+  --cor-primaria: #4CAF50;
+  --cor-secundaria: #2196F3;
+  --cor-fundo: #0B0F0C;
+  --cor-superficie: #101412;
+  --cor-texto: #E0E0E0;
+  --cor-muted: #8EA390;
+  --cor-erro: #F44336;
+  --cor-aviso: #FFC107;
+
+  /* Neons */
+  --cor-neon-verde: #39FF14;
+  --cor-neon-ciano: #00E5FF;
+
+  /* Tipografia */
+  --fonte-mono: 'JetBrains Mono', monospace;
+
+  --tamanho-fonte-xs: 0.75rem;
+  --tamanho-fonte-sm: 0.875rem;
+  --tamanho-fonte-md: 1rem;
+  --tamanho-fonte-lg: 1.125rem;
+  --tamanho-fonte-xl: 1.5rem;
+
+  --peso-regular: 400;
+  --peso-negrito: 700;
+
+  /* Espaçamentos */
+  --espaco-xs: 0.25rem;
+  --espaco-sm: 0.5rem;
+  --espaco-md: 1rem;
+  --espaco-lg: 1.5rem;
+  --espaco-xl: 2rem;
+
+  /* Raios */
+  --raio-sm: 4px;
+  --raio-md: 8px;
+  --raio-lg: 12px;
+
+  /* Transições */
+  --transicao-rapida: 0.15s;
+  --transicao-normal: 0.3s;
+}

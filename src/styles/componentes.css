@@ -1,0 +1,121 @@
+@import url('./tokens.css');
+
+body {
+  font-family: var(--fonte-mono);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  margin: 0;
+}
+
+/* Botões */
+.btn {
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-md);
+  border: 1px solid var(--cor-primaria);
+  background: transparent;
+  color: var(--cor-primaria);
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--cor-primaria);
+  color: var(--cor-fundo);
+}
+.btn-ghost {
+  border-color: var(--cor-neon-ciano);
+  color: var(--cor-neon-ciano);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inputs e selects */
+input,
+select {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-muted);
+  border-radius: var(--raio-sm);
+  padding: var(--espaco-sm);
+  color: var(--cor-texto);
+}
+
+/* Chips */
+.chip {
+  display: inline-block;
+  padding: var(--espaco-xs) var(--espaco-sm);
+  background: var(--cor-superficie);
+  border-radius: var(--raio-lg);
+  color: var(--cor-texto);
+}
+
+/* Cards */
+.card {
+  background: var(--cor-superficie);
+  border-radius: var(--raio-md);
+  padding: var(--espaco-md);
+  box-shadow: 0 0 0 1px var(--cor-primaria);
+  color: var(--cor-texto);
+}
+
+/* Tabelas */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--cor-texto);
+}
+.tabela th,
+.tabela td {
+  border: 1px solid var(--cor-muted);
+  padding: var(--espaco-sm);
+}
+.tabela th {
+  background: var(--cor-superficie);
+}
+
+/* Toasters */
+.toast {
+  background: var(--cor-superficie);
+  border-left: 4px solid var(--cor-primaria);
+  padding: var(--espaco-sm) var(--espaco-md);
+  color: var(--cor-texto);
+  border-radius: var(--raio-sm);
+}
+.toast.aviso {
+  border-color: var(--cor-aviso);
+}
+.toast.erro {
+  border-color: var(--cor-erro);
+}
+
+/* Estados */
+.btn:hover,
+input:hover,
+select:hover,
+.chip:hover,
+.card:hover {
+  box-shadow: 0 0 4px var(--cor-neon-verde);
+}
+.btn:active {
+  box-shadow: 0 0 4px var(--cor-neon-ciano);
+}
+input:focus,
+select:focus,
+.btn:focus,
+.chip:focus,
+.card:focus {
+  outline: 2px solid var(--cor-neon-ciano);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn,
+  input,
+  select,
+  .chip,
+  .card,
+  .tabela th,
+  .tabela td {
+    transition: box-shadow var(--transicao-rapida),
+      background var(--transicao-rapida), color var(--transicao-rapida);
+  }
+}
