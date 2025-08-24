@@ -22,6 +22,12 @@ export function UIProvider({ children }) {
     return Number.isFinite(v) ? v : 20;
   });
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState(
+    () => localStorage.getItem('primaryColor') || '#222222'
+  );
+  const [accentColor, setAccentColor] = useState(
+    () => localStorage.getItem('accentColor') || '#4caf50'
+  );
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -38,6 +44,16 @@ export function UIProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('matrixDensity', matrixDensity);
   }, [matrixDensity]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--primary-color', primaryColor);
+    localStorage.setItem('primaryColor', primaryColor);
+  }, [primaryColor]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent-color', accentColor);
+    localStorage.setItem('accentColor', accentColor);
+  }, [accentColor]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -61,6 +77,10 @@ export function UIProvider({ children }) {
         matrixDensity,
         setMatrixDensity,
         reducedMotion,
+        primaryColor,
+        setPrimaryColor,
+        accentColor,
+        setAccentColor,
       }}
     >
       {children}
