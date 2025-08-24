@@ -1,5 +1,9 @@
 // Autor: Pexe (instagram: @David.devloli)
-import adb from 'adbkit';
+// Garante uso do adbkit em ambientes diferentes
+const adb =
+  typeof window !== 'undefined' && window.require
+    ? window.require('adbkit')
+    : (await import('adbkit')).default;
 
 const client = adb.createClient();
 

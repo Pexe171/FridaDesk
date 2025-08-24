@@ -1,6 +1,13 @@
 import initSqlJs from 'sql.js';
-import fs from 'fs';
-import path from 'path';
+import { createRequire } from 'module';
+
+// Garante acesso aos módulos nativos tanto no Electron quanto nos testes
+const require =
+  typeof window !== 'undefined' && window.require
+    ? window.require
+    : createRequire(import.meta.url);
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Gerenciador de banco de dados SQLite utilizando sql.js.
