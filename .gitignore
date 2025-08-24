@@ -1,4 +1,5 @@
-# Build outputs
-bin/
-obj/
-build/publish/
+node_modules/
+dist/
+coverage/
+.env
+*.tgz

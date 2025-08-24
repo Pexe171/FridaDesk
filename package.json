@@ -1,0 +1,25 @@
+{
+  "name": "fridadesk",
+  "version": "0.1.0",
+  "description": "Estrutura inicial do projeto FridaDesk",
+  "author": "Pexe (instagram: @David.devloli)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "build": "echo 'Build ainda não implementado'",
+    "lint": "eslint .",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^8.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^8.0.0",
+    "jest": "^29.0.0",
+    "prettier": "^2.0.0"
+  }
+}

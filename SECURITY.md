@@ -1,5 +1,5 @@
 # Segurança
 
-O uso deste projeto é autorizado somente para fins legítimos e com a devida permissão do proprietário do dispositivo.
+Se você encontrar uma vulnerabilidade, avise imediatamente **Pexe** pelo Instagram [@David.devloli](https://instagram.com/David.devloli).
 
-Relate vulnerabilidades abrindo uma issue ou entrando em contato pelo Instagram: [@David.devloli](https://www.instagram.com/David.devloli).
+Por favor, não abra issues públicas relatando problemas de segurança.
