@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:FridaDesk.UI.Controls">
     <Styles.Resources>
         <!-- Colors -->
         <Color x:Key="PrimaryColor">#4F46E5</Color>
@@ -94,8 +95,22 @@
         <Setter Property="Foreground" Value="White"/>
     </Style>
 
-    <Style Selector="ScrollBar">
-        <Setter Property="Background" Value="{StaticResource SurfaceCardBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-    </Style>
+  <Style Selector="ScrollBar">
+          <Setter Property="Background" Value="{StaticResource SurfaceCardBrush}"/>
+          <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+      </Style>
+
+      <!-- Custom controls -->
+      <Style Selector="controls|StatusBadge">
+          <Setter Property="FontSize" Value="{StaticResource FontSize12}"/>
+          <Setter Property="Foreground" Value="White"/>
+      </Style>
+
+      <Style Selector="controls|Card">
+          <Setter Property="Margin" Value="4"/>
+      </Style>
+
+      <Style Selector="controls|Toolbar">
+          <Setter Property="Background" Value="{StaticResource SurfaceWindowBrush}"/>
+      </Style>
 </Styles>

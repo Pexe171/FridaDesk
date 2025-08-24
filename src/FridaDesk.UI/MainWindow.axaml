@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:FridaDesk.UI.Controls"
+        xmlns:view="using:FridaDesk.UI.Views"
+        x:Class="FridaDesk.UI.MainWindow"
+        Title="FridaDesk">
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Oem2" Command="{Binding FocusSearchCommand}"/>
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding RefreshCommand}"/>
+        <KeyBinding Gesture="Ctrl+L" Command="{Binding ClearConsoleCommand}"/>
+    </Window.KeyBindings>
+    <Grid ColumnDefinitions="260,*" RowDefinitions="Auto,*,Auto">
+        <Border Grid.RowSpan="3" Width="260" Background="{StaticResource SurfaceCardBrush}" Padding="16">
+            <StackPanel Spacing="8">
+                <TextBlock Text="FridaDesk" FontSize="24" Margin="0,0,0,16"/>
+                <ToggleButton Content="Devices" IsChecked="True" Click="OnDevices"/>
+                <ToggleButton Content="Scripts" Click="OnScripts"/>
+                <ToggleButton Content="Histórico" Click="OnHistory"/>
+                <ToggleButton Content="Configurações" Click="OnSettings"/>
+            </StackPanel>
+        </Border>
+        <controls:Toolbar x:Name="TopBar" Grid.Column="1" Title="FridaDesk"/>
+        <ContentControl Grid.Column="1" Grid.Row="1" x:Name="ContentHost"/>
+        <Expander Grid.Column="1" Grid.Row="2" IsExpanded="True" Header="Console" MaxHeight="180">
+            <controls:ConsolePanel x:Name="Console" Height="180"/>
+        </Expander>
+    </Grid>
+</Window>
