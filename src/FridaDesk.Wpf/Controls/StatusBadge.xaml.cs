@@ -51,5 +51,6 @@ public partial class StatusBadge : UserControl
         }
         BadgeBorder.Background = brush;
         BadgeText.Text = text;
+        ToolTip = text;
     }
 }

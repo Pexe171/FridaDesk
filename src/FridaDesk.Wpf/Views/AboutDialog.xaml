@@ -1,0 +1,13 @@
+<!-- Autor: Pexe (instagram David.devloli) -->
+<Window x:Class="FridaDesk.Wpf.Views.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sobre" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
+        WindowStyle="ToolWindow">
+    <StackPanel Margin="20">
+        <TextBlock Text="FridaDesk" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBlock Text="Versão 0.0.1-design" Margin="0,0,0,10" />
+        <TextBlock Text="Uso autorizado." TextWrapping="Wrap" Margin="0,0,0,20" />
+        <Button Content="Fechar" Width="80" HorizontalAlignment="Right" Click="OnCloseClicked" />
+    </StackPanel>
+</Window>
