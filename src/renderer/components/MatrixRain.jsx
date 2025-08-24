@@ -11,8 +11,8 @@ export default function MatrixRain() {
     const ctx = canvas.getContext('2d');
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
-    const fontSize = matrixDensity;
-    const columns = Math.floor(width / fontSize);
+    const fontSize = Math.max(1, matrixDensity);
+    const columns = Math.max(1, Math.floor(width / fontSize));
     const drops = Array(columns).fill(0);
 
     const draw = () => {

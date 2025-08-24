@@ -13,14 +13,16 @@ export function UIProvider({ children }) {
       return false;
     }
   });
-  const [matrixSpeed, setMatrixSpeed] = useState(() => {
+  const [matrixSpeed, _setMatrixSpeed] = useState(() => {
     const v = Number(localStorage.getItem('matrixSpeed'));
-    return Number.isFinite(v) ? v : 2;
+    return Number.isFinite(v) && v >= 1 ? v : 2;
   });
-  const [matrixDensity, setMatrixDensity] = useState(() => {
+  const setMatrixSpeed = (v) => _setMatrixSpeed(Math.max(1, v));
+  const [matrixDensity, _setMatrixDensity] = useState(() => {
     const v = Number(localStorage.getItem('matrixDensity'));
-    return Number.isFinite(v) ? v : 20;
+    return Number.isFinite(v) && v >= 10 ? v : 20;
   });
+  const setMatrixDensity = (v) => _setMatrixDensity(Math.max(10, v));
   const [reducedMotion, setReducedMotion] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(
     () => localStorage.getItem('primaryColor') || '#222222'
