@@ -16,11 +16,13 @@ Criar uma plataforma de desenvolvimento segura e colaborativa para integrar ferr
 
 1. Instale dependências: `npm install`
 2. Copie `.env.example` para `.env` e ajuste os valores.
-3. Execute em desenvolvimento: `npm run dev`
+3. Execute em desenvolvimento web: `npm run dev`
+4. Para rodar a aplicação desktop, use: `npm start`
 
 ## Scripts
 
 - `npm run dev` – executa o ambiente de desenvolvimento
+- `npm start` – compila e inicia a aplicação Electron
 - `npm run build` – gera build (placeholder)
 - `npm run lint` – roda ESLint e Prettier
 - `npm test` – executa testes com Jest
