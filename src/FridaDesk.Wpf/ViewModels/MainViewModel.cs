@@ -1,25 +1,28 @@
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FridaDesk.Wpf.Views;
 
 namespace FridaDesk.Wpf.ViewModels;
 
 // Autor: Pexe (instagram David.devloli)
 public partial class MainViewModel : ObservableObject
 {
-    public DevicesViewModel DevicesViewModel { get; }
+    public DevicesView DevicesView { get; }
 
     [ObservableProperty]
-    private ObservableObject currentViewModel;
+    private UserControl currentView;
 
     public ObservableCollection<string> ConsoleLines { get; } = new();
 
-    public MainViewModel(DevicesViewModel devicesViewModel)
+    public MainViewModel(DevicesView devicesView, DevicesViewModel devicesViewModel)
     {
-        DevicesViewModel = devicesViewModel;
-        currentViewModel = devicesViewModel;
+        DevicesView = devicesView;
+        DevicesView.DataContext = devicesViewModel;
+        currentView = devicesView;
     }
 
     [RelayCommand]
-    private void ShowDevices() => CurrentViewModel = DevicesViewModel;
+    private void NavigateDevices() => CurrentView = DevicesView;
 }

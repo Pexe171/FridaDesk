@@ -34,6 +34,7 @@ public static class ServiceProviderFactory
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<DevicesViewModel>();
+        services.AddSingleton<DevicesView>();
 
         services.AddTransient<MainWindow>();
 
