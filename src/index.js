@@ -5,6 +5,8 @@ export function soma(a, b) {
 export { Database } from './db.js';
 export {
   listDevices,
+  connectAdb,
+  autoConnectEmulators,
   connectTcpip,
   installApk,
   startLogcat,
