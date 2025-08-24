@@ -5,7 +5,7 @@
   "author": "Pexe (instagram: @David.devloli)",
   "license": "MIT",
   "type": "module",
-  "main": "main.js",
+  "main": "main.cjs",
   "scripts": {
     "start": "npm run electron:start",
     "dev": "vite",
@@ -42,7 +42,7 @@
     "productName": "FridaDesk",
     "files": [
       "dist/**/*",
-      "main.js"
+      "main.cjs"
     ],
     "win": {
       "target": "nsis"
