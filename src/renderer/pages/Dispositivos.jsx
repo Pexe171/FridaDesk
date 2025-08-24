@@ -6,7 +6,7 @@ import {
   listDevices,
   connectAdb,
   autoConnectEmulators,
-} from '../../index.js';
+} from '../../adbService.js';
 
 export default function Dispositivos() {
   const toast = useToast();
