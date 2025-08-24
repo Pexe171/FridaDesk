@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using FridaHub.App.Views;
 
@@ -12,31 +13,14 @@ public partial class MainWindowViewModel : ObservableObject
     private object? currentPage;
 
     [ObservableProperty]
-    private string currentButtonLabel = "Próxima página";
-
-    private int pageIndex;
+    private string currentButtonLabel = string.Empty;
 
     public ICommand NextPage { get; }
 
     public MainWindowViewModel()
     {
-        CurrentPage = new HomeView();
-        NextPage = new RelayCommand(GoNext);
-    }
-
-    private void GoNext()
-    {
-        if (pageIndex == 0)
-        {
-            CurrentPage = new SecondView();
-            CurrentButtonLabel = "Voltar";
-            pageIndex = 1;
-        }
-        else
-        {
-            CurrentPage = new HomeView();
-            CurrentButtonLabel = "Próxima página";
-            pageIndex = 0;
-        }
+        currentPage = App.Services.GetRequiredService<MainView>();
+        currentButtonLabel = "Iniciar";
+        NextPage = new RelayCommand(() => { /* navegação futura */ });
     }
 }

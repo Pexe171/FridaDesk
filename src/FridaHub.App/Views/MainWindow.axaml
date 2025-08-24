@@ -1,18 +1,26 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
-        x:Class="FridaHub.App.Views.MainWindow"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
-        x:DataType="vm:MainWindowViewModel"
-        Title="FridaHub">
-    <StackPanel Margin="20">
-        <TextBlock Text="UI carregada" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <TransitioningContentControl Content="{Binding CurrentPage}" Margin="0,20,0,0"/>
-        <Button Content="{Binding CurrentButtonLabel}"
-                Command="{Binding NextPage}"
-                Margin="0,20,0,0"
-                HorizontalAlignment="Center"/>
-    </StackPanel>
-</Window>
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+using CommunityToolkit.Mvvm.Input;
+using FridaHub.App.Views;
+
+namespace FridaHub.App.ViewModels;
+
+// Autor: Pexe (instagram David.devloli)
+public partial class MainWindowViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private object? currentPage;
+
+    [ObservableProperty]
+    private string currentButtonLabel = string.Empty;
+
+    public ICommand NextPage { get; }
+
+    public MainWindowViewModel()
+    {
+        currentPage = App.Services.GetRequiredService<MainView>();
+        currentButtonLabel = "Iniciar";
+        NextPage = new RelayCommand(() => { /* navegação futura */ });
+    }
+}

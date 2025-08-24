@@ -4,7 +4,7 @@ using FridaHub.App.ViewModels;
 
 namespace FridaHub.App.Views;
 
-public partial class MainView : Window
+public partial class MainView : UserControl
 {
     public MainView()
     {

@@ -1,11 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
-        xmlns:views="clr-namespace:FridaHub.App.Views"
-        x:Class="FridaHub.App.Views.MainView"
-        x:DataType="vm:MainViewModel"
-        Title="{Binding Title}"
-        KeyDown="OnKeyDown">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:FridaHub.App.ViewModels"
+             xmlns:views="clr-namespace:FridaHub.App.Views"
+             x:Class="FridaHub.App.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             KeyDown="OnKeyDown">
     <DockPanel>
         <Border DockPanel.Dock="Bottom" BorderThickness="1" BorderBrush="Gray">
             <TextBox Text="{Binding ConsoleText}"
@@ -34,4 +33,4 @@
             </TabItem>
         </TabControl>
     </DockPanel>
-</Window>
+</UserControl>
