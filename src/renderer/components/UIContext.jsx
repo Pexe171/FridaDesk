@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const HackerContext = createContext();
+// Contexto global para estado de UI e preferências
+const UIContext = createContext();
 
-export function HackerProvider({ children }) {
+export function UIProvider({ children }) {
+  const [page, setPage] = useState('dispositivos');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [hackerMode, setHackerMode] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('hackerMode')) || false;
@@ -19,6 +22,10 @@ export function HackerProvider({ children }) {
     return Number.isFinite(v) ? v : 20;
   });
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('hackerMode', JSON.stringify(hackerMode));
@@ -41,8 +48,12 @@ export function HackerProvider({ children }) {
   }, []);
 
   return (
-    <HackerContext.Provider
+    <UIContext.Provider
       value={{
+        page,
+        setPage,
+        theme,
+        setTheme,
         hackerMode,
         setHackerMode,
         matrixSpeed,
@@ -53,11 +64,11 @@ export function HackerProvider({ children }) {
       }}
     >
       {children}
-    </HackerContext.Provider>
+    </UIContext.Provider>
   );
 }
 
-export function useHacker() {
-  return useContext(HackerContext);
+export function useUI() {
+  return useContext(UIContext);
 }
 

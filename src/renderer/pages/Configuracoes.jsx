@@ -1,6 +1,6 @@
 import React from 'react';
 import Titulo from '../components/Titulo.jsx';
-import { useHacker } from '../components/HackerContext.jsx';
+import { useUI } from '../components/UIContext.jsx';
 
 export default function Configuracoes() {
   const {
@@ -10,7 +10,9 @@ export default function Configuracoes() {
     setMatrixSpeed,
     matrixDensity,
     setMatrixDensity,
-  } = useHacker();
+    theme,
+    setTheme,
+  } = useUI();
 
   return (
     <div className="content">
@@ -18,8 +20,9 @@ export default function Configuracoes() {
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <div style={{ border: '1px solid #ccc', padding: '1rem', flex: '1 1 200px' }}>
           <h3>Tema</h3>
-          <button>Claro</button>
-          <button>Escuro</button>
+          <button onClick={() => setTheme('light')}>Claro</button>
+          <button onClick={() => setTheme('dark')}>Escuro</button>
+          <p>Tema atual: {theme}</p>
         </div>
         <div style={{ border: '1px solid #ccc', padding: '1rem', flex: '1 1 200px' }}>
           <h3>Ferramentas</h3>
@@ -65,3 +68,4 @@ export default function Configuracoes() {
     </div>
   );
 }
+

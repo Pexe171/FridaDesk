@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { useHacker } from './HackerContext.jsx';
+import { useUI } from './UIContext.jsx';
 
 export default function Titulo({ children }) {
-  const { hackerMode, reducedMotion } = useHacker();
+  const { hackerMode, reducedMotion } = useUI();
   const ref = useRef(null);
 
   useEffect(() => {
