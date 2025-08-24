@@ -1,5 +1,6 @@
 import React from 'react';
 import { useToast } from '../components/ToastContext.jsx';
+import Titulo from '../components/Titulo.jsx';
 
 export default function Dispositivos() {
   const toast = useToast();
@@ -11,7 +12,7 @@ export default function Dispositivos() {
 
   return (
     <div className="content">
-      <h2>Dispositivos</h2>
+      <Titulo>Dispositivos</Titulo>
       <div>
         <input placeholder="IP" />
         <input placeholder="Porta" />

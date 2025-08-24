@@ -7,10 +7,14 @@ import Execucao from './pages/Execucao.jsx';
 import Historico from './pages/Historico.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
 import { ToastProvider } from './components/ToastContext.jsx';
+import { useHacker } from './components/HackerContext.jsx';
+import MatrixRain from './components/MatrixRain.jsx';
+import Scanlines from './components/Scanlines.jsx';
 
 export default function App() {
   const [pagina, setPagina] = useState('dispositivos');
   const inicio = useRef(performance.now());
+  const { hackerMode } = useHacker();
 
   const mudarPagina = (p) => {
     inicio.current = performance.now();
@@ -41,7 +45,9 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <div className="app-grid">
+      <MatrixRain />
+      <Scanlines />
+      <div className={`app-grid ${hackerMode ? 'crt' : ''}`}>
         <Sidebar current={pagina} onChange={mudarPagina} />
         <div className="main">
           <Topbar onHistorico={() => mudarPagina('historico')} />

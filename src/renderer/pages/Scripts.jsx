@@ -1,9 +1,10 @@
 import React from 'react';
+import Titulo from '../components/Titulo.jsx';
 
 export default function Scripts() {
   return (
     <div className="content">
-      <h2>Scripts</h2>
+      <Titulo>Scripts</Titulo>
       <div>
         <input type="file" />
         <textarea rows={4} placeholder="Cole o código aqui"></textarea>
