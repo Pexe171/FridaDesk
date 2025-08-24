@@ -3,37 +3,86 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:FridaDesk.Wpf.Controls">
-    <StackPanel Margin="10">
-        <Button Content="Atualizar" Command="{Binding RefreshAsyncCommand}" Width="120" Margin="0,0,0,10" />
-        <ListView ItemsSource="{Binding Devices}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Serial}" />
-                    <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Model}" />
-                    <GridViewColumn Header="Emulador" DisplayMemberBinding="{Binding IsEmulator}" />
-                    <GridViewColumn Header="Status">
-                        <GridViewColumn.CellTemplate>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource ErrorBrush}"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Ocorreu um erro" Foreground="{StaticResource ForegroundBrush}" Margin="5,0" VerticalAlignment="Center" />
+                <Button Content="Copiar detalhe" Command="{Binding CopyErrorDetailCommand}" Margin="5,0" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1">
+            <Button Content="Atualizar" Command="{Binding RefreshAsyncCommand}" Width="120" Margin="0,0,0,10" />
+            <Grid>
+                <ListView ItemsSource="{Binding Devices}">
+                    <ListView.Style>
+                        <Style TargetType="ListView">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ShowEmpty}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.Style>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Serial}" />
+                            <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Model}" />
+                            <GridViewColumn Header="Emulador" DisplayMemberBinding="{Binding IsEmulator}" />
+                            <GridViewColumn Header="Status">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:StatusBadge Status="{Binding Status}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Ações">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Instalar frida-server"
+                                                    Command="{Binding DataContext.EnsureFridaAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                                    CommandParameter="{Binding}" Margin="0,0,5,0" />
+                                            <Button Content="Executar"
+                                                    Command="{Binding DataContext.RunAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <StackPanel Visibility="{Binding ShowEmpty, Converter={StaticResource BoolToVis}}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Nada por aqui ainda" Margin="0,0,0,10" />
+                    <Button Content="Tentar novamente" Width="150" />
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                    <ProgressBar IsIndeterminate="True" Height="20" />
+                    <ItemsControl ItemsSource="{Binding LoadingItems}">
+                        <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <controls:StatusBadge Status="{Binding Status}" />
+                                <Rectangle Style="{StaticResource SkeletonRectangleStyle}" />
                             </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                    <GridViewColumn Header="Ações">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="Instalar frida-server"
-                                            Command="{Binding DataContext.EnsureFridaAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                            CommandParameter="{Binding}" Margin="0,0,5,0" />
-                                    <Button Content="Executar"
-                                            Command="{Binding DataContext.RunAsyncCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
-                                            CommandParameter="{Binding}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
-    </StackPanel>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Grid>
 </UserControl>

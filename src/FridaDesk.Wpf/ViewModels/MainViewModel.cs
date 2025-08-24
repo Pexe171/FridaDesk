@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FridaDesk.Wpf.Views;
+using System.Windows;
 
 namespace FridaDesk.Wpf.ViewModels;
 
@@ -25,4 +26,24 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void NavigateDevices() => CurrentView = DevicesView;
+
+    [RelayCommand]
+    private void ClearConsole() => ConsoleLines.Clear();
+
+    [RelayCommand]
+    private void FocusSearch(TextBox? box)
+    {
+        box?.Focus();
+        box?.SelectAll();
+    }
+
+    [RelayCommand]
+    private void OpenAbout()
+    {
+        var dialog = new AboutDialog
+        {
+            Owner = Application.Current.MainWindow
+        };
+        dialog.ShowDialog();
+    }
 }
