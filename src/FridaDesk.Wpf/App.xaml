@@ -1,0 +1,6 @@
+<!-- Autor: Pexe (instagram David.devloli) -->
+<Application x:Class="FridaDesk.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+</Application>
