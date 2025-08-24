@@ -17,8 +17,8 @@ export default function Dispositivos() {
   const [serialFilter, setSerialFilter] = useState('');
 
   const refreshDevices = useCallback(async () => {
-    await autoConnectEmulators();
-    const list = await listDevices();
+    await autoConnectEmulators().catch(() => {});
+    const list = await listDevices().catch(() => []);
     setDevices(list);
   }, []);
 

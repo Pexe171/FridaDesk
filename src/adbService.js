@@ -17,22 +17,26 @@ function getClient() {
 export async function listDevices() {
   const client = await getClient();
   const adb = await adbPromise;
-  const devices = await client.listDevices();
-  return Promise.all(
-    devices.map(async (device) => {
-      let model = 'desconhecido';
-      try {
-        const stream = await client.shell(
-          device.id,
-          'getprop ro.product.model'
-        );
-        model = (await adb.util.readAll(stream)).toString().trim();
-      } catch (e) {
-        // Ignora erros ao obter modelo
-      }
-      return { id: device.id, type: device.type, model };
-    })
-  );
+  try {
+    const devices = await client.listDevices();
+    return Promise.all(
+      devices.map(async (device) => {
+        let model = 'desconhecido';
+        try {
+          const stream = await client.shell(
+            device.id,
+            'getprop ro.product.model'
+          );
+          model = (await adb.util.readAll(stream)).toString().trim();
+        } catch (e) {
+          // Ignora erros ao obter modelo
+        }
+        return { id: device.id, type: device.type, model };
+      })
+    );
+  } catch (e) {
+    return [];
+  }
 }
 
 export async function connectAdb(host, port = 5555) {
@@ -49,7 +53,6 @@ export async function autoConnectEmulators(start = 5555, end = 5585) {
       // Ignora portas sem emulador
     }
   }
-  return listDevices();
 }
 
 export async function connectTcpip(id, host, port = 5555) {
