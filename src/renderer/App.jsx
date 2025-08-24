@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import Topbar from './components/Topbar.jsx';
 import Dispositivos from './pages/Dispositivos.jsx';
@@ -7,27 +7,26 @@ import Execucao from './pages/Execucao.jsx';
 import Historico from './pages/Historico.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
 import { ToastProvider } from './components/ToastContext.jsx';
-import { useHacker } from './components/HackerContext.jsx';
+import { useUI } from './components/UIContext.jsx';
 import MatrixRain from './components/MatrixRain.jsx';
 import Scanlines from './components/Scanlines.jsx';
 
 export default function App() {
-  const [pagina, setPagina] = useState('dispositivos');
+  const { page, setPage, hackerMode } = useUI();
   const inicio = useRef(performance.now());
-  const { hackerMode } = useHacker();
 
   const mudarPagina = (p) => {
     inicio.current = performance.now();
-    setPagina(p);
+    setPage(p);
   };
 
   useEffect(() => {
     const duracao = performance.now() - inicio.current;
-    console.log(`Tempo de carregamento de ${pagina}: ${duracao.toFixed(2)}ms`);
-  }, [pagina]);
+    console.log(`Tempo de carregamento de ${page}: ${duracao.toFixed(2)}ms`);
+  }, [page]);
 
   const renderizar = () => {
-    switch (pagina) {
+    switch (page) {
       case 'dispositivos':
         return <Dispositivos />;
       case 'scripts':
@@ -48,7 +47,7 @@ export default function App() {
       <MatrixRain />
       <Scanlines />
       <div className={`app-grid ${hackerMode ? 'crt' : ''}`}>
-        <Sidebar current={pagina} onChange={mudarPagina} />
+        <Sidebar current={page} onChange={mudarPagina} />
         <div className="main">
           <Topbar onHistorico={() => mudarPagina('historico')} />
           {renderizar()}
@@ -57,3 +56,4 @@ export default function App() {
     </ToastProvider>
   );
 }
+

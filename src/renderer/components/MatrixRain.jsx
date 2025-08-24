@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { useHacker } from './HackerContext.jsx';
+import { useUI } from './UIContext.jsx';
 
 export default function MatrixRain() {
   const canvasRef = useRef(null);
-  const { hackerMode, matrixSpeed, matrixDensity, reducedMotion } = useHacker();
+  const { hackerMode, matrixSpeed, matrixDensity, reducedMotion } = useUI();
 
   useEffect(() => {
     if (!hackerMode || reducedMotion) return;

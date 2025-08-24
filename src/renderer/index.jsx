@@ -2,12 +2,16 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
-import { HackerProvider } from './components/HackerContext.jsx';
+import { UIProvider } from './components/UIContext.jsx';
+import { ScriptCatalogProvider } from './components/ScriptCatalogContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <HackerProvider>
-      <App />
-    </HackerProvider>
+    <UIProvider>
+      <ScriptCatalogProvider>
+        <App />
+      </ScriptCatalogProvider>
+    </UIProvider>
   </React.StrictMode>
 );
+
