@@ -1,3 +1,8 @@
+:root {
+  --primary-color: #222;
+  --accent-color: #4caf50;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
@@ -11,7 +16,7 @@ html, body, #root {
 }
 
 .sidebar {
-  background: #222;
+  background: var(--primary-color);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -82,9 +87,22 @@ html, body, #root {
   color: #fff;
 }
 
-.toast.sucesso { background: #4caf50; }
+.toast.sucesso { background: var(--accent-color); }
 .toast.erro { background: #f44336; }
 .toast.carregando { background: #2196f3; }
+
+.status-halo {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+  background: #999;
+}
+
+.status-halo.online {
+  background: var(--accent-color);
+}
 
 @media (max-width: 768px) {
   .app-grid {
