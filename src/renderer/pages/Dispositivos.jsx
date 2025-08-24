@@ -1,27 +1,48 @@
-import React, { useState } from 'react';
+// Autor: Pexe (instagram: @David.devloli)
+import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../components/ToastContext.jsx';
 import Titulo from '../components/Titulo.jsx';
+import {
+  listDevices,
+  connectAdb,
+  autoConnectEmulators,
+} from '../../index.js';
 
 export default function Dispositivos() {
   const toast = useToast();
-  const devices = [
-    { model: 'Pixel 5', serial: 'ABC123', status: 'online' },
-    { model: 'Galaxy S10', serial: 'XYZ456', status: 'offline' },
-  ];
+  const [devices, setDevices] = useState([]);
   const [ip, setIp] = useState('');
   const [port, setPort] = useState('');
   const [modelFilter, setModelFilter] = useState('');
   const [serialFilter, setSerialFilter] = useState('');
 
-  const handleConnect = () => {
+  const refreshDevices = useCallback(async () => {
+    await autoConnectEmulators();
+    const list = await listDevices();
+    setDevices(list);
+  }, []);
+
+  useEffect(() => {
+    refreshDevices();
+    const interval = setInterval(refreshDevices, 5000);
+    return () => clearInterval(interval);
+  }, [refreshDevices]);
+
+  const handleConnect = async () => {
     toast('carregando', 'Conectando...');
-    setTimeout(() => toast('sucesso', 'Conectado!'), 1000);
+    try {
+      await connectAdb(ip, Number(port) || 5555);
+      toast('sucesso', 'Conectado!');
+      refreshDevices();
+    } catch (e) {
+      toast('erro', 'Falha ao conectar');
+    }
   };
 
   const filtered = devices.filter(
     (d) =>
       d.model.toLowerCase().includes(modelFilter.toLowerCase()) &&
-      d.serial.toLowerCase().includes(serialFilter.toLowerCase())
+      d.id.toLowerCase().includes(serialFilter.toLowerCase())
   );
 
   return (
@@ -64,16 +85,25 @@ export default function Dispositivos() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((d) => (
-              <tr key={d.serial}>
-                <td>{d.model}</td>
-                <td>{d.serial}</td>
-                <td>
-                  <span className={`status-halo ${d.status}`}></span>
-                  {d.status}
-                </td>
-              </tr>
-            ))}
+            {filtered.map((d) => {
+              const status =
+                d.type === 'offline'
+                  ? 'offline'
+                  : d.type === 'emulator'
+                  ? 'emulador'
+                  : 'online';
+              const cls = status === 'offline' ? 'offline' : 'online';
+              return (
+                <tr key={d.id}>
+                  <td>{d.model}</td>
+                  <td>{d.id}</td>
+                  <td>
+                    <span className={`status-halo ${cls}`}></span>
+                    {status}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

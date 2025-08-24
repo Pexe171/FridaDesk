@@ -22,6 +22,21 @@ export async function listDevices() {
   );
 }
 
+export function connectAdb(host, port = 5555) {
+  return client.connect(host, port);
+}
+
+export async function autoConnectEmulators(start = 5555, end = 5585) {
+  for (let port = start; port <= end; port += 2) {
+    try {
+      await client.connect('127.0.0.1', port);
+    } catch (e) {
+      // Ignora portas sem emulador
+    }
+  }
+  return listDevices();
+}
+
 export async function connectTcpip(id, host, port = 5555) {
   await client.tcpip(id, port);
   return client.connect(host, port);
