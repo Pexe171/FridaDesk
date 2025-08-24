@@ -2,9 +2,11 @@
 <UserControl x:Class="FridaDesk.Wpf.Views.DevicesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:FridaDesk.Wpf.Controls">
+             xmlns:controls="clr-namespace:FridaDesk.Wpf.Controls"
+             xmlns:conv="clr-namespace:FridaDesk.Wpf.Converters">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <conv:IosVisibilityConverter x:Key="IosVisibilityConverter" />
     </UserControl.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -12,15 +14,22 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource ErrorBrush}"
-                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Ocorreu um erro" Foreground="{StaticResource ForegroundBrush}" Margin="5,0" VerticalAlignment="Center" />
-                <Button Content="Copiar detalhe" Command="{Binding CopyErrorDetailCommand}" Margin="5,0" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10" Spacing="8">
+            <Image Source="assets/logo.svg" Width="24" Height="24" />
+            <StackPanel>
+                <TextBlock Text="Devices" Style="{StaticResource H1TextBlockStyle}" />
+                <TextBlock Text="Lista de dispositivos" Style="{StaticResource H3TextBlockStyle}" />
             </StackPanel>
-        </Border>
+        </StackPanel>
 
         <StackPanel Grid.Row="1">
+            <Border Background="{StaticResource ErrorBrush}" Margin="0,0,0,10"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Ocorreu um erro" Foreground="{StaticResource ForegroundBrush}" Margin="5,0" VerticalAlignment="Center" />
+                    <Button Content="Copiar detalhe" Command="{Binding CopyErrorDetailCommand}" Margin="5,0" />
+                </StackPanel>
+            </Border>
             <Button Content="Atualizar" Command="{Binding RefreshAsyncCommand}" Width="120" Margin="0,0,0,10" />
             <Grid>
                 <ListView ItemsSource="{Binding Devices}">
@@ -45,6 +54,16 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:StatusBadge Status="{Binding Status}" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Jailbreak">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="Gray" Padding="4,2" CornerRadius="4"
+                                                Visibility="{Binding Platform, Converter={StaticResource IosVisibilityConverter}}">
+                                            <TextBlock Text="Jailbreak (futuro)" Foreground="White" />
+                                        </Border>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
