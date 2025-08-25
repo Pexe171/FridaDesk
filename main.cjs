@@ -1,6 +1,7 @@
 // Autor: Pexe (instagram: @David.devloli)
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const configModulePromise = import('./src/configService.js');
 
 // Desativa aceleração de hardware para evitar problemas com GPU
 app.disableHardwareAcceleration();
@@ -24,6 +25,20 @@ ipcMain.handle('frida:ensure', async (_event, id) => {
 ipcMain.handle('frida:isRunning', async (_event, id) => {
   const { isFridaRunning } = await import('./src/fridaService.js');
   return isFridaRunning(id);
+});
+
+ipcMain.handle('config:get', async (_event, key) => {
+  const cfg = await configModulePromise;
+  if (key) {
+    return { ok: true, value: cfg.getConfig(key) };
+  }
+  return { ok: true, config: cfg.getAllConfig() };
+});
+
+ipcMain.handle('config:set', async (_event, key, value) => {
+  const cfg = await configModulePromise;
+  cfg.setConfig(key, value);
+  return { ok: true };
 });
 
 function createWindow() {
