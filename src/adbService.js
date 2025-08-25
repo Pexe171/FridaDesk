@@ -43,7 +43,9 @@ const adbPath = findAdbPath();
 if (adbPath) {
   process.env.ADB_BINARY = adbPath;
 } else {
-  console.error('ADB binary could not be found. ADB functionality will be disabled.');
+  console.error(
+    'ADB binary could not be found. ADB functionality will be disabled.'
+  );
 }
 
 const adbPromise = (
@@ -59,9 +61,17 @@ let clientPromise;
 
 export function getClient() {
   if (!clientPromise) {
-    clientPromise = adbPromise.then((adb) =>
-      adb ? adb.createClient() : null
-    );
+    clientPromise = adbPromise.then((adb) => {
+      if (adb) {
+        console.log('adbkit module successfully loaded.');
+        const client = adb.createClient({ host: '127.0.0.1', port: 5037 });
+        console.log('ADB client created:', client);
+        return client;
+      } else {
+        console.error('Failed to load adbkit module.');
+        return null;
+      }
+    });
   }
   return clientPromise;
 }
