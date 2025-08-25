@@ -1,3 +1,4 @@
+// Autor: Pexe (instagram: @David.devloli)
 import React, { useEffect, useState } from 'react';
 import Titulo from '../components/Titulo.jsx';
 import { useUI } from '../components/UIContext.jsx';
@@ -20,25 +21,25 @@ export default function Configuracoes() {
   const handlePrimary = (e) => {
     const value = e.target.value;
     setPrimaryColor(value);
-    window.myAPI.setConfig('primaryColor', value);
+    window.myAPI.saveConfig({ primaryColor: value });
   };
 
   const handleAccent = (e) => {
     const value = e.target.value;
     setAccentColor(value);
-    window.myAPI.setConfig('accentColor', value);
+    window.myAPI.saveConfig({ accentColor: value });
   };
 
   const handleAdb = (e) => {
     const value = e.target.value;
     setAdbPath(value);
-    window.myAPI.setConfig('adbPath', value);
+    window.myAPI.saveConfig({ adbPath: value });
   };
 
   const handleFrida = (e) => {
     const value = e.target.value;
     setFridaPath(value);
-    window.myAPI.setConfig('fridaPath', value);
+    window.myAPI.saveConfig({ fridaPath: value });
   };
 
   return (

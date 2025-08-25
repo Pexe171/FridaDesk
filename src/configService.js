@@ -1,3 +1,4 @@
+// Autor: Pexe (instagram: @David.devloli)
 import fs from 'fs';
 import path from 'path';
 import { spawnSync } from 'child_process';
@@ -28,6 +29,11 @@ class ConfigService {
 
   set(key, value) {
     this.config[key] = value;
+    this.save();
+  }
+
+  saveConfig(obj) {
+    this.config = { ...this.config, ...obj };
     this.save();
   }
 
@@ -73,4 +79,5 @@ export const configService = new ConfigService();
 export const getConfig = (key) => configService.get(key);
 export const getAllConfig = () => configService.get();
 export const setConfig = (key, value) => configService.set(key, value);
+export const saveConfig = (obj) => configService.saveConfig(obj);
 export const getAdbExecutable = () => configService.getAdbExecutable();

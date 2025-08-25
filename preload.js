@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('myAPI', {
   isFridaRunning: (id) => ipcRenderer.invoke('frida:isRunning', id),
   getConfig: (key) => ipcRenderer.invoke('config:get', key),
   setConfig: (key, value) => ipcRenderer.invoke('config:set', key, value),
+  saveConfig: (config) => ipcRenderer.invoke('config:save', config),
 });
