@@ -57,7 +57,15 @@ export default function Execucao() {
   return (
     <div className="content">
       <Titulo>Execução</Titulo>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div
+        className="card"
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--espaco-sm)',
+          marginBottom: 'var(--espaco-md)',
+        }}
+      >
         <select value={device} onChange={(e) => setDevice(e.target.value)}>
           {devices.map((d) => (
             <option key={d}>{d}</option>
@@ -70,28 +78,36 @@ export default function Execucao() {
             value={processQuery}
             onChange={(e) => setProcessQuery(e.target.value)}
           />
-          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <div
+            style={{ display: 'flex', gap: 'var(--espaco-xs)', flexWrap: 'wrap' }}
+          >
             {filteredProcesses.map((p) => (
-              <button key={p} type="button" onClick={() => addProcess(p)}>
+              <button
+                key={p}
+                type="button"
+                onClick={() => addProcess(p)}
+                className="btn btn-ghost"
+              >
                 {p}
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--espaco-xs)',
+              flexWrap: 'wrap',
+              marginTop: 'var(--espaco-xs)',
+            }}
+          >
             {selectedProcesses.map((p) => (
-              <span
-                key={p}
-                style={{
-                  padding: '0.25rem 0.5rem',
-                  background: '#eee',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                }}
-              >
+              <span key={p} className="chip">
                 {p}
-                <button type="button" onClick={() => removeProcess(p)}>
+                <button
+                  type="button"
+                  onClick={() => removeProcess(p)}
+                  className="btn btn-ghost"
+                >
                   x
                 </button>
               </span>
@@ -137,7 +153,13 @@ export default function Execucao() {
           )}
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--espaco-xs)',
+          }}
+        >
           <input
             type="checkbox"
             checked={spawn}
@@ -146,10 +168,10 @@ export default function Execucao() {
           Spawn
         </label>
 
-        <button onClick={start} disabled={running}>
+        <button onClick={start} disabled={running} className="btn btn-primary">
           Rodar
         </button>
-        <button onClick={stop} disabled={!running}>
+        <button onClick={stop} disabled={!running} className="btn btn-ghost">
           Parar
         </button>
       </div>

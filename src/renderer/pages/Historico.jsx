@@ -41,7 +41,15 @@ export default function Historico() {
   return (
     <div className="content">
       <Titulo>Histórico</Titulo>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+      <div
+        className="card"
+        style={{
+          display: 'flex',
+          gap: 'var(--espaco-sm)',
+          flexWrap: 'wrap',
+          marginBottom: 'var(--espaco-sm)',
+        }}
+      >
         <select value={deviceFilter} onChange={(e) => setDeviceFilter(e.target.value)}>
           <option value="">Todos dispositivos</option>
           {[...new Set(data.map((d) => d.device))].map((d) => (
@@ -54,12 +62,20 @@ export default function Historico() {
             <option key={s}>{s}</option>
           ))}
         </select>
-        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
-        <button onClick={exportJSONL}>Exportar JSONL</button>
-        <button onClick={exportTXT}>Exportar TXT</button>
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+        />
+        <button onClick={exportJSONL} className="btn btn-primary">
+          Exportar JSONL
+        </button>
+        <button onClick={exportTXT} className="btn btn-ghost">
+          Exportar TXT
+        </button>
       </div>
       <div className="table-container">
-        <table>
+        <table className="tabela">
           <thead>
             <tr>
               <th>Data</th>
