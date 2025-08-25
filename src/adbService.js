@@ -1,5 +1,7 @@
 // Autor: Pexe (instagram: @David.devloli)
 // Garante uso do adbkit em ambientes diferentes sem `top-level await`
+import { getAdbExecutable } from './configService.js';
+
 const adbPromise = (
   typeof window !== 'undefined' && window.require
     ? Promise.resolve().then(() => window.require('adbkit'))
@@ -14,7 +16,8 @@ let clientPromise;
 export function getClient() {
   if (!clientPromise) {
     clientPromise = adbPromise.then((adb) => {
-      const client = adb ? adb.createClient() : null;
+      const adbBin = getAdbExecutable();
+      const client = adb ? adb.createClient({ bin: adbBin }) : null;
       console.log('Cliente ADB criado:', client);
       return client;
     });
