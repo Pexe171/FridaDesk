@@ -8,11 +8,8 @@ import Historico from './pages/Historico.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
 import { ToastProvider } from './components/ToastContext.jsx';
 import { useUI } from './components/UIContext.jsx';
-import MatrixRain from './components/MatrixRain.jsx';
-import Scanlines from './components/Scanlines.jsx';
-
 export default function App() {
-  const { page, setPage, hackerMode } = useUI();
+  const { page, setPage } = useUI();
   const inicio = useRef(performance.now());
 
   const mudarPagina = (p) => {
@@ -44,9 +41,7 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <MatrixRain />
-      <Scanlines />
-      <div className={`app-grid ${hackerMode ? 'crt' : ''}`}>
+      <div className="app-grid">
         <Sidebar current={page} onChange={mudarPagina} />
         <div className="main">
           <Topbar onHistorico={() => mudarPagina('historico')} />

@@ -6,23 +6,6 @@ const UIContext = createContext();
 export function UIProvider({ children }) {
   const [page, setPage] = useState('dispositivos');
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  const [hackerMode, setHackerMode] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('hackerMode')) || false;
-    } catch {
-      return false;
-    }
-  });
-  const [matrixSpeed, _setMatrixSpeed] = useState(() => {
-    const v = Number(localStorage.getItem('matrixSpeed'));
-    return Number.isFinite(v) && v >= 1 ? v : 2;
-  });
-  const setMatrixSpeed = (v) => _setMatrixSpeed(Math.max(1, v));
-  const [matrixDensity, _setMatrixDensity] = useState(() => {
-    const v = Number(localStorage.getItem('matrixDensity'));
-    return Number.isFinite(v) && v >= 10 ? v : 20;
-  });
-  const setMatrixDensity = (v) => _setMatrixDensity(Math.max(10, v));
   const [reducedMotion, setReducedMotion] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(
     () => localStorage.getItem('primaryColor') || '#222222'
@@ -34,18 +17,6 @@ export function UIProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('hackerMode', JSON.stringify(hackerMode));
-  }, [hackerMode]);
-
-  useEffect(() => {
-    localStorage.setItem('matrixSpeed', matrixSpeed);
-  }, [matrixSpeed]);
-
-  useEffect(() => {
-    localStorage.setItem('matrixDensity', matrixDensity);
-  }, [matrixDensity]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--primary-color', primaryColor);
@@ -72,12 +43,6 @@ export function UIProvider({ children }) {
         setPage,
         theme,
         setTheme,
-        hackerMode,
-        setHackerMode,
-        matrixSpeed,
-        setMatrixSpeed,
-        matrixDensity,
-        setMatrixDensity,
         reducedMotion,
         primaryColor,
         setPrimaryColor,
