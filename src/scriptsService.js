@@ -1,6 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
+async function loadNodeModule(name) {
+  if (typeof window !== 'undefined' && window.require) {
+    return window.require(name);
+  }
+  const mod = await import(name);
+  return mod.default || mod;
+}
 
 /**
  * Serviço para gerenciamento de scripts locais e do CodeShare.
@@ -11,12 +15,13 @@ export class ScriptsService {
     this.db = db;
   }
 
-  checksum(source) {
+  async checksum(source) {
+    const crypto = await loadNodeModule('crypto');
     return crypto.createHash('sha256').update(source).digest('hex');
   }
 
   async add({ name, tags = [], source, origin, favorite = false }) {
-    const checksum = this.checksum(source);
+    const checksum = await this.checksum(source);
     return this.db.insertScript({
       name,
       tags,
@@ -28,6 +33,8 @@ export class ScriptsService {
   }
 
   async importFromFile(filePath, opts = {}) {
+    const fs = await loadNodeModule('fs');
+    const path = await loadNodeModule('path');
     const source = fs.readFileSync(filePath, 'utf8');
     const name = opts.name || path.basename(filePath);
     return this.add({
@@ -43,6 +50,7 @@ export class ScriptsService {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Falha ao baixar script');
     const source = await res.text();
+    const path = await loadNodeModule('path');
     const name = opts.name || path.basename(new URL(url).pathname) || 'script';
     return this.add({
       name,

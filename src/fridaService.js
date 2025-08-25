@@ -1,11 +1,14 @@
 // Autor: Pexe (instagram: @David.devloli)
 import { getClient } from './adbService.js';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { spawn as cpSpawn } from 'child_process';
-import https from 'https';
 import frida from 'frida';
+
+async function loadNodeModule(name) {
+  if (typeof window !== 'undefined' && window.require) {
+    return window.require(name);
+  }
+  const mod = await import(name);
+  return mod.default || mod;
+}
 
 const FRIDA_VERSION = '17.2.17';
 
@@ -24,7 +27,9 @@ async function detectArch(id) {
   return await readAll(stream);
 }
 
-function download(url, dest) {
+async function download(url, dest) {
+  const fs = await loadNodeModule('fs');
+  const https = await loadNodeModule('https');
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     https
@@ -39,6 +44,10 @@ function download(url, dest) {
 }
 
 async function downloadFridaServer(arch) {
+  const fs = await loadNodeModule('fs');
+  const path = await loadNodeModule('path');
+  const os = await loadNodeModule('os');
+  const { spawn: cpSpawn } = await loadNodeModule('child_process');
   const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'frida-'));
   const xzName = `frida-server-${FRIDA_VERSION}-android-${arch}.xz`;
   const url = `https://github.com/frida/frida/releases/download/${FRIDA_VERSION}/${xzName}`;
@@ -54,6 +63,7 @@ async function downloadFridaServer(arch) {
 }
 
 export async function installFridaServer(id) {
+  const fs = await loadNodeModule('fs');
   const client = await getClient();
   const arch = await detectArch(id);
   const localPath = await downloadFridaServer(arch);
