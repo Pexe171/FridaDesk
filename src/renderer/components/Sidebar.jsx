@@ -16,7 +16,7 @@ export default function Sidebar({ current, onChange }) {
         {menus.map((m) => (
           <button
             key={m.key}
-            className={current === m.key ? 'active' : ''}
+            className={`btn btn-ghost ${current === m.key ? 'active' : ''}`}
             onClick={() => onChange(m.key)}
           >
             <span>{m.label}</span>

@@ -7,6 +7,11 @@ body {
   margin: 0;
 }
 
+/* Títulos */
+.titulo {
+  color: var(--cor-texto);
+}
+
 /* Botões */
 .btn {
   padding: var(--espaco-sm) var(--espaco-md);
@@ -70,6 +75,7 @@ select {
 }
 .tabela th {
   background: var(--cor-superficie);
+  color: var(--cor-texto);
 }
 
 /* Toasters */

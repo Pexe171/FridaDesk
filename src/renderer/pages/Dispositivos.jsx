@@ -42,7 +42,15 @@ export default function Dispositivos() {
   return (
     <div className="content">
       <Titulo>Dispositivos</Titulo>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div
+        className="card"
+        style={{
+          display: 'flex',
+          gap: 'var(--espaco-sm)',
+          marginBottom: 'var(--espaco-md)',
+          flexWrap: 'wrap',
+        }}
+      >
         <input
           placeholder="IP"
           value={ip}
@@ -53,10 +61,20 @@ export default function Dispositivos() {
           value={port}
           onChange={(e) => setPort(e.target.value)}
         />
-        <button onClick={handleConnect}>Conectar ADB (TCP/IP)</button>
+        <button onClick={handleConnect} className="btn btn-primary">
+          Conectar ADB (TCP/IP)
+        </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      <div
+        className="card"
+        style={{
+          display: 'flex',
+          gap: 'var(--espaco-sm)',
+          marginBottom: 'var(--espaco-sm)',
+          flexWrap: 'wrap',
+        }}
+      >
         <input
           placeholder="Filtrar por modelo"
           value={modelFilter}
@@ -70,7 +88,7 @@ export default function Dispositivos() {
       </div>
 
       <div className="table-container">
-        <table>
+        <table className="tabela">
           <thead>
             <tr>
               <th>Modelo</th>
@@ -98,6 +116,7 @@ export default function Dispositivos() {
                   </td>
                   <td>
                     <button
+                      className="btn btn-primary"
                       onClick={async () => {
                         toast('carregando', 'Inicializando Frida...');
                         try {
