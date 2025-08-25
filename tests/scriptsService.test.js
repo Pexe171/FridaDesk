@@ -23,7 +23,7 @@ test('importa script de arquivo com metadados', async () => {
   expect(script.origin).toBe(`file:${scriptPath}`);
   expect(script.tags).toEqual(['local']);
   expect(script.favorite).toBe(0);
-  expect(script.checksum).toBe(service.checksum('console.log("oi")'));
+  expect(script.checksum).toBe(await service.checksum('console.log("oi")'));
 });
 
 test('importa script via URL e marca favorito', async () => {
