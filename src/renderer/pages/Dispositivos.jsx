@@ -7,6 +7,7 @@ import {
   connectAdb,
   autoConnectEmulators,
 } from '../../adbService.js';
+import { ensureFrida } from '../../fridaService.js';
 
 export default function Dispositivos() {
   const toast = useToast();
@@ -82,6 +83,7 @@ export default function Dispositivos() {
               <th>Modelo</th>
               <th>Serial</th>
               <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -100,6 +102,21 @@ export default function Dispositivos() {
                   <td>
                     <span className={`status-halo ${cls}`}></span>
                     {status}
+                  </td>
+                  <td>
+                    <button
+                      onClick={async () => {
+                        toast('carregando', 'Inicializando Frida...');
+                        try {
+                          await ensureFrida(d.id);
+                          toast('sucesso', 'Frida iniciado');
+                        } catch {
+                          toast('erro', 'Falha no Frida');
+                        }
+                      }}
+                    >
+                      Frida
+                    </button>
                   </td>
                 </tr>
               );

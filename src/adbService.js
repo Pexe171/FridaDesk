@@ -11,12 +11,15 @@ const adbPromise = (
 
 let clientPromise;
 
-function getClient() {
+export function getClient() {
   if (!clientPromise) {
     clientPromise = adbPromise.then((adb) => (adb ? adb.createClient() : null));
   }
   return clientPromise;
 }
+
+// Cache simples para modelos de dispositivos
+const deviceModelCache = {};
 
 export async function listDevices() {
   const client = await getClient();
@@ -26,21 +29,30 @@ export async function listDevices() {
   }
   try {
     const devices = await client.listDevices();
-    return Promise.all(
+    const result = await Promise.all(
       devices.map(async (device) => {
-        let model = 'desconhecido';
-        try {
-          const stream = await client.shell(
-            device.id,
-            'getprop ro.product.model'
-          );
-          model = (await adb.util.readAll(stream)).toString().trim();
-        } catch (e) {
-          // Ignora erros ao obter modelo
+        let model = deviceModelCache[device.id];
+        if (!model) {
+          model = 'desconhecido';
+          try {
+            const stream = await client.shell(
+              device.id,
+              'getprop ro.product.model'
+            );
+            model = (await adb.util.readAll(stream)).toString().trim();
+          } catch (e) {
+            // Ignora erros ao obter modelo
+          }
+          deviceModelCache[device.id] = model;
         }
         return { id: device.id, type: device.type, model };
       })
     );
+    // Remove dispositivos desconectados do cache
+    Object.keys(deviceModelCache).forEach((id) => {
+      if (!devices.find((d) => d.id === id)) delete deviceModelCache[id];
+    });
+    return result;
   } catch (e) {
     return [];
   }

@@ -23,6 +23,7 @@ Documento descrevendo os processos e serviços que orquestram o núcleo do aplic
 - `spawn/attach` em alvos definidos.
 - Injeta scripts e roteia mensagens/erros para o renderer.
 - Encerra sessões sob demanda e reconecta em `session.detached`.
+- Instala e inicializa automaticamente o `frida-server` conforme a arquitetura do dispositivo.
 
 ### 2.3 Scripts Service
 
