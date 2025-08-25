@@ -14,10 +14,12 @@ export default function Dispositivos() {
   const refreshDevices = useCallback(async () => {
     const list = await window.myAPI.listDevices().catch(() => []);
     setDevices(list);
+    console.log('Dispositivos recebidos:', list);
   }, []);
 
   useEffect(() => {
     refreshDevices();
+    console.log('Iniciando refresh de dispositivos...');
     const interval = setInterval(refreshDevices, 5000);
     return () => clearInterval(interval);
   }, [refreshDevices]);
