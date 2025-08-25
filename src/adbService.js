@@ -1,5 +1,4 @@
 // Autor: Pexe (instagram: @David.devloli)
-// Garante uso do adbkit em ambientes diferentes sem `top-level await`
 import { createRequire } from 'module';
 
 const require =
@@ -8,18 +7,14 @@ const require =
     : createRequire(import.meta.url);
 
 const path = require('path');
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
-const { fileURLToPath } = require('url');
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Função para encontrar o caminho do adb
 function findAdbPath() {
+  // Tenta o caminho local primeiro
   const localAdbPath = path.join(
-    __dirname,
-    '..',
+    process.cwd(),
     'bin',
     'adb',
     process.platform === 'win32' ? 'adb.exe' : 'adb'
@@ -28,40 +23,34 @@ function findAdbPath() {
     console.log('Using local ADB binary:', localAdbPath);
     return localAdbPath;
   }
-  console.log('Local ADB binary not found, falling back to system PATH.');
-  return 'adb';
+
+  // Se não encontrar, tenta o PATH do sistema
+  try {
+    const cmd = process.platform === 'win32' ? 'where adb' : 'which adb';
+    const systemAdbPath = execSync(cmd, { encoding: 'utf8' })
+      .split('\n')[0]
+      .trim();
+    console.log('Using system ADB binary:', systemAdbPath);
+    return systemAdbPath;
+  } catch (e) {
+    console.error('ADB binary not found locally or in system PATH.');
+    return null;
+  }
 }
 
+// Configura a variável de ambiente para o adbkit
 const adbPath = findAdbPath();
+if (adbPath) {
+  process.env.ADB_BINARY = adbPath;
+} else {
+  console.error('ADB binary could not be found. ADB functionality will be disabled.');
+}
 
-const adbPromise = new Promise((resolve) => {
-  if (process.env.NODE_ENV === 'test') {
-    import(/* @vite-ignore */ 'adbkit')
-      .then((m) => resolve(m.default))
-      .catch((err) => {
-        console.warn('Falha ao carregar adbkit:', err);
-        resolve(null);
-      });
-    return;
-  }
-
-  exec(`"${adbPath}" version`, (err) => {
-    if (err) {
-      console.warn(
-        'Falha ao encontrar o binário ADB no caminho:',
-        adbPath,
-        err
-      );
-      return resolve(null);
-    }
-    import(/* @vite-ignore */ 'adbkit')
-      .then((m) => resolve(m.default))
-      .catch((err) => {
-        console.warn('Falha ao carregar adbkit:', err);
-        resolve(null);
-      });
-  });
-}).catch((err) => {
+const adbPromise = (
+  typeof window !== 'undefined' && window.require
+    ? Promise.resolve().then(() => window.require('adbkit'))
+    : import(/* @vite-ignore */ 'adbkit').then((m) => m.default)
+).catch((err) => {
   console.warn('Falha ao carregar adbkit:', err);
   return null;
 });
@@ -70,11 +59,9 @@ let clientPromise;
 
 export function getClient() {
   if (!clientPromise) {
-    clientPromise = adbPromise.then((adb) => {
-      const client = adb ? adb.createClient({ bin: adbPath }) : null;
-      console.log('Cliente ADB criado:', client);
-      return client;
-    });
+    clientPromise = adbPromise.then((adb) =>
+      adb ? adb.createClient() : null
+    );
   }
   return clientPromise;
 }
