@@ -41,6 +41,12 @@ ipcMain.handle('config:set', async (_event, key, value) => {
   return { ok: true };
 });
 
+ipcMain.handle('config:save', async (_event, config) => {
+  const cfg = await configModulePromise;
+  cfg.saveConfig(config);
+  return { ok: true };
+});
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 800,
