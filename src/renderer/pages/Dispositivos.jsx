@@ -2,12 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../components/ToastContext.jsx';
 import Titulo from '../components/Titulo.jsx';
-import {
-  listDevices,
-  connectAdb,
-  autoConnectEmulators,
-} from '../../adbService.js';
-import { ensureFrida } from '../../fridaService.js';
 
 export default function Dispositivos() {
   const toast = useToast();
@@ -18,8 +12,7 @@ export default function Dispositivos() {
   const [serialFilter, setSerialFilter] = useState('');
 
   const refreshDevices = useCallback(async () => {
-    await autoConnectEmulators().catch(() => {});
-    const list = await listDevices().catch(() => []);
+    const list = await window.myAPI.listDevices().catch(() => []);
     setDevices(list);
   }, []);
 
@@ -32,7 +25,7 @@ export default function Dispositivos() {
   const handleConnect = async () => {
     toast('carregando', 'Conectando...');
     try {
-      await connectAdb(ip, Number(port) || 5555);
+      await window.myAPI.connectAdb(ip, Number(port) || 5555);
       toast('sucesso', 'Conectado!');
       refreshDevices();
     } catch (e) {
@@ -108,7 +101,7 @@ export default function Dispositivos() {
                       onClick={async () => {
                         toast('carregando', 'Inicializando Frida...');
                         try {
-                          await ensureFrida(d.id);
+                          await window.myAPI.ensureFrida(d.id);
                           toast('sucesso', 'Frida iniciado');
                         } catch {
                           toast('erro', 'Falha no Frida');

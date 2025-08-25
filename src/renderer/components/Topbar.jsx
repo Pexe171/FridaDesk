@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { listDevices } from '../../adbService.js';
-import { isFridaRunning } from '../../fridaService.js';
 
 export default function Topbar({ onHistorico }) {
   const [adbOnline, setAdbOnline] = useState(false);
@@ -8,10 +6,12 @@ export default function Topbar({ onHistorico }) {
 
   useEffect(() => {
     const check = async () => {
-      const devices = await listDevices().catch(() => []);
+      const devices = await window.myAPI.listDevices().catch(() => []);
       setAdbOnline(devices.length > 0);
       if (devices.length > 0) {
-        const frida = await isFridaRunning(devices[0].id).catch(() => false);
+        const frida = await window.myAPI
+          .isFridaRunning(devices[0].id)
+          .catch(() => false);
         setFridaOnline(frida);
       } else {
         setFridaOnline(false);
