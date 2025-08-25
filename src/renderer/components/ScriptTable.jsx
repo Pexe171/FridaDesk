@@ -26,7 +26,7 @@ export default function ScriptTable({ onView }) {
           onChange={(e) => setTagFilter(e.target.value)}
         />
       </div>
-      <table>
+      <table className="tabela">
         <thead>
           <tr>
             <th>Nome</th>
@@ -40,9 +40,13 @@ export default function ScriptTable({ onView }) {
               <td>{s.name}</td>
               <td>{s.tags.join(', ')}</td>
               <td>
-                <button onClick={() => onView(s.id)}>Ver</button>
-                <button onClick={() => deleteScript(s.id)}>Excluir</button>
-                <button onClick={() => toggleFavorite(s.id)}>
+                <button onClick={() => onView(s.id)} className="btn btn-primary">
+                  Ver
+                </button>
+                <button onClick={() => deleteScript(s.id)} className="btn btn-ghost">
+                  Excluir
+                </button>
+                <button onClick={() => toggleFavorite(s.id)} className="btn btn-ghost">
                   {s.favorite ? '★' : '☆'}
                 </button>
               </td>

@@ -16,7 +16,9 @@ export default function Topbar({ onHistorico }) {
           Efeitos
           <input type="checkbox" />
         </label>
-        <button onClick={onHistorico}>Histórico</button>
+        <button onClick={onHistorico} className="btn">
+          Histórico
+        </button>
       </div>
     </div>
   );

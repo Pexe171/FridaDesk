@@ -43,15 +43,7 @@ export default function LogConsole({ logs, onClear }) {
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginBottom: '0.5rem',
-          alignItems: 'center',
-        }}
-      >
+      <div className="log-console-toolbar">
         <label>
           <input
             type="checkbox"
@@ -81,21 +73,24 @@ export default function LogConsole({ logs, onClear }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button onClick={() => setPaused((p) => !p)}>
+        <button onClick={() => setPaused((p) => !p)} className="btn">
           {paused ? 'CONTINUAR' : 'PAUSAR'}
         </button>
-        <button onClick={copyAll}>Copiar tudo</button>
-        <button onClick={onClear}>Limpar</button>
+        <button onClick={copyAll} className="btn">
+          Copiar tudo
+        </button>
+        <button onClick={onClear} className="btn btn-ghost">
+          Limpar
+        </button>
         <span>{rate} msg/s</span>
       </div>
-      <div
-        ref={containerRef}
-        style={{ border: '1px solid #ccc', padding: '1rem', height: '200px', overflowY: 'auto' }}
-      >
+      <div ref={containerRef} className="log-console-content card">
         {filtered.map((l, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <div key={i} className="log-line">
             <span>{highlight(l.message)}</span>
-            <button onClick={() => copyLine(l.message)}>Copiar</button>
+            <button onClick={() => copyLine(l.message)} className="btn btn-ghost">
+              Copiar
+            </button>
           </div>
         ))}
       </div>
