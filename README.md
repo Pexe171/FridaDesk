@@ -27,6 +27,10 @@ Criar uma plataforma de desenvolvimento segura e colaborativa para integrar ferr
 - `npm run lint` – roda ESLint e Prettier
 - `npm test` – executa testes com Jest
 
+## Captura de Rede
+
+O projeto inclui uma DSL de captura HTTP/HTTPS que permite registrar tráfego diretamente no processo do app usando Frida. O script `src/scripts/httpCapture.js` intercepta requisições em OkHttp, HttpUrlConnection e nas funções nativas `SSL_read`/`SSL_write`, enviando eventos padronizados para o agregador `NetworkCapture` que gera métricas e exporta em JSONL ou HAR.
+
 ## Branching
 
 - `main`: código estável
