@@ -63,37 +63,71 @@ async function downloadFridaServer(arch) {
 }
 
 export async function installFridaServer(id) {
+  console.log(`Iniciando instalação do frida-server no dispositivo ${id}...`);
   const fs = await loadNodeModule('fs');
   const client = await getClient();
   const arch = await detectArch(id);
-  const localPath = await downloadFridaServer(arch);
-  await client.push(
-    id,
-    fs.createReadStream(localPath),
-    '/data/local/tmp/frida-server'
-  );
-  await client.shell(id, 'chmod 755 /data/local/tmp/frida-server');
+  console.log(`Arquitetura detectada: ${arch}`);
+  try {
+    const localPath = await downloadFridaServer(arch);
+    console.log(
+      'Download do frida-server concluído, enviando para o dispositivo...'
+    );
+    await client.push(
+      id,
+      fs.createReadStream(localPath),
+      '/data/local/tmp/frida-server'
+    );
+    await client.shell(id, 'chmod 755 /data/local/tmp/frida-server');
+    console.log('frida-server instalado com sucesso.');
+  } catch (e) {
+    console.error('Erro durante a instalação do frida-server:', e);
+    throw e;
+  }
 }
 
 export async function startFridaServer(id) {
   const client = await getClient();
-  await client.shell(id, '/data/local/tmp/frida-server >/dev/null 2>&1 &');
+  console.log(`Iniciando frida-server no dispositivo ${id}...`);
+  try {
+    await client.shell(id, '/data/local/tmp/frida-server >/dev/null 2>&1 &');
+    console.log('Comando de inicialização enviado.');
+  } catch (e) {
+    console.error('Erro ao iniciar o frida-server:', e);
+    throw e;
+  }
 }
 
 export async function isFridaRunning(id) {
   const client = await getClient();
+  console.log(
+    `Verificando se o frida-server está em execução no dispositivo ${id}...`
+  );
   try {
     const stream = await client.shell(id, 'pidof frida-server');
     const out = await readAll(stream);
-    return out.length > 0;
-  } catch {
+    const isRunning = out.length > 0;
+    console.log(`Frida está em execução no dispositivo ${id}: ${isRunning}`);
+    return isRunning;
+  } catch (e) {
+    console.error(`Erro ao verificar o frida-server no dispositivo ${id}:`, e);
     return false;
   }
 }
 
 export async function ensureFrida(id) {
-  await installFridaServer(id);
-  await startFridaServer(id);
+  console.log(
+    'Garantindo que o frida-server esteja pronto para o dispositivo:',
+    id
+  );
+  try {
+    await installFridaServer(id);
+    console.log('Instalação do frida-server concluída.');
+    await startFridaServer(id);
+    console.log('frida-server iniciado com sucesso.');
+  } catch (e) {
+    console.error('Erro no processo ensureFrida:', e);
+  }
 }
 
 // Funções básicas com frida-node
