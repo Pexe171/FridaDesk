@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
+import '../styles/componentes.css';
 import { UIProvider } from './components/UIContext.jsx';
 import { ScriptCatalogProvider } from './components/ScriptCatalogContext.jsx';
 

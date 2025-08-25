@@ -34,7 +34,9 @@ export default function ScriptEditor({ code, onChange }) {
         onMount={handleMount}
       />
       <div className="editor-bar">
-        <button onClick={beautify}>Beautify</button>
+        <button onClick={beautify} className="btn btn-primary">
+          Beautify
+        </button>
         <span>
           L{pos.line}:C{pos.column} ({code.length}b)
         </span>

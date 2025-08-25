@@ -34,7 +34,7 @@ export default function ImportForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="import-form">
+    <form onSubmit={handleSubmit} className="import-form card">
       <label>
         Nome*
         <input
@@ -65,11 +65,11 @@ export default function ImportForm() {
         />
       </label>
       {error && (
-        <div role="alert" className="erro">
+        <div role="alert" className="toast erro">
           {error}
         </div>
       )}
-      <button type="submit">Importar</button>
+      <button type="submit" className="btn btn-primary">Importar</button>
     </form>
   );
 }
