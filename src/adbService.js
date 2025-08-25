@@ -3,7 +3,7 @@
 const adbPromise = (
   typeof window !== 'undefined' && window.require
     ? Promise.resolve().then(() => window.require('adbkit'))
-    : import('adbkit').then((m) => m.default)
+    : import(/* @vite-ignore */ 'adbkit').then((m) => m.default)
 ).catch((err) => {
   console.warn('Falha ao carregar adbkit:', err);
   return null;
