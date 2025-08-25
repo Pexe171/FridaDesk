@@ -13,7 +13,11 @@ let clientPromise;
 
 export function getClient() {
   if (!clientPromise) {
-    clientPromise = adbPromise.then((adb) => (adb ? adb.createClient() : null));
+    clientPromise = adbPromise.then((adb) => {
+      const client = adb ? adb.createClient() : null;
+      console.log('Cliente ADB criado:', client);
+      return client;
+    });
   }
   return clientPromise;
 }
@@ -25,10 +29,12 @@ export async function listDevices() {
   const client = await getClient();
   const adb = await adbPromise;
   if (!client || !adb) {
+    console.log('adbkit não disponível, retornando lista vazia');
     return [];
   }
   try {
     const devices = await client.listDevices();
+    console.log('Dispositivos listados pelo adbkit:', devices);
     const result = await Promise.all(
       devices.map(async (device) => {
         let model = deviceModelCache[device.id];
@@ -54,6 +60,7 @@ export async function listDevices() {
     });
     return result;
   } catch (e) {
+    console.error('Erro ao listar dispositivos:', e);
     return [];
   }
 }
