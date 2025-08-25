@@ -6,7 +6,7 @@ async function loadNodeModule(name) {
   if (typeof window !== 'undefined' && window.require) {
     return window.require(name);
   }
-  const mod = await import(name);
+  const mod = await import(/* @vite-ignore */ name);
   return mod.default || mod;
 }
 
