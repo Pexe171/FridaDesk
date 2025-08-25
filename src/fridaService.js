@@ -10,7 +10,7 @@ async function loadNodeModule(name) {
   return mod.default || mod;
 }
 
-const FRIDA_VERSION = '17.2.17';
+const FRIDA_VERSION = '16.7.7';
 
 function readAll(stream) {
   return new Promise((resolve, reject) => {
