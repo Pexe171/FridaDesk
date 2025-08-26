@@ -104,6 +104,37 @@ Java.perform(function () {
   } catch (e) {
     // ignora
   }
+
+  // Captura exceções e logs do app
+  try {
+    const Throwable = Java.use('java.lang.Throwable');
+    const origPrint = Throwable.printStackTrace.overload();
+    origPrint.implementation = function () {
+      try {
+        enviar('java.exception', { stack: this.toString() });
+      } catch (_) {}
+      return origPrint.call(this);
+    };
+  } catch (e) {}
+
+  try {
+    const Log = Java.use('android.util.Log');
+    ['e', 'wtf'].forEach(function (m) {
+      try {
+        const overload = Log[m].overload('java.lang.String', 'java.lang.String');
+        overload.implementation = function (tag, msg) {
+          try {
+            enviar('java.log', {
+              level: m,
+              tag: tag ? tag.toString() : '',
+              message: msg ? msg.toString() : '',
+            });
+          } catch (_) {}
+          return overload.call(this, tag, msg);
+        };
+      } catch (_) {}
+    });
+  } catch (e) {}
 });
 
 // Hook nativo em SSL_read / SSL_write
