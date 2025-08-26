@@ -193,3 +193,25 @@ textarea:focus {
   outline: 2px solid #2196f3;
   outline-offset: 2px;
 }
+
+/* Autor: Pexe (instagram: @David.devloli) - estilos do timeline */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: var(--espaco-sm);
+  border-bottom: 1px solid var(--cor-muted);
+  padding: var(--espaco-xs) 0;
+}
+
+.timeline-item .time {
+  color: var(--cor-texto-secundario);
+}
+
+.timeline-item .type {
+  font-weight: bold;
+}

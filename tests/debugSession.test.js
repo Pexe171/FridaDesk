@@ -44,6 +44,13 @@ test('coleta mensagens e erros', async () => {
   expect(dbg.lastPayload).toEqual({ foo: 'bar' });
   expect(dbg.errors).toHaveLength(1);
   expect(detReason).toBe('app');
+  expect(dbg.timeline).toHaveLength(3);
+  expect(dbg.timeline.map((t) => t.type)).toEqual([
+    'send',
+    'error',
+    'detached',
+  ]);
   const rep = dbg.generateReport();
   expect(rep.mensagens).toBe(2);
+  expect(rep.timeline).toHaveLength(3);
 });
