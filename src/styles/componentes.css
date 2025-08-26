@@ -113,6 +113,72 @@ select:focus,
   outline-offset: 2px;
 }
 
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: var(--cor-superficie);
+  padding: var(--espaco-lg);
+  border-radius: var(--raio-md);
+  max-width: 90%;
+}
+
+/* Tooltip */
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  padding: var(--espaco-xs) var(--espaco-sm);
+  border-radius: var(--raio-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transicao-rapida);
+}
+
+.tooltip-container:hover .tooltip-bubble {
+  opacity: 1;
+}
+
+/* Barra de progresso */
+.progress-bar {
+  width: 100%;
+  background: var(--cor-superficie);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 8px;
+  background: var(--cor-primaria);
+  width: 0%;
+  transition: width var(--transicao-normal);
+}
+
+/* Gráfico simples */
+.data-chart {
+  width: 100%;
+  height: auto;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .btn,
   input,
