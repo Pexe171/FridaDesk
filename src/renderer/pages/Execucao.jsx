@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Titulo from '../components/Titulo.jsx';
 import LogConsole from '../components/LogConsole.jsx';
+import DebugTimeline from '../components/DebugTimeline.jsx';
 
 export default function Execucao() {
   const devices = ['Device 1', 'Device 2'];
@@ -16,6 +17,7 @@ export default function Execucao() {
   const [spawn, setSpawn] = useState(false);
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const intervalRef = useRef(null);
 
   const addProcess = (p) => {
@@ -31,10 +33,15 @@ export default function Execucao() {
 
   const start = () => {
     setRunning(true);
+    const ts = Date.now();
+    setTimeline((t) => [...t, { ts, type: 'start' }]);
     intervalRef.current = setInterval(() => {
       const types = ['send', 'error', 'event'];
       const type = types[Math.floor(Math.random() * types.length)];
-      setLogs((l) => [...l, { type, message: `${type} message ${Date.now()}` }]);
+      const now = Date.now();
+      const message = `${type} message ${now}`;
+      setLogs((l) => [...l, { type, message }]);
+      setTimeline((t) => [...t, { ts: now, type, message }]);
     }, 500);
   };
 
@@ -42,6 +49,7 @@ export default function Execucao() {
     setRunning(false);
     clearInterval(intervalRef.current);
     intervalRef.current = null;
+    setTimeline((t) => [...t, { ts: Date.now(), type: 'stop' }]);
   };
 
   useEffect(() => {
@@ -176,6 +184,7 @@ export default function Execucao() {
         </button>
       </div>
       <LogConsole logs={logs} onClear={() => setLogs([])} />
+      <DebugTimeline events={timeline} />
     </div>
   );
 }

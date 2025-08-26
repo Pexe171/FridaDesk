@@ -17,6 +17,7 @@ export class DebugSession extends EventEmitter {
     this.startTs = Date.now();
     this.attachMs = 0;
     this.spawnMs = 0;
+    this.timeline = [];
   }
 
   /**
@@ -28,12 +29,16 @@ export class DebugSession extends EventEmitter {
     }
     if (this.session) {
       if (this.session.detached) {
-        this.session.detached.connect((reason) =>
-          this.emit('detached', reason)
-        );
+        this.session.detached.connect((reason) => {
+          this._pushTimeline('detached', { reason });
+          this.emit('detached', reason);
+        });
       }
       if (this.session.processCrashed) {
-        this.session.processCrashed.connect(() => this.emit('crashed'));
+        this.session.processCrashed.connect(() => {
+          this._pushTimeline('crashed');
+          this.emit('crashed');
+        });
       }
     }
   }
@@ -49,11 +54,18 @@ export class DebugSession extends EventEmitter {
         columnNumber: message.columnNumber,
         lastPayload: this.lastPayload,
       });
-      this.emit('script-error', this.errors[this.errors.length - 1]);
+      const errInfo = this.errors[this.errors.length - 1];
+      this._pushTimeline('error', errInfo);
+      this.emit('script-error', errInfo);
     } else {
       this.lastPayload = message.payload;
+      this._pushTimeline(message.type, message.payload);
     }
     this.emit('message', message);
+  }
+
+  _pushTimeline(type, data = {}) {
+    this.timeline.push({ ts: Date.now(), type, ...data });
   }
 
   /**
@@ -114,6 +126,7 @@ export class DebugSession extends EventEmitter {
       attachMs: this.attachMs,
       spawnMs: this.spawnMs,
       rede: networkCapture ? networkCapture.getMetrics() : null,
+      timeline: this.timeline,
     };
   }
 }
