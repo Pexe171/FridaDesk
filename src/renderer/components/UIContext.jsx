@@ -5,7 +5,7 @@ const UIContext = createContext();
 
 export function UIProvider({ children }) {
   const [page, setPage] = useState('dispositivos');
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(
     () => localStorage.getItem('primaryColor') || '#222222'
@@ -15,6 +15,7 @@ export function UIProvider({ children }) {
   );
 
   useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 

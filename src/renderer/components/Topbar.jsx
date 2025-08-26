@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useUI } from './UIContext';
 
 export default function Topbar({ onHistorico }) {
   const [adbOnline, setAdbOnline] = useState(false);
   const [fridaOnline, setFridaOnline] = useState(false);
+  const { theme, setTheme } = useUI();
 
   useEffect(() => {
     const check = async () => {
@@ -31,7 +33,11 @@ export default function Topbar({ onHistorico }) {
       <div className="acoes">
         <label>
           Tema
-          <input type="checkbox" />
+          <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+            <option value="dark">Escuro</option>
+            <option value="light">Claro</option>
+            <option value="contrast">Alto contraste</option>
+          </select>
         </label>
         <label>
           Efeitos
