@@ -3,7 +3,7 @@ import java.io.IOException;
 
 /**
  * Responsável por iniciar o launcher do Minecraft usando {@link ProcessBuilder}.
- * Ajuste o caminho do executável conforme necessário.
+ * Ajuste o caminho do executável conforme necessário via `launcherPath` no config.
  *
  * Autor: Pexe (Instagram @David.devloli)
  */
@@ -19,9 +19,11 @@ public class LauncherHandler {
      * parâmetro "gameDir" do arquivo de configuração.
      */
     public Process launch() throws IOException {
-        // Aqui assumimos que o executável "minecraft-launcher" está no PATH ou
-        // localizado dentro do diretório do jogo. Modifique se necessário.
-        ProcessBuilder pb = new ProcessBuilder("minecraft-launcher", "--workDir", config.gameDir,
+        // Usa o caminho configurado ou assume "minecraft-launcher" no PATH
+        String launcher = (config.launcherPath != null && !config.launcherPath.isBlank())
+                ? config.launcherPath
+                : "minecraft-launcher";
+        ProcessBuilder pb = new ProcessBuilder(launcher, "--workDir", config.gameDir,
                 "--version", config.minecraftVersion);
         pb.directory(new File(config.gameDir));
         return pb.start();
