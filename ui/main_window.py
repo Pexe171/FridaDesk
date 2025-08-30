@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (
 
 from PyQt6.QtCore import Qt
 
+from core.event_bus import EventBus
+
 from .widgets.charts_panel import ChartsPanel
 from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
@@ -23,8 +25,9 @@ from .widgets.process_panel import ProcessPanel
 class MainWindow(QMainWindow):
     """Janela principal que agrega os painéis."""
 
-    def __init__(self) -> None:
+    def __init__(self, bus: EventBus) -> None:
         super().__init__()
+        self._bus = bus
         self.setWindowTitle("FridaDesk")
         self.resize(1024, 768)
 
@@ -42,7 +45,7 @@ class MainWindow(QMainWindow):
         self.left_splitter.setStretchFactor(1, 1)
 
         # Direita superior: Console de Logs com filtro/busca
-        self.console_panel = ConsolePanel()
+        self.console_panel = ConsolePanel(self._bus)
 
         # Direita inferior: abas de gráficos e JSON
         self.data_tabs = QTabWidget()
