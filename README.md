@@ -23,6 +23,7 @@ java -cp bin Main
 Edite o arquivo `config.json` para ajustar:
 - `minecraftVersion`: versão do jogo a ser carregada (ex: `"1.21"`).
 - `gameDir`: diretório de instalação do Minecraft.
+- `launcherPath`: caminho completo para o executável do launcher (opcional; se vazio, usa-se `minecraft-launcher`).
 - `baritoneCommand`: comando a ser enviado após o carregamento do mundo (ex: `".mine diamond_ore"`).
 
 ## Observações

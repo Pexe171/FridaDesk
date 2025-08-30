@@ -16,12 +16,16 @@ public class LauncherHandler {
 
     /**
      * Inicia o launcher do Minecraft. O diretório de trabalho é definido pelo
-     * parâmetro "gameDir" do arquivo de configuração.
+     * parâmetro "gameDir" do arquivo de configuração. Caso o campo
+     * {@code launcherPath} esteja vazio, assume-se que o executável
+     * "minecraft-launcher" está no PATH do sistema.
      */
     public Process launch() throws IOException {
-        // Aqui assumimos que o executável "minecraft-launcher" está no PATH ou
-        // localizado dentro do diretório do jogo. Modifique se necessário.
-        ProcessBuilder pb = new ProcessBuilder("minecraft-launcher", "--workDir", config.gameDir,
+        String executable = config.launcherPath == null || config.launcherPath.isBlank()
+                ? "minecraft-launcher"
+                : config.launcherPath;
+
+        ProcessBuilder pb = new ProcessBuilder(executable, "--workDir", config.gameDir,
                 "--version", config.minecraftVersion);
         pb.directory(new File(config.gameDir));
         return pb.start();
