@@ -3,7 +3,8 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 class DevicePanel(QWidget):
@@ -11,3 +12,7 @@ class DevicePanel(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
+        layout = QVBoxLayout(self)
+        placeholder = QLabel("Painel de Dispositivos")
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(placeholder)
