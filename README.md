@@ -1,5 +1,7 @@
-# Em manutenção
+# Frida GUI Dashboard
 
-Este repositório está temporariamente em manutenção.
+Repositório oficial do **Frida GUI Dashboard**, uma aplicação de desktop multi-plataforma destinada a facilitar a instrumentação dinâmica com o Frida.
+
+Para mais detalhes sobre objetivos, foco e público-alvo, consulte [docs/visao_geral.md](docs/visao_geral.md).
 
 Autor: Pexe (Instagram: [@David.devloli](https://instagram.com/David.devloli))
