@@ -7,7 +7,7 @@ Mantido por **Pexe** (Instagram [@David.devloli](https://instagram.com/David.dev
 ## Pré-requisitos
 - Java 17 ou superior
 - Minecraft instalado com o mod Baritone
-- Launcher do Minecraft configurado no sistema ("minecraft-launcher" no PATH)
+- Launcher do Minecraft configurado no sistema ("minecraft-launcher" no PATH) ou caminho fornecido no `config.json`
 
 ## Como compilar
 ```bash
@@ -23,8 +23,9 @@ java -cp bin Main
 Edite o arquivo `config.json` para ajustar:
 - `minecraftVersion`: versão do jogo a ser carregada (ex: `"1.21"`).
 - `gameDir`: diretório de instalação do Minecraft.
+- `launcherPath`: caminho completo do executável do launcher (opcional se estiver no PATH).
 - `baritoneCommand`: comando a ser enviado após o carregamento do mundo (ex: `".mine diamond_ore"`).
 
 ## Observações
 - O tempo de espera para o carregamento do mundo pode ser ajustado em `BaritoneCommander.java`.
-- O caminho do launcher pode ser alterado em `LauncherHandler.java`.
+- Caso o launcher não esteja no PATH, informe seu caminho em `launcherPath` no `config.json`.
