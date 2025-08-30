@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
  * {
  *   "minecraftVersion": "1.21",
  *   "gameDir": "C:/caminho/do/minecraft",
+ *   "launcherPath": "C:/Program Files/Minecraft Launcher/MinecraftLauncher.exe",
  *   "baritoneCommand": ".mine diamond_ore"
  * }
  *
@@ -21,6 +22,7 @@ public class ConfigReader {
     public static class Config {
         public String minecraftVersion;
         public String gameDir;
+        public String launcherPath;
         public String baritoneCommand;
     }
 
@@ -32,6 +34,7 @@ public class ConfigReader {
         Config cfg = new Config();
         cfg.minecraftVersion = extract(json, "minecraftVersion");
         cfg.gameDir = extract(json, "gameDir");
+        cfg.launcherPath = extract(json, "launcherPath");
         cfg.baritoneCommand = extract(json, "baritoneCommand");
         return cfg;
     }
