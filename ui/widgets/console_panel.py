@@ -15,10 +15,12 @@ from PyQt6.QtWidgets import (
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 from core.event_bus import EventBus
 from core.models import LogEvent
+from core.exporters import export_logs_csv, export_logs_json
 
 
 class ConsolePanel(QWidget):
@@ -28,6 +30,7 @@ class ConsolePanel(QWidget):
         super().__init__()
         self._bus = bus
         self._paused = False
+        self._logs: List[LogEvent] = []
         self._build_ui()
         self._bus.log_event.connect(self._append_log)
 
@@ -53,6 +56,10 @@ class ConsolePanel(QWidget):
         copy_btn.clicked.connect(self._copy_selection)
         controls_layout.addWidget(copy_btn)
 
+        export_btn = QPushButton("Exportar")
+        export_btn.clicked.connect(self._export)
+        controls_layout.addWidget(export_btn)
+
         layout.addLayout(controls_layout)
 
         self._table = QTableWidget(0, 4)
@@ -60,9 +67,21 @@ class ConsolePanel(QWidget):
         self._table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self._table)
 
+    # ------------------------------------------------------------------
+    # Estado
+    # ------------------------------------------------------------------
+    def load_state(self, settings: dict) -> None:
+        self._filter_input.setText(settings.get("log_filter", ""))
+        self._pause_btn.setChecked(settings.get("log_paused", False))
+
+    def save_state(self, settings: dict) -> None:
+        settings["log_filter"] = self._filter_input.text()
+        settings["log_paused"] = self._paused
+
     def _append_log(self, event: LogEvent) -> None:
         """Acrescenta um evento de log na tabela."""
 
+        self._logs.append(event)
         row = self._table.rowCount()
         self._table.insertRow(row)
         ts_str = datetime.fromtimestamp(event.ts).strftime("%H:%M:%S")
@@ -93,6 +112,34 @@ class ConsolePanel(QWidget):
 
     def _clear(self) -> None:
         self._table.setRowCount(0)
+
+    def _filtered_logs(self) -> List[LogEvent]:
+        text = self._filter_input.text().lower()
+        if not text:
+            return list(self._logs)
+        result: List[LogEvent] = []
+        for e in self._logs:
+            if (
+                text in datetime.fromtimestamp(e.ts).strftime("%H:%M:%S").lower()
+                or text in e.level.lower()
+                or text in e.tag.lower()
+                or text in e.message.lower()
+            ):
+                result.append(e)
+        return result
+
+    def _export(self) -> None:
+        logs = self._filtered_logs()
+        if not logs:
+            QMessageBox.information(self, "Exportação", "Nenhum log para exportar.")
+            return
+        json_path = export_logs_json(logs)
+        csv_path = export_logs_csv(logs)
+        QMessageBox.information(
+            self,
+            "Exportação",
+            f"Logs salvos em:\n{json_path}\n{csv_path}",
+        )
 
     def _copy_selection(self) -> None:
         ranges = self._table.selectedRanges()

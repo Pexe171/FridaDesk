@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 from core.event_bus import EventBus
+from core.settings import load_settings, save_settings
 
 from .widgets.charts_panel import ChartsPanel
 from .widgets.console_panel import ConsolePanel
@@ -28,11 +29,16 @@ class MainWindow(QMainWindow):
     def __init__(self, bus: EventBus) -> None:
         super().__init__()
         self._bus = bus
+        self._settings = load_settings()
         self.setWindowTitle("FridaDesk")
-        self.resize(1024, 768)
+        size = self._settings.get("window", {}).get("size", [1024, 768])
+        pos = self._settings.get("window", {}).get("pos", [100, 100])
+        self.resize(*size)
+        self.move(*pos)
 
         self._build_ui()
         self._configure_theme()
+        self._restore_state()
 
     def _build_ui(self) -> None:
         # Painéis da esquerda (Dispositivos e Processos)
@@ -70,7 +76,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_splitter)
 
     def _configure_theme(self) -> None:
-        self._dark = True
+        self._dark = self._settings.get("theme", "dark") == "dark"
         self._light_qss = (
             "QWidget { background-color: #ffffff; color: #000000; }"
             "QTabWidget::pane { border: 1px solid #cccccc; }"
@@ -90,3 +96,25 @@ class MainWindow(QMainWindow):
     def _toggle_theme(self) -> None:
         self._dark = not self._dark
         self._apply_theme()
+
+    # ------------------------------------------------------------------
+    # Persistência
+    # ------------------------------------------------------------------
+    def _restore_state(self) -> None:
+        self.console_panel.load_state(self._settings)
+        self.device_panel.load_state(self._settings)
+        self.process_panel.load_state(self._settings)
+        self.charts_panel.load_state(self._settings)
+
+    def closeEvent(self, event) -> None:  # type: ignore[override]
+        self._settings["window"] = {
+            "size": [self.width(), self.height()],
+            "pos": [self.x(), self.y()],
+        }
+        self._settings["theme"] = "dark" if self._dark else "light"
+        self.console_panel.save_state(self._settings)
+        self.device_panel.save_state(self._settings)
+        self.process_panel.save_state(self._settings)
+        self.charts_panel.save_state(self._settings)
+        save_settings(self._settings)
+        super().closeEvent(event)
