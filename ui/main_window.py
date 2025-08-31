@@ -5,6 +5,7 @@ Autor: Pexe (Instagram: @David.devloli)
 
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import (
+    QAction,
     QMainWindow,
     QShortcut,
     QSplitter,
@@ -21,6 +22,7 @@ from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
 from .widgets.json_viewer import JsonViewer
 from .widgets.process_panel import ProcessPanel
+from .widgets.network_panel import NetworkPanel
 
 
 class MainWindow(QMainWindow):
@@ -53,12 +55,14 @@ class MainWindow(QMainWindow):
         # Direita superior: Console de Logs com filtro/busca
         self.console_panel = ConsolePanel(self._bus)
 
-        # Direita inferior: abas de gráficos e JSON
+        # Direita inferior: abas de gráficos, JSON e rede
         self.data_tabs = QTabWidget()
         self.charts_panel = ChartsPanel(self._bus)
         self.json_viewer = JsonViewer(self._bus)
+        self.network_panel = NetworkPanel(self._bus)
         self.data_tabs.addTab(self.charts_panel, "Gráficos")
         self.data_tabs.addTab(self.json_viewer, "JSON")
+        self.data_tabs.addTab(self.network_panel, "Rede")
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.console_panel)
@@ -74,6 +78,15 @@ class MainWindow(QMainWindow):
         self.main_splitter.setStretchFactor(1, 2)
 
         self.setCentralWidget(self.main_splitter)
+
+        # Menu para plugins
+        self.plugins_menu = self.menuBar().addMenu("Plugins")
+
+    def add_plugin_menu_action(self, title: str, callback):
+        action = QAction(title, self)
+        action.triggered.connect(callback)
+        self.plugins_menu.addAction(action)
+        return action
 
     def _configure_theme(self) -> None:
         self._dark = self._settings.get("theme", "dark") == "dark"
