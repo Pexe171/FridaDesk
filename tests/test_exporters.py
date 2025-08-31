@@ -4,6 +4,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
+# ruff: noqa: E402
+
 from core.exporters import (
     export_logs_csv,
     export_logs_json,
@@ -11,8 +13,8 @@ from core.exporters import (
     export_metrics_html,
     export_network_json,
     export_network_har,
-)
-from core.models import LogEvent, MetricSample, NetworkEvent
+)  # noqa: E402
+from core.models import LogEvent, MetricSample, NetworkEvent  # noqa: E402
 
 
 def test_export_logs(tmp_path, monkeypatch):

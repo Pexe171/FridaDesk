@@ -8,7 +8,7 @@ import random
 
 from ui.widgets.console_panel import ConsolePanel
 from core.models import LogEvent
-from parsers import register_parser, set_key_color, clear_key_colors
+from parsers import set_key_color, clear_key_colors
 
 
 class ErrorEventsPanel(ConsolePanel):

@@ -41,6 +41,8 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._configure_theme()
         self._restore_state()
+        self.statusBar().showMessage("Pronto")
+        QShortcut(QKeySequence("F5"), self, activated=self._toggle_collection)
 
     def _build_ui(self) -> None:
         # Painéis da esquerda (Dispositivos e Processos)
@@ -109,6 +111,11 @@ class MainWindow(QMainWindow):
     def _toggle_theme(self) -> None:
         self._dark = not self._dark
         self._apply_theme()
+        self.statusBar().showMessage("Tema escuro" if self._dark else "Tema claro", 3000)
+
+    def _toggle_collection(self) -> None:
+        btn = self.console_panel._pause_btn
+        btn.setChecked(not btn.isChecked())
 
     # ------------------------------------------------------------------
     # Persistência
