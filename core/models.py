@@ -52,3 +52,15 @@ class MetricSample(BaseModel):
     rss_mb: float
     process_pid: int
 
+
+class NetworkEvent(BaseModel):
+    """Resumo de uma requisição capturada pelo proxy."""
+
+    ts: float
+    host: str
+    method: str
+    status: int
+    size: int
+    request: str
+    response: str
+

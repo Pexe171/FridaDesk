@@ -14,11 +14,11 @@ from PyQt6.QtWidgets import (
     QTreeView,
     QWidget,
 )
-from PyQt6.QtGui import QStandardItem, QStandardItemModel
+from PyQt6.QtGui import QColor, QStandardItem, QStandardItemModel
 
 from core.event_bus import EventBus
 from core.models import LogEvent
-from parsers import parse_message
+from parsers import clear_key_colors, get_key_color, parse_message
 
 
 class JsonViewer(QWidget):
@@ -44,6 +44,7 @@ class JsonViewer(QWidget):
 
     def _handle_log(self, event: LogEvent) -> None:
         text = event.message.strip()
+        clear_key_colors()
         data: Any = None
         try:
             data = json.loads(text)
@@ -69,6 +70,9 @@ class JsonViewer(QWidget):
         if isinstance(data, dict):
             for key, value in data.items():
                 key_item = QStandardItem(str(key))
+                color = get_key_color(str(key))
+                if color:
+                    key_item.setForeground(QColor(color))
                 parent.appendRow([key_item, QStandardItem("")])
                 self._add_items(key_item, value)
         elif isinstance(data, list):

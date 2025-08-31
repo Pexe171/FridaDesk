@@ -14,6 +14,7 @@ from qasync import QEventLoop
 from core.event_bus import get_event_bus, publish
 from core.models import LogEvent
 from ui.main_window import MainWindow
+from core.plugin_manager import load_plugins
 
 
 async def simulate_logs() -> None:
@@ -42,6 +43,7 @@ async def main() -> None:
     asyncio.create_task(bus.start())
 
     window = MainWindow(bus)
+    load_plugins(window, bus)
     window.show()
 
     asyncio.create_task(simulate_logs())

@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from jinja2 import Environment
 
-from .models import LogEvent, MetricSample
+from .models import LogEvent, MetricSample, NetworkEvent
 
 LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -49,6 +49,45 @@ def export_logs_csv(logs: Iterable[LogEvent]) -> Path:
         writer.writerow(["ts", "level", "tag", "message"])
         for log in logs:
             writer.writerow([log.ts, log.level, log.tag, log.message])
+    return path
+
+
+def export_network_json(events: Iterable[NetworkEvent]) -> Path:
+    """Exporta eventos de rede em JSON."""
+
+    path = LOG_DIR / f"network_{_timestamp()}.json"
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump([e.model_dump() for e in events], fh, ensure_ascii=False, indent=2)
+    return path
+
+
+def export_network_har(events: Iterable[NetworkEvent]) -> Path:
+    """Exporta eventos de rede em formato HAR simplificado."""
+
+    entries = []
+    for e in events:
+        entries.append(
+            {
+                "startedDateTime": datetime.fromtimestamp(e.ts).isoformat(),
+                "request": {
+                    "method": e.method,
+                    "url": e.host,
+                    "headers": [],
+                    "bodySize": len(e.request),
+                },
+                "response": {
+                    "status": e.status,
+                    "statusText": "",
+                    "headers": [],
+                    "bodySize": e.size,
+                },
+                "timings": {"send": 0, "wait": 0, "receive": 0},
+            }
+        )
+    har = {"log": {"version": "1.2", "creator": {"name": "FridaDesk"}, "entries": entries}}
+    path = LOG_DIR / f"network_{_timestamp()}.har"
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(har, fh, ensure_ascii=False, indent=2)
     return path
 
 
@@ -118,5 +157,7 @@ __all__ = [
     "export_logs_csv",
     "export_metrics_csv",
     "export_metrics_html",
+    "export_network_json",
+    "export_network_har",
 ]
 

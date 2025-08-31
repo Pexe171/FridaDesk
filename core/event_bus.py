@@ -10,7 +10,7 @@ from typing import Any
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from .models import LogEvent, MetricSample
+from .models import LogEvent, MetricSample, NetworkEvent
 
 
 class EventBus(QObject):
@@ -18,6 +18,7 @@ class EventBus(QObject):
 
     log_event = pyqtSignal(object)
     metric_sample = pyqtSignal(object)
+    network_event = pyqtSignal(object)
 
     def __init__(self) -> None:
         super().__init__()
@@ -32,6 +33,8 @@ class EventBus(QObject):
                 self.log_event.emit(event)
             elif isinstance(event, MetricSample):
                 self.metric_sample.emit(event)
+            elif isinstance(event, NetworkEvent):
+                self.network_event.emit(event)
             self._queue.task_done()
 
     def publish(self, event: Any) -> None:
