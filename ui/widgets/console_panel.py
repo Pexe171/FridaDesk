@@ -6,14 +6,13 @@ Autor: Pexe (Instagram: @David.devloli)
 from datetime import datetime
 from typing import List
 
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLineEdit,
     QMessageBox,
     QPushButton,
-    QShortcut,
     QStyle,
     QTableWidget,
     QTableWidgetItem,
