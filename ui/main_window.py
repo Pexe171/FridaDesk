@@ -49,8 +49,8 @@ class MainWindow(QMainWindow):
 
         # Direita inferior: abas de gráficos e JSON
         self.data_tabs = QTabWidget()
-        self.charts_panel = ChartsPanel()
-        self.json_viewer = JsonViewer()
+        self.charts_panel = ChartsPanel(self._bus)
+        self.json_viewer = JsonViewer(self._bus)
         self.data_tabs.addTab(self.charts_panel, "Gráficos")
         self.data_tabs.addTab(self.json_viewer, "JSON")
 

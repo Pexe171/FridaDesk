@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Iterable, Optional
 
 from .event_bus import publish
-from .models import LogEvent
+from .models import LogEvent, MetricSample
 
 
 class BaseCollector:
@@ -124,3 +124,86 @@ class LogcatCollector(BaseCollector):
             self.tag_filter = tag
         if pattern is not None:
             self.regex = re.compile(pattern) if pattern else None
+
+
+class ProcessMetricsCollector(BaseCollector):
+    """Coletor periódico de métricas de CPU e memória de um processo."""
+
+    def __init__(self, pid: int, interval: float = 1.0) -> None:
+        self.pid = pid
+        self.interval = interval
+        self._task: Optional[asyncio.Task[None]] = None
+        self._running = False
+
+    def start(self) -> None:
+        """Inicia a coleta em segundo plano."""
+
+        if not self._task:
+            self._running = True
+            self._task = asyncio.create_task(self._run())
+
+    async def stop(self) -> None:
+        """Interrompe a coleta."""
+
+        self._running = False
+        if self._task:
+            await self._task
+        self._task = None
+
+    async def _run(self) -> None:
+        while self._running:
+            cpu, rss = await self._sample()
+            publish(
+                MetricSample(
+                    ts=datetime.now().timestamp(),
+                    cpu_pct=cpu,
+                    rss_mb=rss,
+                    process_pid=self.pid,
+                )
+            )
+            await asyncio.sleep(self.interval)
+
+    async def _sample(self) -> tuple[float, float]:
+        proc = await asyncio.create_subprocess_exec(
+            "adb",
+            "shell",
+            "top",
+            "-n",
+            "1",
+            "-b",
+            "-p",
+            str(self.pid),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        out, _ = await proc.communicate()
+        cpu = 0.0
+        rss = 0.0
+        if out:
+            text = out.decode(errors="replace")
+            for line in text.splitlines():
+                line = line.strip()
+                if not line.startswith(str(self.pid)):
+                    continue
+                parts = line.split()
+                try:
+                    # saída do top: PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ ARGS
+                    cpu = float(parts[8])
+                    rss = self._parse_mem(parts[5])
+                except Exception:
+                    pass
+                break
+        return cpu, rss
+
+    @staticmethod
+    def _parse_mem(value: str) -> float:
+        """Converte valores do ``top`` em MB."""
+
+        try:
+            if value.lower().endswith("m"):
+                return float(value[:-1])
+            if value.lower().endswith("k"):
+                return float(value[:-1]) / 1024
+            return float(value) / (1024 * 1024)
+        except Exception:
+            return 0.0
