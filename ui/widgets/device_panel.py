@@ -36,7 +36,10 @@ class DevicePanel(QWidget):
 
         self._list = QListWidget()
         self._list.setUniformItemSizes(True)
+        self._list.currentTextChanged.connect(self._on_current_changed)
         layout.addWidget(self._list)
+        self._current = ""
+        self._desired = ""
 
     # ------------------------------------------------------------------
     # Callbacks
@@ -71,4 +74,22 @@ class DevicePanel(QWidget):
             )
             item.setIcon(icon)
             self._list.addItem(item)
+        if self._desired:
+            self.set_current_device(self._desired)
+
+    def _on_current_changed(self, text: str) -> None:
+        self._current = text
+
+    def set_current_device(self, name: str) -> None:
+        for i in range(self._list.count()):
+            if self._list.item(i).text() == name:
+                self._list.setCurrentRow(i)
+                self._current = name
+                break
+
+    def load_state(self, settings: dict) -> None:
+        self._desired = settings.get("last_device", "")
+
+    def save_state(self, settings: dict) -> None:
+        settings["last_device"] = self._current
 
