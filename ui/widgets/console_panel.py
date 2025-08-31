@@ -6,16 +6,19 @@ Autor: Pexe (Instagram: @David.devloli)
 from datetime import datetime
 from typing import List
 
+from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLineEdit,
+    QMessageBox,
     QPushButton,
+    QShortcut,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 from core.event_bus import EventBus
@@ -40,25 +43,38 @@ class ConsolePanel(QWidget):
         controls_layout = QHBoxLayout()
         self._filter_input = QLineEdit()
         self._filter_input.setPlaceholderText("Filtrar/Buscar logs")
+        self._filter_input.setToolTip("Buscar texto nos logs (Ctrl+F)")
         self._filter_input.textChanged.connect(self._apply_filter)
         controls_layout.addWidget(self._filter_input)
 
+        style = self.style()
         self._pause_btn = QPushButton("Pausar")
+        self._pause_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaPause))
+        self._pause_btn.setToolTip("Pausar/retomar captura de logs (F5)")
         self._pause_btn.setCheckable(True)
         self._pause_btn.toggled.connect(self._toggle_pause)
         controls_layout.addWidget(self._pause_btn)
 
         clear_btn = QPushButton("Limpar")
+        clear_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
+        clear_btn.setToolTip("Limpar tabela de logs")
         clear_btn.clicked.connect(self._clear)
         controls_layout.addWidget(clear_btn)
 
         copy_btn = QPushButton("Copiar seleção")
+        copy_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
+        copy_btn.setToolTip("Copiar linhas selecionadas")
         copy_btn.clicked.connect(self._copy_selection)
         controls_layout.addWidget(copy_btn)
 
         export_btn = QPushButton("Exportar")
+        export_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        export_btn.setToolTip("Exportar logs (Ctrl+E)")
         export_btn.clicked.connect(self._export)
         controls_layout.addWidget(export_btn)
+
+        QShortcut(QKeySequence("Ctrl+F"), self, activated=self._filter_input.setFocus)
+        QShortcut(QKeySequence("Ctrl+E"), self, activated=self._export)
 
         layout.addLayout(controls_layout)
 
@@ -109,9 +125,12 @@ class ConsolePanel(QWidget):
 
     def _toggle_pause(self, checked: bool) -> None:
         self._paused = checked
+        self._pause_btn.setText("Retomar" if checked else "Pausar")
+        self._status("Coleta pausada" if checked else "Coleta retomada")
 
     def _clear(self) -> None:
         self._table.setRowCount(0)
+        self._status("Logs limpos")
 
     def _filtered_logs(self) -> List[LogEvent]:
         text = self._filter_input.text().lower()
@@ -140,6 +159,7 @@ class ConsolePanel(QWidget):
             "Exportação",
             f"Logs salvos em:\n{json_path}\n{csv_path}",
         )
+        self._status("Logs exportados")
 
     def _copy_selection(self) -> None:
         ranges = self._table.selectedRanges()
@@ -154,3 +174,9 @@ class ConsolePanel(QWidget):
                     parts.append(item.text() if item else "")
                 lines.append("\t".join(parts))
         QApplication.clipboard().setText("\n".join(lines))
+        self._status("Logs copiados para a área de transferência")
+
+    def _status(self, text: str) -> None:
+        win = self.window()
+        if hasattr(win, "statusBar"):
+            win.statusBar().showMessage(text, 3000)
