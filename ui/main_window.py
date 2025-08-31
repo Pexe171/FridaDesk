@@ -3,11 +3,9 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QAction, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QAction,
     QMainWindow,
-    QShortcut,
     QSplitter,
     QTabWidget,
 )
