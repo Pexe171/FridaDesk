@@ -32,7 +32,8 @@ class DeviceManager:
         """Inicia a tarefa de monitoramento de dispositivos."""
 
         if self._task is None:
-            self._task = asyncio.create_task(self._poll_loop())
+            loop = asyncio.get_event_loop()
+            self._task = loop.create_task(self._poll_loop())
 
     def stop(self) -> None:
         """Interrompe o monitoramento de dispositivos."""

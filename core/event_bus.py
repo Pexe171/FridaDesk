@@ -22,11 +22,13 @@ class EventBus(QObject):
 
     def __init__(self) -> None:
         super().__init__()
-        self._queue: asyncio.Queue[Any] = asyncio.Queue()
+        self._queue: asyncio.Queue[Any] | None = None
 
     async def start(self) -> None:
         """Consome eventos da fila e emite sinais correspondentes."""
 
+        if self._queue is None:
+            self._queue = asyncio.Queue()
         while True:
             event = await self._queue.get()
             if isinstance(event, LogEvent):
@@ -40,6 +42,8 @@ class EventBus(QObject):
     def publish(self, event: Any) -> None:
         """Publica um novo evento no barramento."""
 
+        if self._queue is None:
+            self._queue = asyncio.Queue()
         self._queue.put_nowait(event)
 
 
