@@ -47,6 +47,7 @@ class MainWindow(QMainWindow):
         self.left_splitter = QSplitter(Qt.Orientation.Vertical)
         self.device_panel = DevicePanel()
         self.process_panel = ProcessPanel()
+        self.process_panel.set_device_panel(self.device_panel)
         self.left_splitter.addWidget(self.device_panel)
         self.left_splitter.addWidget(self.process_panel)
         self.left_splitter.setStretchFactor(0, 1)
