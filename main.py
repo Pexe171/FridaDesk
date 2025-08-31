@@ -32,7 +32,7 @@ async def simulate_logs() -> None:
         await asyncio.sleep(0.1)
 
 
-async def main() -> None:
+def main() -> None:
     """Função principal da aplicação."""
 
     app = QApplication(sys.argv)
@@ -40,18 +40,18 @@ async def main() -> None:
     asyncio.set_event_loop(loop)
 
     bus = get_event_bus()
-    asyncio.create_task(bus.start())
+    loop.create_task(bus.start())
 
     window = MainWindow(bus)
     load_plugins(window, bus)
     window.show()
 
-    asyncio.create_task(simulate_logs())
+    loop.create_task(simulate_logs())
 
     with loop:
-        await loop.run_forever()
+        loop.run_forever()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
 
