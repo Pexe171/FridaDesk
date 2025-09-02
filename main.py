@@ -9,6 +9,7 @@ import sys
 import time
 
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QFont
 from qasync import QEventLoop
 
 from core.event_bus import get_event_bus, publish
@@ -36,6 +37,7 @@ def main() -> None:
     """Função principal da aplicação."""
 
     app = QApplication(sys.argv)
+    app.setFont(QFont("Sans Serif"))
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 

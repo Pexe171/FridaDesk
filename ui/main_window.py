@@ -94,6 +94,8 @@ class MainWindow(QMainWindow):
         self.main_splitter.setStretchFactor(1, 2)
 
         self.setCentralWidget(self.main_splitter)
+        self.main_splitter.setCollapsible(0, False)
+        self.main_splitter.setSizes([int(self.width() * 0.25), int(self.width() * 0.75)])
 
         # Menu para plugins
         self.plugins_menu = self.menuBar().addMenu("Plugins")
