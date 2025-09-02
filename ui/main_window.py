@@ -3,9 +3,13 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
+from pathlib import Path
+
 from PyQt6.QtGui import QAction, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QMainWindow,
+    QMessageBox,
+    QPushButton,
     QSplitter,
     QTabWidget,
 )
@@ -19,6 +23,7 @@ from core.frida_manager import FridaManager
 from .widgets.charts_panel import ChartsPanel
 from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
+from .widgets.class_explorer_panel import ClassExplorerPanel
 from .widgets.json_viewer import JsonViewer
 from .widgets.process_panel import ProcessPanel
 from .widgets.network_panel import NetworkPanel
@@ -43,6 +48,9 @@ class MainWindow(QMainWindow):
         self._configure_theme()
         self._restore_state()
         self.statusBar().showMessage("Pronto")
+        self._ssl_btn = QPushButton("Bypass SSL Pinning")
+        self._ssl_btn.clicked.connect(self._bypass_ssl_pinning)
+        self.statusBar().addPermanentWidget(self._ssl_btn)
         QShortcut(QKeySequence("F5"), self, activated=self._toggle_collection)
 
     def _build_ui(self) -> None:
@@ -66,10 +74,13 @@ class MainWindow(QMainWindow):
         self.network_panel = NetworkPanel(self._bus)
         self.script_editor_panel = ScriptEditorPanel(self._frida)
         self.script_editor_panel.set_process_panel(self.process_panel)
+        self.class_explorer_panel = ClassExplorerPanel(self._frida)
+        self.class_explorer_panel.set_process_panel(self.process_panel)
         self.data_tabs.addTab(self.charts_panel, "Gráficos")
         self.data_tabs.addTab(self.json_viewer, "JSON")
         self.data_tabs.addTab(self.network_panel, "Rede")
         self.data_tabs.addTab(self.script_editor_panel, "Scripts")
+        self.data_tabs.addTab(self.class_explorer_panel, "Classes")
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.console_panel)
@@ -121,6 +132,29 @@ class MainWindow(QMainWindow):
     def _toggle_collection(self) -> None:
         btn = self.console_panel._pause_btn
         btn.setChecked(not btn.isChecked())
+
+    def _bypass_ssl_pinning(self) -> None:
+        target_text = self.process_panel.current_process()
+        if not target_text:
+            QMessageBox.warning(self, "Bypass SSL", "Selecione um processo")
+            return
+        if "(" in target_text and target_text.endswith(")"):
+            pid_part = target_text.split("(")[-1].rstrip(")")
+            target = int(pid_part) if pid_part.isdigit() else target_text
+        else:
+            target = target_text
+        script_path = Path(__file__).resolve().parent.parent / "core" / "scripts" / "ssl_bypass.js"
+        try:
+            self._frida.attach(target)
+            self._frida.inject_script_from_file(script_path)
+            self.statusBar().showMessage("Bypass SSL aplicado", 3000)
+        except Exception as exc:
+            QMessageBox.critical(self, "Erro", str(exc))
+        finally:
+            try:
+                self._frida.detach()
+            except Exception:
+                pass
 
     # ------------------------------------------------------------------
     # Persistência
