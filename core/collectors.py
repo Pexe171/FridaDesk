@@ -7,12 +7,11 @@ from __future__ import annotations
 
 import asyncio
 import re
-import time
 from datetime import datetime
 from typing import Iterable, Optional
 
 from .event_bus import publish
-from .models import LogEvent, MetricSample
+from .models import LogEvent
 
 
 class BaseCollector:
@@ -127,90 +126,3 @@ class LogcatCollector(BaseCollector):
             self.regex = re.compile(pattern) if pattern else None
 
 
-class ProcessMetricsCollector(BaseCollector):
-    """Coletor periódico de métricas de CPU e memória de um processo."""
-
-    LINE_RE = re.compile(
-        r"^(?P<pid>\d+)\s+\S+\s+(?P<cpu>[\d\.]+)%\s+\S+\s+\S+\s+\S+\s+(?P<rss>\d+)",
-        re.MULTILINE,
-    )
-
-    def __init__(self, pid: int, interval: float = 1.0) -> None:
-        self.pid = pid
-        self.interval = interval
-        self._task: Optional[asyncio.Task[None]] = None
-        self._running = False
-
-    def start(self) -> None:
-        """Inicia a coleta em loop assíncrono."""
-
-        if not self._task:
-            self._running = True
-            self._task = asyncio.create_task(self._run())
-
-    async def stop(self) -> None:
-        """Interrompe a coleta de métricas."""
-
-        self._running = False
-        if self._task:
-            await self._task
-        self._task = None
-
-    async def _run(self) -> None:
-        while self._running:
-            cpu, rss = await self._sample()
-            sample = MetricSample(
-                ts=time.time(),
-                cpu_pct=cpu,
-                rss_mb=rss,
-                process_pid=self.pid,
-            )
-            publish(sample)
-            await asyncio.sleep(self.interval)
-
-    async def _sample(self) -> tuple[float, float]:
-        """Executa ``adb`` para extrair CPU% e RSS em MB."""
-
-        cpu_pct = 0.0
-        rss_mb = 0.0
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                "adb",
-                "shell",
-                "top",
-                "-n",
-                "1",
-                "-b",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-            )
-            out, _ = await proc.communicate()
-            text = out.decode(errors="replace")
-            match = self.LINE_RE.search(text)
-            if match:
-                cpu_pct = float(match.group("cpu"))
-                rss_kb = float(match.group("rss"))
-                rss_mb = rss_kb / 1024
-        except Exception:
-            pass
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                "adb",
-                "shell",
-                "dumpsys",
-                "meminfo",
-                str(self.pid),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-            )
-            out, _ = await proc.communicate()
-            text = out.decode(errors="replace")
-            match = re.search(r"TOTAL\s+(\d+)", text)
-            if match:
-                rss_mb = float(match.group(1)) / 1024
-        except Exception:
-            pass
-
-        return cpu_pct, rss_mb

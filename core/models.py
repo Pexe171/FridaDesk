@@ -44,15 +44,6 @@ class LogEvent(BaseModel):
     raw: str
 
 
-class MetricSample(BaseModel):
-    """Amostra de métricas de desempenho de um processo."""
-
-    ts: float
-    cpu_pct: float
-    rss_mb: float
-    process_pid: int
-
-
 class NetworkEvent(BaseModel):
     """Resumo de uma requisição capturada pelo proxy."""
 
