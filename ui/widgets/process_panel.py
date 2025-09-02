@@ -8,7 +8,14 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from PyQt6.QtWidgets import QListWidget, QListWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QListWidget,
+    QListWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+)
 
 from core.process_manager import ProcessManager
 from core.models import ProcessInfo
@@ -27,13 +34,22 @@ class ProcessPanel(QWidget):
         self._manager.processes_ready.connect(self._refresh)
 
         layout = QVBoxLayout(self)
+        layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         self._list = QListWidget()
         self._list.setUniformItemSizes(True)
         self._list.currentTextChanged.connect(self._on_current_changed)
+        self._list.setStyleSheet(
+            """
+QListWidget::item { padding: 4px; }
+QListWidget::item:hover { background-color: #002b36; }
+QListWidget::item:selected { background-color: #003c50; border: 1px solid #00ffff; }
+"""
+        )
         layout.addWidget(self._list)
 
         self._current = ""
-        self._desired = ""
+        self._desired = "com.example.secureapp (PID: 1337)"
         self._device_panel: DevicePanel | None = None
 
     # ------------------------------------------------------------------
@@ -61,9 +77,27 @@ class ProcessPanel(QWidget):
     def _refresh(self, processes: list[ProcessInfo]) -> None:
         self._list.clear()
         for proc in processes:
-            item = QListWidgetItem(f"{proc.name} ({proc.pid})")
+            text = f"{proc.name} (PID: {proc.pid})"
+            item = QListWidgetItem(text)
             item.setToolTip(proc.user)
+            badge_widget = QWidget()
+            h = QHBoxLayout(badge_widget)
+            h.setContentsMargins(4, 2, 4, 2)
+            h.setSpacing(6)
+            name_lbl = QLabel(proc.name)
+            pid_lbl = QLabel(f"PID: {proc.pid}")
+            status_lbl = QLabel("ativo")
+            for lbl in (pid_lbl, status_lbl):
+                lbl.setStyleSheet(
+                    "background-color:#00ffff;color:#000;padding:1px 3px;border-radius:3px;"
+                )
+            h.addWidget(name_lbl)
+            h.addWidget(pid_lbl)
+            h.addWidget(status_lbl)
+            h.addStretch()
             self._list.addItem(item)
+            self._list.setItemWidget(item, badge_widget)
+            item.setSizeHint(badge_widget.sizeHint())
         if self._desired:
             self.set_current_process(self._desired)
 

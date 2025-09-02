@@ -6,7 +6,7 @@ Autor: Pexe (Instagram: @David.devloli)
 import asyncio
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtGui import QBrush, QColor, QIcon, QPainter
 from PyQt6.QtWidgets import (
     QInputDialog,
     QListWidget,
@@ -37,6 +37,8 @@ class DevicePanel(QWidget):
         self._proc_manager = ProcessManager()
 
         layout = QVBoxLayout(self)
+        layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
 
         self._add_btn = QPushButton("Adicionar dispositivo remoto (Android)")
         self._add_btn.clicked.connect(self._add_remote_device)
@@ -50,9 +52,16 @@ class DevicePanel(QWidget):
         self._list.setUniformItemSizes(True)
         self._list.currentTextChanged.connect(self._on_current_changed)
         self._list.itemDoubleClicked.connect(self._show_options)
+        self._list.setStyleSheet(
+            """
+QListWidget::item { padding: 4px; }
+QListWidget::item:hover { background-color: #002b36; }
+QListWidget::item:selected { background-color: #003c50; border: 1px solid #00ffff; }
+"""
+        )
         layout.addWidget(self._list)
         self._current = ""
-        self._desired = ""
+        self._desired = "Emulador"
 
     # ------------------------------------------------------------------
     # Callbacks
@@ -94,20 +103,33 @@ class DevicePanel(QWidget):
     def _refresh(self, devices: list[DeviceInfo]) -> None:
         self._list.clear()
         for dev in devices:
-            item = QListWidgetItem(f"{dev.name} ({dev.id})")
+            text = (
+                f"Emulador ({dev.id})"
+                if dev.type == DeviceType.EMULATOR
+                else f"{dev.name} ({dev.id})"
+            )
+            item = QListWidgetItem(text)
             item.setToolTip(dev.status or "")
             item.setData(Qt.ItemDataRole.UserRole, dev)
             color = QColor("green") if dev.status == "device" else QColor("gray")
             item.setForeground(QBrush(color))
-
             icon = (
                 self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
                 if dev.type == DeviceType.EMULATOR
                 else self.style().standardIcon(QStyle.StandardPixmap.SP_DriveHDIcon)
             )
+            if dev.type == DeviceType.EMULATOR:
+                pix = icon.pixmap(16, 16)
+                painter = QPainter(pix)
+                painter.setCompositionMode(QPainter.CompositionMode.SourceIn)
+                painter.fillRect(pix.rect(), QColor("#00ffff"))
+                painter.end()
+                icon = QIcon(pix)
             item.setIcon(icon)
             self._list.addItem(item)
-        if self._desired:
+            if self._desired == "Emulador" and dev.type == DeviceType.EMULATOR and not self._current:
+                self.set_current_device(item.text())
+        if self._desired and not self._current:
             self.set_current_device(self._desired)
 
     def _on_current_changed(self, text: str) -> None:

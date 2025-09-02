@@ -6,7 +6,7 @@ Autor: Pexe (Instagram: @David.devloli)
 from datetime import datetime
 from typing import List
 
-from PyQt6.QtGui import QKeySequence, QShortcut
+from PyQt6.QtGui import QKeySequence, QShortcut, QFontDatabase, QFont
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -38,6 +38,10 @@ class ConsolePanel(QWidget):
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
+        mono = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+        mono.setStyleHint(QFont.StyleHint.Monospace)
+        mono.setFamilies(["monospace"])
+        self.setFont(mono)
 
         controls_layout = QHBoxLayout()
         self._filter_input = QLineEdit()

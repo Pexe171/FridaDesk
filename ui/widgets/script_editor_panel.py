@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat
+from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QFontDatabase, QFont
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -123,6 +123,10 @@ class ScriptEditorPanel(QWidget):
         layout.addLayout(controls)
 
         self._editor = QPlainTextEdit()
+        mono = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+        mono.setStyleHint(QFont.StyleHint.Monospace)
+        mono.setFamilies(["monospace"])
+        self._editor.setFont(mono)
         layout.addWidget(self._editor)
         self._highlighter = JavaScriptHighlighter(self._editor.document())
 

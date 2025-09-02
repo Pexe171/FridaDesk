@@ -69,6 +69,27 @@ QStatusBar {{
 QWidget:focus {{
     border: 1px solid {PALETTE['primary']};
 }}
+QScrollBar:vertical, QScrollBar:horizontal {{
+    background: transparent;
+    width: 8px;
+    height: 8px;
+    margin: 0px;
+}}
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{
+    background: {PALETTE['primary']};
+    border: 1px solid {PALETTE['primary']};
+    border-radius: 4px;
+}}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{
+    background: {PALETTE['primary']};
+}}
+QScrollBar::add-line, QScrollBar::sub-line {{
+    background: none;
+    border: none;
+}}
+QScrollBar::add-page, QScrollBar::sub-page {{
+    background: {PALETTE['background']};
+}}
 """
 
 def dark_cyberpunk() -> str:
