@@ -3,12 +3,15 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
+import asyncio
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
     QInputDialog,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QStyle,
     QVBoxLayout,
@@ -17,6 +20,7 @@ from PyQt6.QtWidgets import (
 
 from core.device_manager import DeviceManager
 from core.models import DeviceInfo, DeviceType
+from core.process_manager import ProcessManager
 from .device_options_dialog import DeviceOptionsDialog
 
 
@@ -30,11 +34,17 @@ class DevicePanel(QWidget):
         self._manager.add_listener(self._refresh)
         self._manager.start()
 
+        self._proc_manager = ProcessManager()
+
         layout = QVBoxLayout(self)
 
         self._add_btn = QPushButton("Adicionar dispositivo remoto (Android)")
         self._add_btn.clicked.connect(self._add_remote_device)
         layout.addWidget(self._add_btn)
+
+        self._check_btn = QPushButton("Verificar Frida")
+        self._check_btn.clicked.connect(self._check_frida)
+        layout.addWidget(self._check_btn)
 
         self._list = QListWidget()
         self._list.setUniformItemSizes(True)
@@ -61,6 +71,25 @@ class DevicePanel(QWidget):
             "Notas adicionais (opcional)",
         )
         self._manager.add_remote_device(endpoint, notes)
+
+    def _check_frida(self) -> None:
+        item = self._list.currentItem()
+        if not item:
+            QMessageBox.warning(self, "Frida", "Selecione um dispositivo")
+            return
+        dev = item.data(Qt.ItemDataRole.UserRole)
+        if dev is None:
+            QMessageBox.warning(self, "Frida", "Informações indisponíveis")
+            return
+
+        async def _run() -> None:
+            ok = await self._proc_manager.check_frida(dev)
+            if ok:
+                QMessageBox.information(self, "Frida", "Frida está disponível no dispositivo.")
+            else:
+                QMessageBox.critical(self, "Frida", "Frida não está disponível neste dispositivo.")
+
+        asyncio.create_task(_run())
 
     def _refresh(self, devices: list[DeviceInfo]) -> None:
         self._list.clear()
