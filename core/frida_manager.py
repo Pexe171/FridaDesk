@@ -11,7 +11,7 @@ from typing import Any
 
 import frida  # type: ignore[import]
 
-from .event_bus import publish
+from .event_bus import get_event_bus, publish
 from .models import LogEvent
 
 
@@ -21,6 +21,8 @@ class FridaManager:
     def __init__(self) -> None:
         self._session: Any | None = None
         self._script: Any | None = None
+        self._bus = get_event_bus()
+        self._bus.frida_send_to_script.connect(self.send_message)
 
     # ------------------------------------------------------------------
     # Conexão
@@ -65,6 +67,13 @@ class FridaManager:
         code = Path(path).read_text(encoding="utf-8")
         self.inject_script_from_text(code)
 
+    def send_message(self, payload: Any) -> None:
+        """Envia ``payload`` ao script injetado via ``post``."""
+
+        if self._script is None:
+            raise RuntimeError("Script não injetado")
+        self._script.post(payload)
+
     # ------------------------------------------------------------------
     # Callbacks
     # ------------------------------------------------------------------
@@ -72,6 +81,7 @@ class FridaManager:
         payload = (
             message.get("payload") if isinstance(message, dict) else message
         )
+        self._bus.frida_message_received.emit(payload)
         event = LogEvent(
             ts=time.time(),
             level="info",
