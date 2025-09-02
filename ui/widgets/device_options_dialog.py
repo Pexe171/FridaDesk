@@ -5,19 +5,27 @@ Autor: Pexe (Instagram: @David.devloli)
 
 from PyQt6.QtWidgets import (
     QDialog,
+    QLabel,
     QVBoxLayout,
     QPushButton,
     QMessageBox,
 )
 
+from core.models import DeviceInfo
+
 
 class DeviceOptionsDialog(QDialog):
     """Exibe opções ao selecionar um dispositivo."""
 
-    def __init__(self, device_name: str, parent=None) -> None:
+    def __init__(self, device: DeviceInfo, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(device_name)
+        self.setWindowTitle(device.name)
         layout = QVBoxLayout(self)
+
+        info = QLabel(
+            f"ID: {device.id}\nTipo: {device.type.value}\nStatus: {device.status or 'desconhecido'}"
+        )
+        layout.addWidget(info)
 
         self._graph_btn = QPushButton("Gráfico")
         self._graph_btn.clicked.connect(lambda: self._not_implemented("Gráfico"))

@@ -33,7 +33,8 @@ class ProcessManager(QObject):
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, _ = await proc.communicate()
-            lines = stdout.decode().splitlines()[1:]
+            text = stdout.decode("utf-8", errors="replace")
+            lines = text.splitlines()[1:]
         except FileNotFoundError:
             lines = []
 

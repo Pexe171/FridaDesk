@@ -74,3 +74,24 @@ async def test_list_processes_remote(monkeypatch) -> None:
     assert received[0].pid == 4321
     assert received[0].name == "remoto.app"
     assert received[0].user == "outroUsuario"
+
+
+@pytest.mark.asyncio
+async def test_list_processes_invalid_encoding(monkeypatch) -> None:
+    """Saída com bytes inválidos não deve gerar exceção."""
+
+    async def fake_create_subprocess_exec(*cmd, stdout=None, stderr=None):
+        data = b""" PID Name User\n1234 app Jos\xe9\n"""
+        return FakeProcess(data)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create_subprocess_exec)
+
+    manager = ProcessManager()
+    received: list = []
+    manager.processes_ready.connect(lambda procs: received.extend(procs))
+
+    device = DeviceInfo(id="ABC123", name="Teste", type=DeviceType.USB)
+    await manager.list_processes(device)
+
+    assert len(received) == 1
+    assert received[0].name == "app"
