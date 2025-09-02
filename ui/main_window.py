@@ -20,6 +20,7 @@ from core.event_bus import EventBus
 from core.settings import load_settings, save_settings
 from core.frida_manager import FridaManager
 
+from .style import dark_cyberpunk
 from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
 from .widgets.class_explorer_panel import ClassExplorerPanel
@@ -110,11 +111,7 @@ class MainWindow(QMainWindow):
             "QTabWidget::pane { border: 1px solid #cccccc; }"
             "QTabBar::tab { padding: 4px; }"
         )
-        self._dark_qss = (
-            "QWidget { background-color: #2b2b2b; color: #dddddd; }"
-            "QTabWidget::pane { border: 1px solid #444444; }"
-            "QTabBar::tab { padding: 4px; }"
-        )
+        self._dark_qss = dark_cyberpunk()
         self._apply_theme()
         QShortcut(QKeySequence("Ctrl+T"), self, activated=self._toggle_theme)
 
