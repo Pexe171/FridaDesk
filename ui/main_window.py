@@ -15,12 +15,14 @@ from PyQt6.QtCore import Qt
 from core.event_bus import EventBus
 from core.settings import load_settings, save_settings
 
+from core.frida_manager import FridaManager
 from .widgets.charts_panel import ChartsPanel
 from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
 from .widgets.json_viewer import JsonViewer
 from .widgets.process_panel import ProcessPanel
 from .widgets.network_panel import NetworkPanel
+from .widgets.script_editor_panel import ScriptEditorPanel
 
 
 class MainWindow(QMainWindow):
@@ -29,6 +31,7 @@ class MainWindow(QMainWindow):
     def __init__(self, bus: EventBus) -> None:
         super().__init__()
         self._bus = bus
+        self._frida = FridaManager()
         self._settings = load_settings()
         self.setWindowTitle("FridaDesk")
         size = self._settings.get("window", {}).get("size", [1024, 768])
@@ -61,9 +64,12 @@ class MainWindow(QMainWindow):
         self.charts_panel = ChartsPanel(self._bus)
         self.json_viewer = JsonViewer(self._bus)
         self.network_panel = NetworkPanel(self._bus)
+        self.script_panel = ScriptEditorPanel(self._frida)
+        self.script_panel.set_process_panel(self.process_panel)
         self.data_tabs.addTab(self.charts_panel, "Gráficos")
         self.data_tabs.addTab(self.json_viewer, "JSON")
         self.data_tabs.addTab(self.network_panel, "Rede")
+        self.data_tabs.addTab(self.script_panel, "Scripts")
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.console_panel)
@@ -124,6 +130,7 @@ class MainWindow(QMainWindow):
         self.device_panel.load_state(self._settings)
         self.process_panel.load_state(self._settings)
         self.charts_panel.load_state(self._settings)
+        self.script_panel.load_state(self._settings)
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         self._settings["window"] = {
@@ -135,5 +142,6 @@ class MainWindow(QMainWindow):
         self.device_panel.save_state(self._settings)
         self.process_panel.save_state(self._settings)
         self.charts_panel.save_state(self._settings)
+        self.script_panel.save_state(self._settings)
         save_settings(self._settings)
         super().closeEvent(event)
