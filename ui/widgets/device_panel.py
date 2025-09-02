@@ -3,6 +3,7 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
     QInputDialog,
@@ -66,6 +67,7 @@ class DevicePanel(QWidget):
         for dev in devices:
             item = QListWidgetItem(f"{dev.name} ({dev.id})")
             item.setToolTip(dev.status or "")
+            item.setData(Qt.ItemDataRole.UserRole, dev)
             color = QColor("green") if dev.status == "device" else QColor("gray")
             item.setForeground(QBrush(color))
 
@@ -85,7 +87,10 @@ class DevicePanel(QWidget):
     def _show_options(self, item: QListWidgetItem) -> None:
         if not item:
             return
-        dialog = DeviceOptionsDialog(item.text(), self)
+        dev = item.data(Qt.ItemDataRole.UserRole)
+        if dev is None:
+            return
+        dialog = DeviceOptionsDialog(dev, self)
         dialog.exec()
 
     def set_current_device(self, name: str) -> None:
