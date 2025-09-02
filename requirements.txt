@@ -1,10 +1,7 @@
 PyQt6
 qasync
-pyqtgraph
 pydantic
-jinja2
 mitmproxy
-matplotlib
 pyinstaller
 ruff
 mypy

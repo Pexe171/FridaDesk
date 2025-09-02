@@ -20,7 +20,6 @@ from core.event_bus import EventBus
 from core.settings import load_settings, save_settings
 from core.frida_manager import FridaManager
 
-from .widgets.charts_panel import ChartsPanel
 from .widgets.console_panel import ConsolePanel
 from .widgets.device_panel import DevicePanel
 from .widgets.class_explorer_panel import ClassExplorerPanel
@@ -69,14 +68,12 @@ class MainWindow(QMainWindow):
 
         # Direita inferior: abas de gráficos, JSON e rede
         self.data_tabs = QTabWidget()
-        self.charts_panel = ChartsPanel(self._bus)
         self.json_viewer = JsonViewer(self._bus)
         self.network_panel = NetworkPanel(self._bus)
         self.script_editor_panel = ScriptEditorPanel(self._frida)
         self.script_editor_panel.set_process_panel(self.process_panel)
         self.class_explorer_panel = ClassExplorerPanel(self._frida)
         self.class_explorer_panel.set_process_panel(self.process_panel)
-        self.data_tabs.addTab(self.charts_panel, "Gráficos")
         self.data_tabs.addTab(self.json_viewer, "JSON")
         self.data_tabs.addTab(self.network_panel, "Rede")
         self.data_tabs.addTab(self.script_editor_panel, "Scripts")
@@ -163,7 +160,6 @@ class MainWindow(QMainWindow):
         self.console_panel.load_state(self._settings)
         self.device_panel.load_state(self._settings)
         self.process_panel.load_state(self._settings)
-        self.charts_panel.load_state(self._settings)
 
     def closeEvent(self, event) -> None:  # type: ignore[override]
         self._settings["window"] = {
@@ -174,6 +170,5 @@ class MainWindow(QMainWindow):
         self.console_panel.save_state(self._settings)
         self.device_panel.save_state(self._settings)
         self.process_panel.save_state(self._settings)
-        self.charts_panel.save_state(self._settings)
         save_settings(self._settings)
         super().closeEvent(event)

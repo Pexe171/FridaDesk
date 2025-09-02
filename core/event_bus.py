@@ -10,14 +10,13 @@ from typing import Any
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from .models import LogEvent, MetricSample, NetworkEvent
+from .models import LogEvent, NetworkEvent
 
 
 class EventBus(QObject):
     """Centraliza a distribuição de eventos para a interface."""
 
     log_event = pyqtSignal(object)
-    metric_sample = pyqtSignal(object)
     network_event = pyqtSignal(object)
     frida_message_received = pyqtSignal(object)
     frida_send_to_script = pyqtSignal(object)
@@ -35,8 +34,6 @@ class EventBus(QObject):
             event = await self._queue.get()
             if isinstance(event, LogEvent):
                 self.log_event.emit(event)
-            elif isinstance(event, MetricSample):
-                self.metric_sample.emit(event)
             elif isinstance(event, NetworkEvent):
                 self.network_event.emit(event)
             self._queue.task_done()

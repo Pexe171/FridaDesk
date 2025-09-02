@@ -6,7 +6,6 @@ Repositório oficial do **Frida GUI Dashboard**, uma aplicação de desktop mult
 - Python 3.10+
 - PyQt6
 - qasync
-- pyqtgraph
 - ADB (subprocess ou pure-python-adb)
 - mitmproxy (opcional)
 - pydantic

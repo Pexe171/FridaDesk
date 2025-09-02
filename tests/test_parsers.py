@@ -1,4 +1,4 @@
-from core.collectors import LogcatCollector, ProcessMetricsCollector
+from core.collectors import LogcatCollector
 
 
 def test_logcat_parse_line():
@@ -9,12 +9,3 @@ def test_logcat_parse_line():
     assert event.level == "I"
     assert event.tag == "Tag"
     assert event.message == "Olá"
-
-
-def test_top_regex():
-    sample = "123 user 10% 0 0 0 2048"
-    match = ProcessMetricsCollector.LINE_RE.search(sample)
-    assert match is not None
-    assert match.group("pid") == "123"
-    assert match.group("cpu") == "10"
-    assert match.group("rss") == "2048"
