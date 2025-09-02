@@ -18,12 +18,14 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QComboBox,
     QPlainTextEdit,
+    QLineEdit,
     QVBoxLayout,
     QWidget,
 )
 
 from core.frida_manager import FridaManager
 from core.models import ProcessInfo
+from core.event_bus import get_event_bus
 
 
 class JavaScriptHighlighter(QSyntaxHighlighter):
@@ -96,6 +98,7 @@ class ScriptEditorPanel(QWidget):
         super().__init__()
         self._manager = manager
         self._process_panel = None
+        self._bus = get_event_bus()
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -122,6 +125,15 @@ class ScriptEditorPanel(QWidget):
         self._editor = QPlainTextEdit()
         layout.addWidget(self._editor)
         self._highlighter = JavaScriptHighlighter(self._editor.document())
+
+        msg_layout = QHBoxLayout()
+        self._message_input = QLineEdit()
+        self._message_input.setPlaceholderText("Mensagem para o script")
+        send_btn = QPushButton("Enviar Mensagem")
+        send_btn.clicked.connect(self._send_message)
+        msg_layout.addWidget(self._message_input)
+        msg_layout.addWidget(send_btn)
+        layout.addLayout(msg_layout)
 
     # ------------------------------------------------------------------
     # Integração com ProcessPanel
@@ -207,6 +219,14 @@ class ScriptEditorPanel(QWidget):
             self._status("Script injetado")
         except Exception as exc:  # pragma: no cover - falhas da frida
             QMessageBox.critical(self, "Erro", str(exc))
+
+    def _send_message(self) -> None:
+        text = self._message_input.text()
+        if not text.strip():
+            return
+        self._bus.frida_send_to_script.emit(text)
+        self._message_input.clear()
+        self._status("Mensagem enviada")
 
     def _status(self, text: str) -> None:
         win = self.window()

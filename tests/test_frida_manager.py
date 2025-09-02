@@ -19,6 +19,7 @@ class FakeScript:
     def __init__(self, payload: str) -> None:
         self._payload = payload
         self._cb = None
+        self.last_post = None
 
     def on(self, _event: str, callback) -> None:  # pragma: no cover - assinatura simplificada
         self._cb = callback
@@ -29,6 +30,11 @@ class FakeScript:
 
     def unload(self) -> None:  # pragma: no cover - sem efeitos
         pass
+
+    def post(self, message) -> None:  # pragma: no cover - comportamento simples
+        self.last_post = message
+        if self._cb:
+            self._cb({"type": "send", "payload": message}, None)
 
 
 class FakeSession:
@@ -58,6 +64,11 @@ def get_manager(monkeypatch):
     monkeypatch.setitem(sys.modules, "frida", fake)
     import core.frida_manager as fm
     importlib.reload(fm)
+    bus = event_bus.get_event_bus()
+    try:
+        bus.frida_send_to_script.disconnect()  # type: ignore[arg-type]
+    except TypeError:
+        pass
     return fm.FridaManager()
 
 
@@ -88,4 +99,27 @@ def test_inject_script_from_file(monkeypatch, tmp_path: Path) -> None:
 
     assert len(eventos) == 1
     assert eventos[0].message == "arquivo"
+
+
+def test_bidirectional_messages(monkeypatch) -> None:
+    monkeypatch.setattr(event_bus, "publish", lambda e: None)
+    manager = get_manager(monkeypatch)
+    bus = event_bus.get_event_bus()
+    received: list[str] = []
+
+    def handler(msg):
+        received.append(msg)
+
+    bus.frida_message_received.connect(handler)
+
+    manager.attach(1)
+    manager.inject_script_from_text("send('oi')")
+    received.clear()
+
+    bus.frida_send_to_script.emit("ping")
+
+    assert manager._script.last_post == "ping"
+    assert received == ["ping"]
+
+    bus.frida_message_received.disconnect(handler)
 

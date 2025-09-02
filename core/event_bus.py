@@ -19,6 +19,8 @@ class EventBus(QObject):
     log_event = pyqtSignal(object)
     metric_sample = pyqtSignal(object)
     network_event = pyqtSignal(object)
+    frida_message_received = pyqtSignal(object)
+    frida_send_to_script = pyqtSignal(object)
 
     def __init__(self) -> None:
         super().__init__()
