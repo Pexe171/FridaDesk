@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 
 from core.device_manager import DeviceManager
 from core.models import DeviceInfo, DeviceType
+from .device_options_dialog import DeviceOptionsDialog
 
 
 class DevicePanel(QWidget):
@@ -37,6 +38,7 @@ class DevicePanel(QWidget):
         self._list = QListWidget()
         self._list.setUniformItemSizes(True)
         self._list.currentTextChanged.connect(self._on_current_changed)
+        self._list.itemDoubleClicked.connect(self._show_options)
         layout.addWidget(self._list)
         self._current = ""
         self._desired = ""
@@ -79,6 +81,12 @@ class DevicePanel(QWidget):
 
     def _on_current_changed(self, text: str) -> None:
         self._current = text
+
+    def _show_options(self, item: QListWidgetItem) -> None:
+        if not item:
+            return
+        dialog = DeviceOptionsDialog(item.text(), self)
+        dialog.exec()
 
     def set_current_device(self, name: str) -> None:
         for i in range(self._list.count()):

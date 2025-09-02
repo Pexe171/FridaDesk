@@ -3,12 +3,19 @@
 Autor: Pexe (Instagram: @David.devloli)
 """
 
+# mypy: ignore-errors
+
 import asyncio
 import time
-from typing import Optional
+from typing import Any, Optional, TYPE_CHECKING
 
-from mitmproxy import http, options
-from mitmproxy.tools.dump import DumpMaster
+if TYPE_CHECKING:  # pragma: no cover
+    http = Any
+    options = Any
+    DumpMaster = Any
+else:
+    from mitmproxy import http, options  # type: ignore
+    from mitmproxy.tools.dump import DumpMaster  # type: ignore
 
 from .event_bus import publish
 from .models import NetworkEvent
