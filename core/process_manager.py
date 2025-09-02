@@ -53,3 +53,22 @@ class ProcessManager(QObject):
             processes.append(ProcessInfo(pid=pid, name=name, user=user))
 
         self.processes_ready.emit(processes)
+
+    async def check_frida(self, device: DeviceInfo) -> bool:
+        """Verifica se o Frida está disponível no ``device``."""
+
+        if ":" in device.id:
+            cmd = ["frida-ps", "-R"]
+        else:
+            cmd = ["frida-ps", "-U"]
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await proc.communicate()
+            return proc.returncode == 0
+        except FileNotFoundError:
+            return False

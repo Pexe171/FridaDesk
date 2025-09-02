@@ -95,3 +95,55 @@ async def test_list_processes_invalid_encoding(monkeypatch) -> None:
 
     assert len(received) == 1
     assert received[0].name == "app"
+
+
+@pytest.mark.asyncio
+async def test_check_frida_usb(monkeypatch) -> None:
+    """Verificação deve usar dispositivo USB quando aplicável."""
+
+    captured: dict[str, Any] = {}
+
+    class Proc:
+        returncode = 0
+
+        async def communicate(self) -> tuple[bytes, bytes]:
+            return b"", b""
+
+    async def fake_create_subprocess_exec(*cmd, stdout=None, stderr=None):
+        captured["cmd"] = cmd
+        return Proc()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create_subprocess_exec)
+
+    manager = ProcessManager()
+    device = DeviceInfo(id="ABC123", name="Teste", type=DeviceType.USB)
+    ok = await manager.check_frida(device)
+
+    assert ok is True
+    assert captured["cmd"] == ("frida-ps", "-U")
+
+
+@pytest.mark.asyncio
+async def test_check_frida_remote(monkeypatch) -> None:
+    """Verificação deve usar dispositivo remoto quando necessário."""
+
+    captured: dict[str, Any] = {}
+
+    class Proc:
+        returncode = 0
+
+        async def communicate(self) -> tuple[bytes, bytes]:
+            return b"", b""
+
+    async def fake_create_subprocess_exec(*cmd, stdout=None, stderr=None):
+        captured["cmd"] = cmd
+        return Proc()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create_subprocess_exec)
+
+    manager = ProcessManager()
+    device = DeviceInfo(id="10.0.0.1:5555", name="Remoto", type=DeviceType.USB)
+    ok = await manager.check_frida(device)
+
+    assert ok is True
+    assert captured["cmd"] == ("frida-ps", "-R")
