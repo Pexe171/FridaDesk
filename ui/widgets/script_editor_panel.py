@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from core.frida_manager import FridaManager
+from core.frida_manager import FridaManager, parse_codeshare_slug
 from core.models import ProcessInfo
 from core.event_bus import get_event_bus
 
@@ -125,6 +125,7 @@ class ScriptEditorPanel(QWidget):
         self._editor = QPlainTextEdit()
         layout.addWidget(self._editor)
         self._highlighter = JavaScriptHighlighter(self._editor.document())
+        self._editor.textChanged.connect(self._check_codeshare)
 
         msg_layout = QHBoxLayout()
         self._message_input = QLineEdit()
@@ -170,6 +171,23 @@ class ScriptEditorPanel(QWidget):
     # ------------------------------------------------------------------
     # Ações
     # ------------------------------------------------------------------
+    def _check_codeshare(self) -> None:
+        """Detecta comandos do CodeShare colados no editor."""
+
+        text = self._editor.toPlainText()
+        slug = parse_codeshare_slug(text)
+        if not slug:
+            return
+        try:
+            code = self._manager.fetch_codeshare_script(slug)
+        except Exception as exc:  # pragma: no cover - erros de rede
+            QMessageBox.critical(self, "Erro", str(exc))
+            return
+        self._editor.blockSignals(True)
+        self._editor.setPlainText(code)
+        self._editor.blockSignals(False)
+        self._status("Script carregado do CodeShare")
+
     def _load_script(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self,

@@ -123,3 +123,41 @@ def test_bidirectional_messages(monkeypatch) -> None:
 
     bus.frida_message_received.disconnect(handler)
 
+
+def test_parse_codeshare_slug() -> None:
+    from core.frida_manager import parse_codeshare_slug
+
+    cmd1 = "$ frida --codeshare pcipolloni/universal-android-ssl-pinning-bypass-with-frida -f app"
+    cmd2 = "frida --codeshare pcipolloni/universal-android-ssl-pinning-bypass-with-frida -f app"
+    slug = "pcipolloni/universal-android-ssl-pinning-bypass-with-frida"
+
+    assert parse_codeshare_slug(cmd1) == slug
+    assert parse_codeshare_slug(cmd2) == slug
+
+
+def test_fetch_codeshare_script(monkeypatch) -> None:
+    manager = get_manager(monkeypatch)
+
+    class DummyResp:
+        def __init__(self, data: str) -> None:
+            self._data = data.encode()
+
+        def read(self) -> bytes:
+            return self._data
+
+        def __enter__(self):  # pragma: no cover - contexto simples
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:  # pragma: no cover
+            pass
+
+    def fake_urlopen(url):  # pragma: no cover - usado apenas em teste
+        return DummyResp("// script")
+
+    import core.frida_manager as fm
+
+    monkeypatch.setattr(fm, "urlopen", fake_urlopen)
+
+    code = manager.fetch_codeshare_script("autor/script")
+    assert "// script" == code
+
