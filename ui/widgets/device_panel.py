@@ -101,6 +101,8 @@ QListWidget::item:selected { background-color: #003c50; border: 1px solid #00fff
         asyncio.create_task(_run())
 
     def _refresh(self, devices: list[DeviceInfo]) -> None:
+        previous = self._current
+        self._current = ""
         self._list.clear()
         for dev in devices:
             text = (
@@ -127,7 +129,13 @@ QListWidget::item:selected { background-color: #003c50; border: 1px solid #00fff
                 icon = QIcon(pix)
             item.setIcon(icon)
             self._list.addItem(item)
-            if self._desired == "Emulador" and dev.type == DeviceType.EMULATOR and not self._current:
+            if previous and item.text() == previous:
+                self.set_current_device(item.text())
+            elif (
+                self._desired == "Emulador"
+                and dev.type == DeviceType.EMULATOR
+                and not self._current
+            ):
                 self.set_current_device(item.text())
         if self._desired and not self._current:
             self.set_current_device(self._desired)

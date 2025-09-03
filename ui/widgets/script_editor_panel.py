@@ -162,7 +162,7 @@ class ScriptEditorPanel(QWidget):
     def _update_processes(self, processes: List[ProcessInfo]) -> None:
         self._process_combo.clear()
         for proc in processes:
-            self._process_combo.addItem(f"{proc.name} ({proc.pid})")
+            self._process_combo.addItem(f"{proc.name} (PID: {proc.pid})")
         if self._process_panel:
             self._sync_current(self._process_panel.current_process())
 

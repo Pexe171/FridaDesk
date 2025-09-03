@@ -76,7 +76,7 @@ class ClassExplorerPanel(QWidget):
     def _update_processes(self, processes: List[ProcessInfo]) -> None:
         self._process_combo.clear()
         for proc in processes:
-            self._process_combo.addItem(f"{proc.name} ({proc.pid})")
+            self._process_combo.addItem(f"{proc.name} (PID: {proc.pid})")
         if self._process_panel:
             self._sync_current(self._process_panel.current_process())
 
@@ -94,6 +94,8 @@ class ClassExplorerPanel(QWidget):
             return None
         if "(" in target_text and target_text.endswith(")"):
             pid_part = target_text.split("(")[-1].rstrip(")")
+            if pid_part.startswith("PID:"):
+                pid_part = pid_part.split(":", 1)[1].strip()
             return int(pid_part) if pid_part.isdigit() else target_text
         return target_text
 
