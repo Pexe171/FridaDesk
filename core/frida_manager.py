@@ -5,14 +5,39 @@ Autor: Pexe (Instagram: @David.devloli)
 
 from __future__ import annotations
 
+import re
 import time
 from pathlib import Path
 from typing import Any
+from urllib.request import urlopen
 
 import frida  # type: ignore[import]
 
 from .event_bus import get_event_bus, publish
 from .models import LogEvent
+
+
+CODESHARE_RE = re.compile(r"--codeshare\s+([^\s]+)")
+
+
+def parse_codeshare_slug(text: str) -> str | None:
+    """Extrai o *slug* de um comando do CodeShare.
+
+    Aceita entradas nos formatos:
+    ``$ frida --codeshare autor/script -f alvo``
+    ``frida --codeshare autor/script -f alvo``
+    ``autor/script``
+    """
+
+    cleaned = text.strip()
+    if cleaned.startswith("$"):
+        cleaned = cleaned[1:].strip()
+    match = CODESHARE_RE.search(cleaned)
+    if match:
+        return match.group(1)
+    if "/" in cleaned and " " not in cleaned:
+        return cleaned
+    return None
 
 
 class FridaManager:
@@ -51,6 +76,16 @@ class FridaManager:
     # ------------------------------------------------------------------
     # Scripts
     # ------------------------------------------------------------------
+    def fetch_codeshare_script(self, slug_or_command: str) -> str:
+        """Obtém o código de um script hospedado no CodeShare."""
+
+        slug = parse_codeshare_slug(slug_or_command)
+        if not slug:
+            raise ValueError("Comando CodeShare inválido")
+        url = f"https://codeshare.frida.re/@{slug}.js"
+        with urlopen(url) as resp:  # pragma: no cover - IO externo
+            return resp.read().decode("utf-8")
+
     def inject_script_from_text(self, source: str) -> None:
         """Carrega e injeta um script a partir de ``source``."""
 

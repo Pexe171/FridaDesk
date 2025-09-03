@@ -17,5 +17,7 @@ Para mais detalhes sobre objetivos, foco e público-alvo, consulte [docs/visao_g
 ## Recursos
 
 - Detecção automática de dispositivos ADB (USB e emuladores) com atualização em tempo real e cadastro de endpoints remotos.
+- Carregamento automático de scripts do CodeShare ao colar comandos
+  `frida --codeshare autor/script` no editor de scripts.
 
 Autor: Pexe (Instagram: [@David.devloli](https://instagram.com/David.devloli))
