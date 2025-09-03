@@ -6,7 +6,7 @@ Autor: Pexe (Instagram: @David.devloli)
 from __future__ import annotations
 
 import asyncio
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple
 
 from .models import DeviceInfo, DeviceType
 
@@ -24,6 +24,7 @@ class DeviceManager:
         self._remotes: Dict[str, DeviceInfo] = {}
         self._listeners: List[Callable[[List[DeviceInfo]], None]] = []
         self._task: asyncio.Task | None = None
+        self._known_ports: Tuple[int, ...] = (5555, 62001, 21503)
 
     # ------------------------------------------------------------------
     # Controle de execução
@@ -33,6 +34,7 @@ class DeviceManager:
 
         if self._task is None:
             loop = asyncio.get_event_loop()
+            loop.create_task(self._connect_known_emulators())
             self._task = loop.create_task(self._poll_loop())
 
     def stop(self) -> None:
@@ -86,6 +88,7 @@ class DeviceManager:
     async def _update_devices(self) -> None:
         """Executa ``adb devices`` e atualiza os dispositivos encontrados."""
 
+        await self._connect_known_emulators()
         seen: Dict[str, DeviceInfo] = {}
 
         try:
@@ -109,7 +112,7 @@ class DeviceManager:
             status = parts[1] if len(parts) > 1 else "unknown"
             dtype = (
                 DeviceType.EMULATOR
-                if serial.startswith("emulator-")
+                if serial.startswith("emulator-") or serial.startswith("127.0.0.1:")
                 else DeviceType.USB
             )
             seen[serial] = DeviceInfo(
@@ -121,4 +124,23 @@ class DeviceManager:
 
         self._devices = seen
         self._emit()
+
+    async def _connect_known_emulators(self) -> None:
+        """Tenta conectar a portas padrão de emuladores."""
+
+        for port in self._known_ports:
+            endpoint = f"127.0.0.1:{port}"
+            if endpoint in self._devices:
+                continue
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    "adb",
+                    "connect",
+                    endpoint,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await proc.communicate()
+            except FileNotFoundError:
+                break
 

@@ -13,6 +13,8 @@ Este documento resume as portas mais comuns utilizadas por emuladores Android e 
 | **Genymotion**    | 5555             | Conexão típica em `127.0.0.1:5555`. |
 | **Android Studio (AVD)** | 5554/5555 | O console usa porta par (ex.: `5554`) e o ADB usa a porta ímpar seguinte (`5555`). |
 
+O `DeviceManager` tenta conectar automaticamente às portas listadas acima para localizar emuladores em execução no host.
+
 ## Portas relacionadas ao ADB
 
 * **5037** – Porta do servidor ADB no host.
