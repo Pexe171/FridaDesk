@@ -86,16 +86,16 @@ class DeviceManager:
             await asyncio.sleep(self._interval)
 
     async def _update_devices(self) -> None:
-        """Reinicia o servidor ADB e atualiza os dispositivos encontrados."""
+        """Garante que o servidor ADB esteja ativo e atualiza os dispositivos."""
 
         try:
-            kill_proc = await asyncio.create_subprocess_exec(
+            start_proc = await asyncio.create_subprocess_exec(
                 "adb",
-                "kill-server",
+                "start-server",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            await kill_proc.communicate()
+            await start_proc.communicate()
         except FileNotFoundError:
             pass
 
