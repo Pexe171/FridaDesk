@@ -24,7 +24,28 @@ class DeviceManager:
         self._remotes: Dict[str, DeviceInfo] = {}
         self._listeners: List[Callable[[List[DeviceInfo]], None]] = []
         self._task: asyncio.Task | None = None
-        self._known_ports: Tuple[int, ...] = (5555, 62001, 21503)
+        self._known_ports: Tuple[int, ...] = self._generate_known_ports()
+
+    @staticmethod
+    def _generate_known_ports() -> Tuple[int, ...]:
+        """Gera faixas de portas ADB comuns em emuladores.
+
+        Inclui variações para múltiplas instâncias dos principais
+        emuladores do mercado.
+        """
+
+        ports: list[int] = []
+
+        # BlueStacks/LDPlayer/Genymotion: 5555, 5557, 5559, ...
+        ports.extend(range(5555, 5585, 2))
+
+        # Nox Player: 62001, 62003, ...
+        ports.extend(range(62001, 62051, 2))
+
+        # MEmu: 21503, 21513, ...
+        ports.extend(range(21503, 21553, 10))
+
+        return tuple(ports)
 
     # ------------------------------------------------------------------
     # Controle de execução
