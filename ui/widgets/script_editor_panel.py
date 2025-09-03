@@ -105,7 +105,11 @@ class CodeEditor(QPlainTextEdit):
             selection = QTextEdit.ExtraSelection()
             line_color = QColor("#00ffff20")
             selection.format.setBackground(line_color)
-            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            if hasattr(QTextFormat, "FullWidthSelection"):
+                prop = QTextFormat.FullWidthSelection
+            else:  # PyQt6
+                prop = QTextFormat.Property.FullWidthSelection
+            selection.format.setProperty(prop, True)
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
             extra.append(selection)
