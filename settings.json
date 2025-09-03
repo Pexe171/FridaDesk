@@ -1,7 +1,16 @@
 {
     "autor": "Pexe",
     "instagram": "David.devloli",
-    "window": {"size": [1024, 768], "pos": [100, 100]},
+    "window": {
+        "size": [
+            1024,
+            768
+        ],
+        "pos": [
+            100,
+            100
+        ]
+    },
     "theme": "dark",
     "last_device": "",
     "last_process": "",
