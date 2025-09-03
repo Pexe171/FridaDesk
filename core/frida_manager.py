@@ -13,6 +13,7 @@ import frida  # type: ignore[import]
 
 from .event_bus import get_event_bus, publish
 from .models import LogEvent
+from .codeshare import download_codeshare_script
 
 
 class FridaManager:
@@ -65,6 +66,12 @@ class FridaManager:
         """Lê um arquivo e injeta seu conteúdo como script."""
 
         code = Path(path).read_text(encoding="utf-8")
+        self.inject_script_from_text(code)
+
+    def inject_script_from_codeshare(self, identifier: str) -> None:
+        """Baixa um snippet do CodeShare e o injeta."""
+
+        code = download_codeshare_script(identifier)
         self.inject_script_from_text(code)
 
     def send_message(self, payload: Any) -> None:

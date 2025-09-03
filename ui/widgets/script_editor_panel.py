@@ -31,11 +31,13 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QTextEdit,
     QStyle,
+    QInputDialog,
 )
 
 from core.frida_manager import FridaManager
 from core.models import ProcessInfo
 from core.event_bus import get_event_bus
+from core.codeshare import download_codeshare_script, extract_codeshare_slug
 
 
 class LineNumberArea(QWidget):
@@ -214,6 +216,12 @@ class ScriptEditorPanel(QWidget):
         load_btn.setStyleSheet("color: #00ffff;")
         controls.addWidget(load_btn)
 
+        codeshare_btn = QPushButton("CodeShare")
+        codeshare_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
+        codeshare_btn.clicked.connect(self._load_codeshare)
+        codeshare_btn.setStyleSheet("color: #00ffff;")
+        controls.addWidget(codeshare_btn)
+
         save_btn = QPushButton("Salvar")
         save_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         save_btn.clicked.connect(self._save_script)
@@ -298,6 +306,18 @@ class ScriptEditorPanel(QWidget):
         except Exception as exc:  # pragma: no cover - erros de IO
             QMessageBox.critical(self, "Erro", str(exc))
 
+    def _load_codeshare(self) -> None:
+        text, ok = QInputDialog.getText(
+            self, "CodeShare", "Comando ou link:")
+        if not ok or not text.strip():
+            return
+        try:
+            code = download_codeshare_script(text)
+            self._editor.setPlainText(code)
+            self._status("Script carregado do CodeShare")
+        except Exception as exc:  # pragma: no cover - falhas de rede
+            QMessageBox.critical(self, "Erro", str(exc))
+
     def _save_script(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
             self,
@@ -323,6 +343,13 @@ class ScriptEditorPanel(QWidget):
         else:
             target = target_text
         code = self._editor.toPlainText()
+        if extract_codeshare_slug(code):
+            try:
+                code = download_codeshare_script(code)
+                self._editor.setPlainText(code)
+            except Exception as exc:  # pragma: no cover - falhas de rede
+                QMessageBox.critical(self, "Erro", str(exc))
+                return
         if not code.strip():
             QMessageBox.warning(self, "Injeção", "O script está vazio")
             return
