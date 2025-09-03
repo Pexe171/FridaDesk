@@ -6,9 +6,10 @@ Autor: Pexe (Instagram: @David.devloli)
 from datetime import datetime
 from typing import List
 
-from PyQt6.QtGui import QKeySequence, QShortcut, QFontDatabase, QFont
+from PyQt6.QtGui import QKeySequence, QShortcut, QFontDatabase, QFont, QColor
 from PyQt6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QHBoxLayout,
     QLineEdit,
     QMessageBox,
@@ -44,6 +45,21 @@ class ConsolePanel(QWidget):
         self.setFont(mono)
 
         controls_layout = QHBoxLayout()
+        self._info_chk = QCheckBox("INFO")
+        self._info_chk.setChecked(True)
+        self._info_chk.toggled.connect(lambda _: self._apply_filter(self._filter_input.text()))
+        controls_layout.addWidget(self._info_chk)
+
+        self._warn_chk = QCheckBox("WARN")
+        self._warn_chk.setChecked(True)
+        self._warn_chk.toggled.connect(lambda _: self._apply_filter(self._filter_input.text()))
+        controls_layout.addWidget(self._warn_chk)
+
+        self._error_chk = QCheckBox("ERROR")
+        self._error_chk.setChecked(True)
+        self._error_chk.toggled.connect(lambda _: self._apply_filter(self._filter_input.text()))
+        controls_layout.addWidget(self._error_chk)
+
         self._filter_input = QLineEdit()
         self._filter_input.setPlaceholderText("Filtrar/Buscar logs")
         self._filter_input.setToolTip("Buscar texto nos logs (Ctrl+F)")
@@ -84,6 +100,21 @@ class ConsolePanel(QWidget):
         self._table = QTableWidget(0, 4)
         self._table.setHorizontalHeaderLabels(["Tempo", "Nível", "Tag", "Mensagem"])
         self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.setStyleSheet(
+            """
+            QTableWidget {
+                background-color: #000000;
+                color: #e0e0e0;
+            }
+            QScrollBar:vertical {
+                width: 6px;
+                background: #000000;
+            }
+            QScrollBar::handle:vertical {
+                background: #00ffff;
+            }
+            """
+        )
         layout.addWidget(self._table)
 
     # ------------------------------------------------------------------
@@ -108,23 +139,42 @@ class ConsolePanel(QWidget):
         self._table.setItem(row, 1, QTableWidgetItem(event.level))
         self._table.setItem(row, 2, QTableWidgetItem(event.tag))
         self._table.setItem(row, 3, QTableWidgetItem(event.message))
+
+        color_map = {
+            "INFO": QColor("#e0e0e0"),
+            "WARN": QColor("#ffd700"),
+            "ERROR": QColor("#ff4500"),
+        }
+        fg = color_map.get(event.level, QColor("#e0e0e0"))
+        for col in range(self._table.columnCount()):
+            item = self._table.item(row, col)
+            if item:
+                item.setForeground(fg)
         self._apply_filter(self._filter_input.text())
         if not self._paused:
             self._table.scrollToBottom()
 
     def _apply_filter(self, text: str) -> None:
         lowered = text.lower()
+        allowed_levels = []
+        if self._info_chk.isChecked():
+            allowed_levels.append("INFO")
+        if self._warn_chk.isChecked():
+            allowed_levels.append("WARN")
+        if self._error_chk.isChecked():
+            allowed_levels.append("ERROR")
+
         for row in range(self._table.rowCount()):
-            match = False
-            if lowered:
+            level_item = self._table.item(row, 1)
+            visible = level_item.text() in allowed_levels if level_item else False
+            if visible and lowered:
+                visible = False
                 for col in range(self._table.columnCount()):
                     item = self._table.item(row, col)
                     if item and lowered in item.text().lower():
-                        match = True
+                        visible = True
                         break
-            else:
-                match = True
-            self._table.setRowHidden(row, not match)
+            self._table.setRowHidden(row, not visible)
 
     def _toggle_pause(self, checked: bool) -> None:
         self._paused = checked
@@ -137,10 +187,20 @@ class ConsolePanel(QWidget):
 
     def _filtered_logs(self) -> List[LogEvent]:
         text = self._filter_input.text().lower()
-        if not text:
-            return list(self._logs)
+        allowed = []
+        if self._info_chk.isChecked():
+            allowed.append("INFO")
+        if self._warn_chk.isChecked():
+            allowed.append("WARN")
+        if self._error_chk.isChecked():
+            allowed.append("ERROR")
         result: List[LogEvent] = []
         for e in self._logs:
+            if e.level not in allowed:
+                continue
+            if not text:
+                result.append(e)
+                continue
             if (
                 text in datetime.fromtimestamp(e.ts).strftime("%H:%M:%S").lower()
                 or text in e.level.lower()

@@ -67,18 +67,19 @@ class MainWindow(QMainWindow):
         # Direita superior: Console de Logs com filtro/busca
         self.console_panel = ConsolePanel(self._bus)
 
-        # Direita inferior: abas de gráficos, JSON e rede
+        # Direita inferior: painel com abas
         self.data_tabs = QTabWidget()
-        self.json_viewer = JsonViewer(self._bus)
-        self.network_panel = NetworkPanel(self._bus)
         self.script_editor_panel = ScriptEditorPanel(self._frida)
         self.script_editor_panel.set_process_panel(self.process_panel)
         self.class_explorer_panel = ClassExplorerPanel(self._frida)
         self.class_explorer_panel.set_process_panel(self.process_panel)
-        self.data_tabs.addTab(self.json_viewer, "JSON")
-        self.data_tabs.addTab(self.network_panel, "Rede")
-        self.data_tabs.addTab(self.script_editor_panel, "Scripts")
-        self.data_tabs.addTab(self.class_explorer_panel, "Classes")
+        self.network_panel = NetworkPanel(self._bus)
+        self.json_viewer = JsonViewer(self._bus)
+        self.data_tabs.addTab(self.script_editor_panel, "Editor de Scripts")
+        self.data_tabs.addTab(self.class_explorer_panel, "Explorador de Classes")
+        self.data_tabs.addTab(self.network_panel, "Gráficos")
+        self.data_tabs.addTab(self.json_viewer, "Visualizador JSON")
+        self.data_tabs.setCurrentWidget(self.script_editor_panel)
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.console_panel)

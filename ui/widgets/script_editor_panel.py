@@ -9,18 +9,28 @@ import re
 from pathlib import Path
 from typing import List
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QFontDatabase, QFont
+from PyQt6.QtCore import Qt, QRect, QSize
+from PyQt6.QtGui import (
+    QSyntaxHighlighter,
+    QTextCharFormat,
+    QFontDatabase,
+    QFont,
+    QPainter,
+    QColor,
+    QTextFormat,
+)
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QMessageBox,
     QPushButton,
     QComboBox,
-    QPlainTextEdit,
     QLineEdit,
     QVBoxLayout,
     QWidget,
+    QPlainTextEdit,
+    QTextEdit,
+    QStyle,
 )
 
 from core.frida_manager import FridaManager
@@ -28,13 +38,87 @@ from core.models import ProcessInfo
 from core.event_bus import get_event_bus
 
 
+class LineNumberArea(QWidget):
+    def __init__(self, editor: "CodeEditor") -> None:
+        super().__init__(editor)
+        self._editor = editor
+
+    def sizeHint(self):  # type: ignore[override]
+        return QSize(self._editor.line_number_area_width(), 0)
+
+    def paintEvent(self, event):  # type: ignore[override]
+        self._editor.line_number_area_paint_event(event)
+
+
+class CodeEditor(QPlainTextEdit):
+    def __init__(self) -> None:
+        super().__init__()
+        self._line_number_area = LineNumberArea(self)
+        self.blockCountChanged.connect(self.update_line_number_area_width)
+        self.updateRequest.connect(self.update_line_number_area)
+        self.cursorPositionChanged.connect(self.highlight_current_line)
+        self.update_line_number_area_width(0)
+        self.highlight_current_line()
+
+    def line_number_area_width(self) -> int:
+        digits = len(str(max(1, self.blockCount())))
+        return 3 + self.fontMetrics().horizontalAdvance("9") * digits
+
+    def update_line_number_area_width(self, _):
+        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+
+    def update_line_number_area(self, rect, dy):
+        if dy:
+            self._line_number_area.scroll(0, dy)
+        else:
+            self._line_number_area.update(0, rect.y(), self._line_number_area.width(), rect.height())
+        if rect.contains(self.viewport().rect()):
+            self.update_line_number_area_width(0)
+
+    def resizeEvent(self, event):  # type: ignore[override]
+        super().resizeEvent(event)
+        cr = self.contentsRect()
+        self._line_number_area.setGeometry(QRect(cr.left(), cr.top(), self.line_number_area_width(), cr.height()))
+
+    def line_number_area_paint_event(self, event):
+        painter = QPainter(self._line_number_area)
+        painter.fillRect(event.rect(), QColor("#1e1e1e"))
+
+        block = self.firstVisibleBlock()
+        block_number = block.blockNumber()
+        top = int(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
+        bottom = top + int(self.blockBoundingRect(block).height())
+
+        while block.isValid() and top <= event.rect().bottom():
+            if block.isVisible() and bottom >= event.rect().top():
+                number = str(block_number + 1)
+                painter.setPen(QColor("#00ffff"))
+                painter.drawText(0, top, self._line_number_area.width() - 2, self.fontMetrics().height(), Qt.AlignmentFlag.AlignRight, number)
+            block = block.next()
+            top = bottom
+            bottom = top + int(self.blockBoundingRect(block).height())
+            block_number += 1
+
+    def highlight_current_line(self) -> None:
+        extra = []
+        if not self.isReadOnly():
+            selection = QTextEdit.ExtraSelection()
+            line_color = QColor("#00ffff20")
+            selection.format.setBackground(line_color)
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.cursor = self.textCursor()
+            selection.cursor.clearSelection()
+            extra.append(selection)
+        self.setExtraSelections(extra)
+
+
 class JavaScriptHighlighter(QSyntaxHighlighter):
-    """Realce simples de sintaxe para JavaScript."""
+    """Realce simples de sintaxe para JavaScript com cores vibrantes."""
 
     def __init__(self, document) -> None:
         super().__init__(document)
         keyword_format = QTextCharFormat()
-        keyword_format.setForeground(Qt.GlobalColor.blue)
+        keyword_format.setForeground(QColor("#ff7edb"))
         keywords = [
             "break",
             "case",
@@ -76,12 +160,16 @@ class JavaScriptHighlighter(QSyntaxHighlighter):
         ]
 
         string_format = QTextCharFormat()
-        string_format.setForeground(Qt.GlobalColor.darkGreen)
+        string_format.setForeground(QColor("#fede5d"))
         self.rules.append((re.compile(r"'[^'\n]*'"), string_format))
         self.rules.append((re.compile(r'"[^"\n]*"'), string_format))
 
+        number_format = QTextCharFormat()
+        number_format.setForeground(QColor("#00ffff"))
+        self.rules.append((re.compile(r"\b\d+\b"), number_format))
+
         comment_format = QTextCharFormat()
-        comment_format.setForeground(Qt.GlobalColor.gray)
+        comment_format.setForeground(QColor("#5f7187"))
         self.rules.append((re.compile(r"//[^\n]*"), comment_format))
 
     def highlightBlock(self, text: str) -> None:  # type: ignore[override]
@@ -108,25 +196,42 @@ class ScriptEditorPanel(QWidget):
         self._process_combo = QComboBox()
         controls.addWidget(self._process_combo)
 
-        load_btn = QPushButton("Carregar Script")
+        style = self.style()
+
+        inject_btn = QPushButton("Injetar")
+        inject_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        inject_btn.clicked.connect(self._inject_script)
+        inject_btn.setStyleSheet("color: #00ffff;")
+        controls.addWidget(inject_btn)
+
+        load_btn = QPushButton("Carregar")
+        load_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
         load_btn.clicked.connect(self._load_script)
+        load_btn.setStyleSheet("color: #00ffff;")
         controls.addWidget(load_btn)
 
-        save_btn = QPushButton("Salvar Script")
+        save_btn = QPushButton("Salvar")
+        save_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         save_btn.clicked.connect(self._save_script)
+        save_btn.setStyleSheet("color: #00ffff;")
         controls.addWidget(save_btn)
-
-        inject_btn = QPushButton("Injetar Script")
-        inject_btn.clicked.connect(self._inject_script)
-        controls.addWidget(inject_btn)
 
         layout.addLayout(controls)
 
-        self._editor = QPlainTextEdit()
+        self._editor = CodeEditor()
         mono = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         mono.setStyleHint(QFont.StyleHint.Monospace)
         mono.setFamilies(["monospace"])
         self._editor.setFont(mono)
+        self._editor.setStyleSheet(
+            """
+            QPlainTextEdit {
+                background-color: #2b213a;
+                color: #f8f8f2;
+                selection-background-color: #00ffff33;
+            }
+            """
+        )
         layout.addWidget(self._editor)
         self._highlighter = JavaScriptHighlighter(self._editor.document())
 

@@ -38,12 +38,14 @@ QTabWidget::pane {{
 }}
 QTabBar::tab {{
     background: {PALETTE['background']};
-    border: 1px solid {PALETTE['primary']};
-    padding: 4px;
+    color: {PALETTE['text_secondary']};
+    border: none;
+    padding: 4px 8px;
+    border-bottom: 2px solid transparent;
 }}
 QTabBar::tab:selected {{
-    background: {PALETTE['primary']};
-    color: {PALETTE['background']};
+    color: {PALETTE['primary']};
+    border-bottom: 2px solid {PALETTE['primary']};
 }}
 QLineEdit, QTextEdit {{
     background-color: #242638;
@@ -71,8 +73,8 @@ QWidget:focus {{
 }}
 QScrollBar:vertical, QScrollBar:horizontal {{
     background: transparent;
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     margin: 0px;
 }}
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{
