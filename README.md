@@ -17,5 +17,6 @@ Para mais detalhes sobre objetivos, foco e público-alvo, consulte [docs/visao_g
 ## Recursos
 
 - Detecção automática de dispositivos ADB (USB e emuladores) com atualização em tempo real e cadastro de endpoints remotos.
+- Importação de scripts diretamente do CodeShare do Frida.
 
 Autor: Pexe (Instagram: [@David.devloli](https://instagram.com/David.devloli))

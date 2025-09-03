@@ -21,11 +21,13 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
     QWidget,
+    QInputDialog,
 )
 
 from core.frida_manager import FridaManager
 from core.models import ProcessInfo
 from core.event_bus import get_event_bus
+from core.codeshare import baixar_script
 
 
 class JavaScriptHighlighter(QSyntaxHighlighter):
@@ -112,6 +114,10 @@ class ScriptEditorPanel(QWidget):
         load_btn.clicked.connect(self._load_script)
         controls.addWidget(load_btn)
 
+        codeshare_btn = QPushButton("CodeShare")
+        codeshare_btn.clicked.connect(self._load_codeshare)
+        controls.addWidget(codeshare_btn)
+
         save_btn = QPushButton("Salvar Script")
         save_btn.clicked.connect(self._save_script)
         controls.addWidget(save_btn)
@@ -183,6 +189,17 @@ class ScriptEditorPanel(QWidget):
             code = Path(path).read_text(encoding="utf-8")
             self._editor.setPlainText(code)
         except Exception as exc:  # pragma: no cover - erros de IO
+            QMessageBox.critical(self, "Erro", str(exc))
+
+    def _load_codeshare(self) -> None:
+        texto, ok = QInputDialog.getText(
+            self, "CodeShare", "Link ou comando:")
+        if not ok or not texto.strip():
+            return
+        try:
+            code = baixar_script(texto)
+            self._editor.setPlainText(code)
+        except Exception as exc:  # pragma: no cover - falhas de rede
             QMessageBox.critical(self, "Erro", str(exc))
 
     def _save_script(self) -> None:
