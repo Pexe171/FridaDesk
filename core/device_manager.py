@@ -86,7 +86,18 @@ class DeviceManager:
             await asyncio.sleep(self._interval)
 
     async def _update_devices(self) -> None:
-        """Executa ``adb devices`` e atualiza os dispositivos encontrados."""
+        """Reinicia o servidor ADB e atualiza os dispositivos encontrados."""
+
+        try:
+            kill_proc = await asyncio.create_subprocess_exec(
+                "adb",
+                "kill-server",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await kill_proc.communicate()
+        except FileNotFoundError:
+            pass
 
         await self._connect_known_emulators()
         seen: Dict[str, DeviceInfo] = {}
