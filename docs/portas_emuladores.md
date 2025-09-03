@@ -14,6 +14,11 @@ Este documento resume as portas mais comuns utilizadas por emuladores Android e 
 | **Android Studio (AVD)** | 5554/5555 | O console usa porta par (ex.: `5554`) e o ADB usa a porta ímpar seguinte (`5555`). |
 
 O `DeviceManager` tenta conectar automaticamente às portas listadas acima para localizar emuladores em execução no host.
+Além disso, o sistema varre faixas dessas portas para cobrir múltiplas instâncias:
+
+- `5555`–`5583` (incremento de `2`) para **BlueStacks**, **LDPlayer** e **Genymotion**;
+- `62001`–`62049` (incremento de `2`) para **Nox Player**;
+- `21503`–`21543` (incremento de `10`) para **MEmu**.
 
 ## Portas relacionadas ao ADB
 
