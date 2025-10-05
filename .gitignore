@@ -1,0 +1,7 @@
+node_modules
+.env
+.tmp
+.DS_Store
+tmp/local-sheet-*.json
+session*
+*.log
