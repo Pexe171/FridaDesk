@@ -1,0 +1,50 @@
+{
+  "defaultCategory": "Geral",
+  "categories": [
+    {
+      "name": "Repasse",
+      "color": "#0D47A1",
+      "keywords": ["repasse", "repasse bancario", "repasse bancário"]
+    },
+    {
+      "name": "Crédito",
+      "color": "#2E7D32",
+      "keywords": ["credito", "crédito", "credito imobiliario", "financiamento"]
+    },
+    {
+      "name": "Análise de Crédito",
+      "color": "#1B5E20",
+      "keywords": ["analise de credito", "análise de crédito", "analise", "analise credito"]
+    },
+    {
+      "name": "Cliente",
+      "color": "#F9A825",
+      "keywords": ["cliente", "sou cliente", "sou um cliente"]
+    },
+    {
+      "name": "Direcional",
+      "color": "#5E35B1",
+      "keywords": ["direcional", "direcional engenharia"]
+    },
+    {
+      "name": "MRV",
+      "color": "#00838F",
+      "keywords": ["mrv", "mrv engenharia"]
+    },
+    {
+      "name": "Casa Nova",
+      "color": "#EF6C00",
+      "keywords": ["casa nova", "casa nova cca"]
+    },
+    {
+      "name": "Olá",
+      "color": "#AD1457",
+      "keywords": ["ola", "olá", "bom dia", "boa tarde", "boa noite"]
+    },
+    {
+      "name": "Geral",
+      "color": "#546E7A",
+      "keywords": ["ajuda", "atendimento", "informacao", "informação"]
+    }
+  ]
+}

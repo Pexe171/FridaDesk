@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM CCA - Painel de Atendimento</title>
+    <link rel="stylesheet" href="/panel/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>CRM CCA · Painel de Atendimento</h1>
+      <div class="topbar__actions">
+        <button id="refreshTasks" type="button">Atualizar agora</button>
+        <span id="lastUpdate">Última atualização: --</span>
+      </div>
+    </header>
+    <main>
+      <section class="summary" id="summary"></section>
+      <section id="board" class="board"></section>
+    </main>
+
+    <template id="task-card">
+      <article class="task-card">
+        <header>
+          <span class="task-number"></span>
+          <span class="task-status"></span>
+        </header>
+        <div class="task-body">
+          <p class="task-message"></p>
+        </div>
+        <footer>
+          <span class="task-analyst"></span>
+          <button class="task-complete">Concluir atendimento</button>
+        </footer>
+      </article>
+    </template>
+
+    <script src="/panel/app.js" type="module"></script>
+  </body>
+</html>
