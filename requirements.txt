@@ -1,9 +1,0 @@
-PyQt6
-qasync
-pydantic
-mitmproxy
-pyinstaller
-ruff
-mypy
-pytest
-pytest-asyncio
