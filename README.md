@@ -1,22 +1,3 @@
-# Frida GUI Dashboard
+# FridaDesk
 
-Repositório oficial do **Frida GUI Dashboard**, uma aplicação de desktop multi-plataforma destinada a facilitar a instrumentação dinâmica com o Frida.
-
-## Stack
-- Python 3.10+
-- PyQt6
-- qasync
-- ADB (subprocess ou pure-python-adb)
-- mitmproxy (opcional)
-- pydantic
-- loguru
-- PyInstaller
-
-Para mais detalhes sobre objetivos, foco e público-alvo, consulte [docs/visao_geral.md](docs/visao_geral.md).
-
-## Recursos
-
-- Detecção automática de dispositivos ADB (USB e emuladores) com atualização em tempo real e cadastro de endpoints remotos.
-- Importação de scripts diretamente do CodeShare do Frida.
-
-Autor: Pexe (Instagram: [@David.devloli](https://instagram.com/David.devloli))
+Este repositório foi limpo para dar lugar a um novo projeto em breve. Fique atento às próximas atualizações!
