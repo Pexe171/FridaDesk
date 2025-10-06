@@ -13,22 +13,108 @@
     <link rel="stylesheet" href="/panel/style.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="topbar__brand">
-        <h1>CRM CCA · Painel de Atendimento</h1>
-        <span class="topbar__subtitle">Central de relacionamento em tempo real</span>
-      </div>
-      <div class="topbar__actions">
-        <button id="openSettings" type="button" class="button">Configurações</button>
-        <label class="switch" for="autoRefresh">
-          <input type="checkbox" id="autoRefresh" checked />
-          <span class="switch__label">Auto atualizar</span>
-        </label>
-        <button id="refreshTasks" type="button" class="button button--primary">Atualizar agora</button>
-        <span id="lastUpdate" class="last-update">Última atualização: --</span>
-      </div>
-    </header>
-    <main>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar__brand">
+          <span class="sidebar__logo" aria-hidden="true">FD</span>
+          <div>
+            <strong>FridaDesk</strong>
+            <small>Central Omnichannel</small>
+          </div>
+        </div>
+        <nav class="sidebar__nav" aria-label="Navegação principal">
+          <div class="sidebar__group">
+            <span class="sidebar__group-title">Gerência</span>
+            <ul>
+              <li class="is-active">
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">📊</span>
+                  <span>Dashboard</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">📑</span>
+                  <span>Relatórios</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">🧭</span>
+                  <span>Painéis</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="sidebar__group">
+            <span class="sidebar__group-title">Comunicação</span>
+            <ul>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">💬</span>
+                  <span>Atendimentos</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">⚡</span>
+                  <span>Respostas rápidas</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">🏷️</span>
+                  <span>Tags e campanhas</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="sidebar__group">
+            <span class="sidebar__group-title">Administração</span>
+            <ul>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">⚙️</span>
+                  <span>Configurações</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">🔌</span>
+                  <span>Integrações</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="sidebar__link">
+                  <span class="sidebar__icon" aria-hidden="true">📂</span>
+                  <span>Arquivos</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <footer class="sidebar__footer">
+          <span>© 2024 FridaDesk</span>
+          <span>v1.0</span>
+        </footer>
+      </aside>
+      <div class="app-shell__main">
+        <header class="topbar">
+          <div class="topbar__brand">
+            <h1>CRM CCA · Painel de Atendimento</h1>
+            <span class="topbar__subtitle">Central de relacionamento em tempo real</span>
+          </div>
+          <div class="topbar__actions">
+            <button id="openSettings" type="button" class="button">Configurações</button>
+            <label class="switch" for="autoRefresh">
+              <input type="checkbox" id="autoRefresh" checked />
+              <span class="switch__label">Auto atualizar</span>
+            </label>
+            <button id="refreshTasks" type="button" class="button button--primary">Atualizar agora</button>
+            <span id="lastUpdate" class="last-update">Última atualização: --</span>
+          </div>
+        </header>
+        <main>
       <section class="summary" id="summary"></section>
 
       <section class="runtime" id="runtimeStatus">
@@ -83,6 +169,16 @@
       </section>
 
       <section class="controls">
+        <div class="controls__header">
+          <div>
+            <h2>Painel de atendimentos</h2>
+            <p>Monitore a fila, refine por tags e mantenha o foco no que é prioritário.</p>
+          </div>
+          <div class="controls__actions">
+            <button id="resetFilters" type="button" class="button button--ghost">Limpar filtros</button>
+            <button type="button" class="button button--primary">Filtrar</button>
+          </div>
+        </div>
         <div class="controls__search">
           <input
             type="search"
@@ -100,9 +196,15 @@
             <span class="filter-group__label">Categorias</span>
             <div id="categoryFilters" class="filter-chips"></div>
           </div>
+        </div>
+        <div class="controls__toggles">
           <label class="toggle" for="showCompleted">
             <input type="checkbox" id="showCompleted" />
             <span>Mostrar concluídos</span>
+          </label>
+          <label class="toggle" for="filterPrivate">
+            <input type="checkbox" id="filterPrivate" checked />
+            <span>Somente conversas privadas</span>
           </label>
         </div>
         <div class="controls__view">
@@ -118,7 +220,9 @@
         <section id="board" class="board"></section>
         <aside id="insights" class="insights"></aside>
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
 
     <div id="settingsOverlay" class="settings-overlay" aria-hidden="true">
       <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
