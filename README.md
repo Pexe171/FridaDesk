@@ -9,6 +9,7 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
 - **Registro imediato** de cada atendimento como tarefa na aba `Atendimentos CCA` da planilha Google.
 - **Controle de analistas** por meio da aba `Analistas`, incluindo disponibilidade e direcionamento automático de tarefas.
 - **Painel web** em tempo real para acompanhar os atendimentos em aberto, organizados por categoria, com opção de concluir tarefas.
+- **Notificações instantâneas** entre estações através de WebSockets, mantendo tarefas, analistas e configurações sincronizados sem recarregar a página.
 - **Atualização dinâmica de palavras-chave** sem alterar o código principal (via API ou edição do arquivo `src/config/keywords.json`).
 - **Modo offline** para desenvolvimento local usando armazenamento em arquivo (`tmp/local-sheet-*.json`) quando as credenciais do Google não estiverem configuradas.
 
@@ -63,6 +64,8 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
    - Credenciais do Google Sheets (opcionais) para sincronizar com a planilha oficial.
 
 5. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
+
+6. Ao abrir o painel, cada estação estabelece automaticamente uma conexão WebSocket segura com `ws://localhost:PORT/ws` (ou `wss://` em produção) para receber atualizações em tempo real.
 
 ## Configurações pelo painel
 
@@ -123,13 +126,25 @@ As alterações são persistidas no arquivo JSON, garantindo que futuras execuç
 - Acesse `http://localhost:PORT/panel`.
 - Cada categoria possui uma coluna com cor distinta.
 - Botões **Concluir atendimento** atualizam o status diretamente na planilha.
-- A lista é atualizada automaticamente a cada 15 segundos ou manualmente pelo botão **Atualizar agora**.
+- As tarefas e o status dos analistas são atualizados em tempo real via WebSocket. O botão **Atualizar agora** e o modo de atualização automática a cada 15 segundos permanecem disponíveis como fallback caso o canal em tempo real esteja indisponível.
 
 ## Execução em múltiplas máquinas
 
 - Defina uma sessão distinta para cada estação diretamente pelo painel de configurações.
 - Informe o nome do analista local para que o status seja atualizado automaticamente na aba `Analistas`.
 - Todas as estações podem compartilhar as mesmas credenciais do Google Sheets para manter a sincronização com a planilha oficial.
+- Alterações realizadas em qualquer estação (novas tarefas, conclusão de atendimentos, mudanças nas configurações ou status dos analistas) são propagadas instantaneamente para todas as demais via WebSocket.
+
+## Canal em tempo real
+
+O servidor expõe um endpoint WebSocket em `/ws`. Após a autenticação inicial (não há credenciais adicionais), cada cliente recebe uma mensagem `init` com o snapshot atual de tarefas, analistas, configurações e status de execução. Atualizações subsequentes são enviadas nos seguintes formatos:
+
+- `tasks`: disparado quando há criação, atualização ou sincronização completa de tarefas.
+- `analysts`: reflete modificações no status ou lista de analistas.
+- `settings`: confirma alterações persistidas nas configurações locais da estação.
+- `status`: informa o estado em tempo real dos serviços (armazenamento ativo, sessão do WhatsApp, analista logado etc.).
+
+Esse canal pode ser reutilizado por dashboards externos ou outras integrações internas para acompanhar o fluxo de atendimentos sem recorrer a polling.
 
 ## Scripts disponíveis
 
@@ -142,7 +157,6 @@ As alterações são persistidas no arquivo JSON, garantindo que futuras execuç
 
 - Conectar webhooks/automação com outros sistemas internos (ex.: CRM corporativo).
 - Adicionar autenticação no painel.
-- Criar notificações em tempo real (WebSocket) para atualização instantânea entre estações.
 
 ---
 

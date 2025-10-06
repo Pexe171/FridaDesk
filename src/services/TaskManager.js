@@ -1,9 +1,11 @@
 import { DateTime } from 'luxon';
+import { EventEmitter } from 'events';
 
 const ATTENDANCE_SHEET = 'Atendimentos CCA';
 
-export class TaskManager {
+export class TaskManager extends EventEmitter {
   constructor({ sheetsService }) {
+    super();
     this.sheetsService = sheetsService;
     this.tasks = new Map();
   }
@@ -33,7 +35,12 @@ export class TaskManager {
         analyst
       });
     });
-    return Array.from(this.tasks.values());
+    const tasks = this.listTasks();
+    this.emit('tasks:updated', {
+      type: 'refresh',
+      tasks
+    });
+    return tasks;
   }
 
   listTasks({ status } = {}) {
@@ -70,6 +77,13 @@ export class TaskManager {
       this.tasks.set(task.id, task);
     }
 
+    const tasks = this.listTasks();
+    this.emit('tasks:updated', {
+      type: 'created',
+      task,
+      tasks
+    });
+
     return task;
   }
 
@@ -89,6 +103,14 @@ export class TaskManager {
       updated.analyst
     ]);
     this.tasks.set(id, updated);
+
+    const tasks = this.listTasks();
+    this.emit('tasks:updated', {
+      type: 'updated',
+      task: updated,
+      tasks
+    });
+
     return updated;
   }
 }

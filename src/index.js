@@ -14,6 +14,7 @@ import {
   resolveLocalStoragePath
 } from './services/SettingsManager.js';
 import { createHttpServer } from './server/httpServer.js';
+import { createWebSocketServer } from './server/websocketServer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,6 +91,8 @@ async function bootstrap() {
   await markAnalystAvailable(lastAnalystName);
 
   let whatsappService;
+  let realtimeNotifier;
+
   async function applyWhatsAppSettings(settings) {
     const sessionId = (settings.whatsappSession || '').trim();
     if (!sessionId) {
@@ -101,6 +104,7 @@ async function bootstrap() {
         ...runtimeStatus,
         whatsapp: { active: false, session: '' }
       };
+      realtimeNotifier?.notifyRuntimeStatus();
       return;
     }
 
@@ -110,6 +114,7 @@ async function bootstrap() {
         ...runtimeStatus,
         whatsapp: { active: true, session: sessionId }
       };
+      realtimeNotifier?.notifyRuntimeStatus();
       return;
     }
 
@@ -133,12 +138,14 @@ async function bootstrap() {
         ...runtimeStatus,
         whatsapp: { active: true, session: sessionId }
       };
+      realtimeNotifier?.notifyRuntimeStatus();
     } catch (error) {
       console.error('Não foi possível iniciar o cliente WhatsApp:', error);
       runtimeStatus = {
         ...runtimeStatus,
         whatsapp: { active: false, session: sessionId }
       };
+      realtimeNotifier?.notifyRuntimeStatus();
     }
   }
 
@@ -156,6 +163,15 @@ async function bootstrap() {
     console.log('Acesse o painel em http://localhost:%s/panel', PORT);
   });
 
+  realtimeNotifier = createWebSocketServer({
+    server,
+    taskManager,
+    analystManager,
+    settingsManager,
+    getRuntimeStatus: () => ({ ...runtimeStatus })
+  });
+  realtimeNotifier.notifyRuntimeStatus();
+
   async function reconfigureServices(updatedSettings) {
     const googleConfigured = areGoogleCredentialsConfigured(updatedSettings);
     const previousStorage = runtimeStatus.storage;
@@ -169,6 +185,7 @@ async function bootstrap() {
       googleConfigured,
       analystName: updatedSettings.analystName || ''
     };
+    realtimeNotifier?.notifyRuntimeStatus();
 
     if (lastAnalystName && lastAnalystName !== updatedSettings.analystName) {
       await markAnalystAvailable(lastAnalystName);
@@ -201,6 +218,7 @@ async function bootstrap() {
     Promise.resolve()
       .then(() => applyingUpdate)
       .then(() => whatsappService?.shutdown())
+      .then(() => realtimeNotifier?.close())
       .finally(() => {
         server.close(() => process.exit(0));
       });
