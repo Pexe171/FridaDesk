@@ -31,6 +31,57 @@
     <main>
       <section class="summary" id="summary"></section>
 
+      <section class="runtime" id="runtimeStatus">
+        <article class="runtime-card runtime-card--whatsapp">
+          <header class="runtime-card__header">
+            <div>
+              <h2>Status do WhatsApp</h2>
+              <p id="whatsappConnectionState" class="runtime-card__state" data-status="offline">
+                Sessão não configurada
+              </p>
+            </div>
+            <button id="resetWhatsappSession" type="button" class="button button--ghost" disabled>
+              Gerar novo QR Code
+            </button>
+          </header>
+          <div class="runtime-card__body">
+            <div class="runtime-card__metrics">
+              <span id="whatsappMessageStats">Mensagens registradas: --</span>
+              <span id="whatsappLastMessage">Última mensagem: --</span>
+              <span id="whatsappQrUpdatedAt" class="runtime-card__hint" hidden></span>
+              <span
+                id="resetWhatsappFeedback"
+                class="runtime-feedback"
+                role="status"
+                aria-live="polite"
+              ></span>
+            </div>
+            <div class="runtime-card__qr">
+              <img id="whatsappQrImage" alt="QR Code do WhatsApp" hidden />
+              <span id="whatsappQrPlaceholder" class="runtime-card__placeholder"
+                >Configure uma sessão para gerar o QR Code.</span
+              >
+            </div>
+          </div>
+        </article>
+        <article class="runtime-card runtime-card--system">
+          <header class="runtime-card__header">
+            <div>
+              <h2>Monitor do servidor</h2>
+              <p id="runtimeHealthStatus" class="runtime-card__state">Status geral: --</p>
+            </div>
+          </header>
+          <div class="runtime-card__body runtime-card__body--column">
+            <span id="runtimeStorageSummary">Armazenamento local habilitado</span>
+            <div class="runtime-card__stations-header">
+              <strong>Estações conectadas</strong>
+              <span class="runtime-card__badge" id="runtimeStationsCount">0</span>
+            </div>
+            <ul id="runtimeStationsList" class="runtime-stations"></ul>
+          </div>
+        </article>
+      </section>
+
       <section class="controls">
         <div class="controls__search">
           <input

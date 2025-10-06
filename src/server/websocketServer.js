@@ -13,9 +13,11 @@ export function createWebSocketServer({
   taskManager,
   analystManager,
   settingsManager,
-  getRuntimeStatus
+  getRuntimeStatus,
+  onClientsChanged
 }) {
   const wss = new WebSocketServer({ server, path: '/ws' });
+  const clientsMetadata = new Map();
 
   function broadcast(message) {
     const payload = JSON.stringify(message);
@@ -29,6 +31,27 @@ export function createWebSocketServer({
   function notifyStatus() {
     if (typeof getRuntimeStatus === 'function') {
       broadcast({ type: 'status', payload: getRuntimeStatus() });
+    }
+  }
+
+  function summarizeClients() {
+    const connectedClients = Array.from(wss.clients).filter((client) => client.readyState === OPEN_STATE).length;
+    const stations = Array.from(clientsMetadata.values()).map((metadata) => ({
+      id: metadata.id,
+      name: metadata.name,
+      analystName: metadata.analystName,
+      session: metadata.session,
+      hostname: metadata.hostname,
+      connectedAt: metadata.connectedAt,
+      lastSeenAt: metadata.lastSeenAt
+    }));
+    return { clients: connectedClients, stations };
+  }
+
+  function emitClientSummary() {
+    const summary = summarizeClients();
+    if (typeof onClientsChanged === 'function') {
+      onClientsChanged(summary);
     }
   }
 
@@ -48,17 +71,57 @@ export function createWebSocketServer({
   }
 
   wss.on('connection', (ws) => {
+    const metadata = {
+      id: `station-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: 'Estação sem identificação',
+      analystName: '',
+      session: '',
+      hostname: '',
+      connectedAt: Date.now(),
+      lastSeenAt: Date.now()
+    };
+    clientsMetadata.set(ws, metadata);
     ws.isAlive = true;
     ws.on('pong', () => {
       ws.isAlive = true;
+      const currentMetadata = clientsMetadata.get(ws);
+      if (currentMetadata) {
+        currentMetadata.lastSeenAt = Date.now();
+      }
+    });
+    ws.on('message', (raw) => {
+      try {
+        const message = JSON.parse(raw);
+        if (message?.type === 'identify') {
+          const currentMetadata = clientsMetadata.get(ws);
+          if (currentMetadata) {
+            currentMetadata.name = message.payload?.station || message.payload?.name || currentMetadata.name;
+            currentMetadata.analystName = message.payload?.analystName || '';
+            currentMetadata.session = message.payload?.session || '';
+            currentMetadata.hostname = message.payload?.hostname || '';
+            currentMetadata.version = message.payload?.version || '';
+            currentMetadata.lastSeenAt = Date.now();
+            emitClientSummary();
+          }
+        }
+      } catch (error) {
+        console.warn('Mensagem recebida no WebSocket ignorada por erro de parsing:', error.message);
+      }
     });
     sendInitialState(ws);
+    emitClientSummary();
+    ws.on('close', () => {
+      clientsMetadata.delete(ws);
+      emitClientSummary();
+    });
   });
 
   const heartbeat = setInterval(() => {
     wss.clients.forEach((client) => {
       if (client.isAlive === false) {
         client.terminate();
+        clientsMetadata.delete(client);
+        emitClientSummary();
         return;
       }
       client.isAlive = false;
@@ -85,6 +148,7 @@ export function createWebSocketServer({
     taskManager?.off?.('tasks:updated', taskListener);
     analystManager?.off?.('analysts:updated', analystListener);
     settingsManager?.off?.('update', settingsListener);
+    clientsMetadata.clear();
     wss.close();
   }
 

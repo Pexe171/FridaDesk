@@ -1,52 +1,148 @@
-import qrcode from 'qrcode-terminal';
+import { EventEmitter } from 'events';
+import qrcode from 'qrcode';
 import whatsapp from 'whatsapp-web.js';
 
 const { Client, LocalAuth } = whatsapp;
 
-export class WhatsAppService {
+function now() {
+  return Date.now();
+}
+
+export class WhatsAppService extends EventEmitter {
   constructor({ keywordClassifier, taskManager, analystManager, sessionId, localAnalystName }) {
+    super();
     this.keywordClassifier = keywordClassifier;
     this.taskManager = taskManager;
     this.analystManager = analystManager;
     this.sessionId = sessionId || 'default';
     this.localAnalystName = localAnalystName;
     this.client = undefined;
+    this.initializing = undefined;
+    this.status = {
+      session: this.sessionId,
+      active: false,
+      connected: false,
+      initializing: false,
+      qr: null,
+      qrImage: null,
+      qrGeneratedAt: null,
+      readyAt: null,
+      messageCount: 0,
+      lastMessageAt: null,
+      error: null
+    };
   }
 
   async init() {
+    if (this.initializing) {
+      return this.initializing;
+    }
     if (this.client) {
       return;
     }
-    this.client = new Client({
-      authStrategy: new LocalAuth({ clientId: this.sessionId }),
-      puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      }
-    });
 
-    this.client.on('qr', (qr) => {
-      qrcode.generate(qr, { small: true });
-      console.log('Escaneie o QR Code acima para conectar ao WhatsApp.');
-    });
+    const initializeClient = async () => {
+      this.client = new Client({
+        authStrategy: new LocalAuth({ clientId: this.sessionId }),
+        puppeteer: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
+      });
 
-    this.client.on('ready', () => {
-      console.log('Conectado ao WhatsApp com sucesso.');
-    });
+      this.client.on('qr', async (qr) => {
+        try {
+          const qrImage = await qrcode.toDataURL(qr, {
+            errorCorrectionLevel: 'M',
+            margin: 1,
+            scale: 6
+          });
+          this.updateStatus({
+            qr,
+            qrImage,
+            qrGeneratedAt: now(),
+            connected: false,
+            initializing: false,
+            error: null
+          });
+        } catch (error) {
+          console.warn('Não foi possível gerar QR Code para exibição no painel:', error.message);
+          this.updateStatus({
+            qr,
+            qrImage: null,
+            qrGeneratedAt: now(),
+            connected: false,
+            initializing: false,
+            error: null
+          });
+        }
+        console.log('QR Code disponível no painel para pareamento com WhatsApp.');
+      });
 
-    this.client.on('message', async (message) => {
-      try {
-        await this.handleIncomingMessage(message);
-      } catch (error) {
-        console.error('Erro ao tratar mensagem recebida:', error);
-      }
-    });
+      this.client.on('ready', () => {
+        console.log('Conectado ao WhatsApp com sucesso.');
+        this.updateStatus({
+          connected: true,
+          initializing: false,
+          qr: null,
+          qrImage: null,
+          readyAt: now(),
+          error: null
+        });
+      });
 
-    this.client.on('auth_failure', (msg) => {
-      console.error('Falha de autenticação com o WhatsApp:', msg);
-    });
+      this.client.on('disconnected', (reason) => {
+        console.warn('Cliente WhatsApp desconectado:', reason);
+        this.updateStatus({
+          connected: false,
+          initializing: false,
+          error: { type: 'disconnected', message: reason }
+        });
+      });
 
-    await this.client.initialize();
-    console.log('Cliente do WhatsApp iniciado.');
+      this.client.on('message', async (message) => {
+        try {
+          const processed = await this.handleIncomingMessage(message);
+          if (processed) {
+            this.updateStatus({
+              messageCount: this.status.messageCount + 1,
+              lastMessageAt: now()
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao tratar mensagem recebida:', error);
+        }
+      });
+
+      this.client.on('auth_failure', (msg) => {
+        console.error('Falha de autenticação com o WhatsApp:', msg);
+        this.updateStatus({
+          connected: false,
+          initializing: false,
+          error: { type: 'auth_failure', message: msg }
+        });
+      });
+
+      this.updateStatus({ active: true, initializing: true, connected: false, error: null });
+      await this.client.initialize();
+      console.log('Cliente do WhatsApp iniciado.');
+    };
+
+    this.initializing = initializeClient()
+      .catch((error) => {
+        console.error('Não foi possível iniciar o cliente WhatsApp:', error);
+        this.updateStatus({
+          active: false,
+          connected: false,
+          initializing: false,
+          error: { type: 'startup', message: error.message }
+        });
+        throw error;
+      })
+      .finally(() => {
+        this.initializing = undefined;
+      });
+
+    return this.initializing;
   }
 
   async shutdown() {
@@ -60,11 +156,60 @@ export class WhatsAppService {
       console.warn('Não foi possível encerrar o cliente do WhatsApp:', error);
     } finally {
       this.client = undefined;
+      this.updateStatus({
+        active: false,
+        connected: false,
+        initializing: false
+      });
     }
   }
 
   updateLocalAnalystName(name) {
     this.localAnalystName = name;
+  }
+
+  async resetSession() {
+    if (!this.client) {
+      throw new Error('Cliente WhatsApp não está inicializado.');
+    }
+    console.log('Reiniciando sessão do WhatsApp e aguardando novo QR Code.');
+    try {
+      await this.client.logout();
+    } catch (error) {
+      console.warn('Não foi possível efetuar logout da sessão atual:', error.message);
+    }
+    try {
+      await this.client.destroy();
+    } catch (error) {
+      console.warn('Não foi possível destruir cliente atual durante reset:', error.message);
+    }
+    this.client = undefined;
+    this.updateStatus({
+      active: false,
+      connected: false,
+      initializing: false,
+      qr: null,
+      qrImage: null,
+      qrGeneratedAt: null,
+      readyAt: null,
+      messageCount: 0,
+      lastMessageAt: null,
+      error: null
+    });
+    await this.init();
+  }
+
+  updateStatus(patch = {}) {
+    this.status = {
+      ...this.status,
+      ...patch,
+      session: this.sessionId
+    };
+    this.emit('status', this.getStatus());
+  }
+
+  getStatus() {
+    return { ...this.status };
   }
 
   composeAutoReply({ category, analystName, keyword }) {
@@ -85,11 +230,11 @@ export class WhatsAppService {
 
   async handleIncomingMessage(message) {
     if (message.fromMe) {
-      return;
+      return false;
     }
     const body = (message.body || '').trim();
     if (!body) {
-      return;
+      return false;
     }
 
     await this.keywordClassifier.load();
@@ -130,5 +275,6 @@ export class WhatsAppService {
 
     await message.reply(reply);
     console.log(`Mensagem registrada como tarefa #${task.id} - Categoria ${task.category}`);
+    return true;
   }
 }

@@ -1,3 +1,34 @@
+function createDefaultStatus() {
+  const now = Date.now();
+  return {
+    storage: 'local',
+    googleConfigured: false,
+    analystName: '',
+    whatsapp: {
+      active: false,
+      session: '',
+      connected: false,
+      initializing: false,
+      qr: null,
+      qrImage: null,
+      qrGeneratedAt: null,
+      readyAt: null,
+      messageCount: 0,
+      lastMessageAt: null,
+      error: null
+    },
+    websocket: {
+      clients: 0,
+      stations: []
+    },
+    health: {
+      status: 'ok',
+      startedAt: now,
+      lastUpdated: now
+    }
+  };
+}
+
 const state = {
   categories: [],
   tasks: [],
@@ -21,24 +52,33 @@ const state = {
     googlePrivateKey: '',
     googleProjectId: ''
   },
-  status: {
-    storage: 'local',
-    googleConfigured: false,
-    whatsapp: { active: false, session: '' },
-    analystName: ''
-  }
+  status: createDefaultStatus()
 };
 
 let autoRefreshHandle;
 let settingsFeedbackTimeout;
 let realtimeSocket;
 let realtimeReconnectTimeout;
+let resetWhatsappFeedbackTimeout;
+let lastIdentifySignature = '';
 
 const summaryEl = document.getElementById('summary');
 const boardEl = document.getElementById('board');
 const insightsEl = document.getElementById('insights');
 const refreshButton = document.getElementById('refreshTasks');
 const lastUpdateEl = document.getElementById('lastUpdate');
+const whatsappStateEl = document.getElementById('whatsappConnectionState');
+const whatsappMessageStatsEl = document.getElementById('whatsappMessageStats');
+const whatsappLastMessageEl = document.getElementById('whatsappLastMessage');
+const whatsappQrImageEl = document.getElementById('whatsappQrImage');
+const whatsappQrPlaceholderEl = document.getElementById('whatsappQrPlaceholder');
+const whatsappQrUpdatedEl = document.getElementById('whatsappQrUpdatedAt');
+const resetWhatsappButton = document.getElementById('resetWhatsappSession');
+const resetWhatsappFeedbackEl = document.getElementById('resetWhatsappFeedback');
+const runtimeStorageSummaryEl = document.getElementById('runtimeStorageSummary');
+const runtimeHealthStatusEl = document.getElementById('runtimeHealthStatus');
+const runtimeStationsListEl = document.getElementById('runtimeStationsList');
+const runtimeStationsCountEl = document.getElementById('runtimeStationsCount');
 const taskTemplate = document.getElementById('task-card');
 const searchInput = document.getElementById('searchTasks');
 const statusFiltersEl = document.getElementById('statusFilters');
@@ -90,17 +130,34 @@ function encodePrivateKey(value) {
 }
 
 function applySystemStatus(status = {}) {
-  const whatsapp = status.whatsapp || {};
+  const defaults = createDefaultStatus();
+  const whatsapp = {
+    ...defaults.whatsapp,
+    ...(status.whatsapp || {})
+  };
+  const websocket = {
+    clients: status.websocket?.clients ?? defaults.websocket.clients,
+    stations: Array.isArray(status.websocket?.stations)
+      ? status.websocket.stations
+      : defaults.websocket.stations
+  };
+  const health = {
+    ...defaults.health,
+    ...(status.health || {})
+  };
   state.status = {
-    storage: status.storage || 'local',
+    ...defaults,
+    ...status,
+    storage: status.storage || defaults.storage,
     googleConfigured: Boolean(status.googleConfigured),
-    whatsapp: {
-      active: Boolean(whatsapp.active),
-      session: whatsapp.session || ''
-    },
-    analystName: status.analystName || state.settings.analystName || ''
+    analystName: status.analystName || state.settings.analystName || defaults.analystName,
+    whatsapp,
+    websocket,
+    health
   };
   updateSettingsSummaryInfo();
+  renderRuntimeStatus();
+  identifyRealtimeStation();
 }
 
 function parseTaskDate(raw) {
@@ -144,6 +201,50 @@ function formatDuration(minutes) {
     chunks.push(`${mins}min`);
   }
   return chunks.join(' ') || 'Recente';
+}
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) {
+    return 'Nunca';
+  }
+  const date = new Date(Number(timestamp));
+  if (Number.isNaN(date.getTime())) {
+    return 'Nunca';
+  }
+  return date.toLocaleString('pt-BR', {
+    hour12: false
+  });
+}
+
+function formatRelativeTimestamp(timestamp) {
+  if (!timestamp) {
+    return 'Nunca';
+  }
+  const diff = Date.now() - Number(timestamp);
+  if (Number.isNaN(diff) || diff < 0) {
+    return 'Agora';
+  }
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) {
+    return 'Agora';
+  }
+  if (minutes < 60) {
+    return `${minutes} min atrás`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours}h atrás`;
+    }
+    return `${hours}h ${remainingMinutes}min atrás`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  if (remainingHours === 0) {
+    return `${days}d atrás`;
+  }
+  return `${days}d ${remainingHours}h atrás`;
 }
 
 function formatDateTime(raw) {
@@ -282,11 +383,24 @@ function renderSummary() {
 
   const whatsapp = state.status.whatsapp || {};
   const whatsappLabel = whatsapp.session || 'Não configurada';
-  const whatsappDetail = whatsapp.session
-    ? whatsapp.active
-      ? 'Conectado ao WhatsApp'
-      : 'Aguardando pareamento'
-    : 'Informe uma sessão para iniciar';
+  let whatsappDetail;
+  if (!whatsapp.session) {
+    whatsappDetail = 'Informe uma sessão para iniciar';
+  } else if (whatsapp.connected) {
+    const messages = whatsapp.messageCount || 0;
+    const last = whatsapp.lastMessageAt ? formatRelativeTimestamp(whatsapp.lastMessageAt) : 'sem mensagens';
+    whatsappDetail = `Conectado • ${messages} mensagens (${last})`;
+  } else if (whatsapp.qrImage) {
+    whatsappDetail = 'QR Code disponível para pareamento';
+  } else if (whatsapp.initializing) {
+    whatsappDetail = 'Inicializando cliente do WhatsApp';
+  } else if (whatsapp.error?.message) {
+    whatsappDetail = `Erro: ${whatsapp.error.message}`;
+  } else if (whatsapp.active) {
+    whatsappDetail = 'Tentando reconectar ao WhatsApp';
+  } else {
+    whatsappDetail = 'Sessão inativa no momento';
+  }
   cards.push({
     label: 'Sessão WhatsApp',
     value: whatsappLabel,
@@ -301,6 +415,176 @@ function renderSummary() {
   });
 }
 
+function renderRuntimeStatus() {
+  const whatsapp = state.status.whatsapp || {};
+  const websocket = state.status.websocket || {};
+  const health = state.status.health || {};
+
+  if (whatsappStateEl) {
+    let statusText = 'Sessão não configurada';
+    let statusType = 'offline';
+    if (!whatsapp.session) {
+      statusText = 'Sessão não configurada';
+      statusType = 'offline';
+    } else if (whatsapp.connected) {
+      statusText = 'Conectado ao WhatsApp';
+      statusType = 'online';
+    } else if (whatsapp.initializing) {
+      statusText = 'Inicializando cliente do WhatsApp...';
+      statusType = 'pending';
+    } else if (whatsapp.qrImage) {
+      statusText = 'QR Code aguardando pareamento';
+      statusType = 'pending';
+    } else if (whatsapp.error?.message) {
+      statusText = `Erro: ${whatsapp.error.message}`;
+      statusType = 'error';
+    } else if (whatsapp.active) {
+      statusText = 'Tentando reconectar ao WhatsApp';
+      statusType = 'pending';
+    } else {
+      statusText = 'Sessão inativa';
+      statusType = 'offline';
+    }
+    whatsappStateEl.textContent = statusText;
+    whatsappStateEl.dataset.status = statusType;
+  }
+
+  if (whatsappMessageStatsEl) {
+    if (!whatsapp.session) {
+      whatsappMessageStatsEl.textContent = 'Mensagens registradas: --';
+    } else {
+      whatsappMessageStatsEl.textContent = `Mensagens registradas: ${whatsapp.messageCount || 0}`;
+    }
+  }
+
+  if (whatsappLastMessageEl) {
+    if (whatsapp.lastMessageAt) {
+      whatsappLastMessageEl.textContent = `Última mensagem: ${formatRelativeTimestamp(
+        whatsapp.lastMessageAt
+      )} (${formatTimestamp(whatsapp.lastMessageAt)})`;
+    } else if (whatsapp.session) {
+      whatsappLastMessageEl.textContent = 'Última mensagem: nenhuma registrada ainda';
+    } else {
+      whatsappLastMessageEl.textContent = 'Última mensagem: --';
+    }
+  }
+
+  if (whatsappQrImageEl && whatsappQrPlaceholderEl) {
+    if (whatsapp.qrImage) {
+      whatsappQrImageEl.src = whatsapp.qrImage;
+      whatsappQrImageEl.alt = 'QR Code do WhatsApp';
+      whatsappQrImageEl.removeAttribute('hidden');
+      whatsappQrPlaceholderEl.setAttribute('hidden', 'hidden');
+      if (whatsappQrUpdatedEl) {
+        whatsappQrUpdatedEl.textContent = `Gerado ${formatRelativeTimestamp(
+          whatsapp.qrGeneratedAt
+        )}`;
+        whatsappQrUpdatedEl.removeAttribute('hidden');
+      }
+    } else {
+      whatsappQrImageEl.removeAttribute('src');
+      whatsappQrImageEl.setAttribute('hidden', 'hidden');
+      let placeholderText = 'Configure uma sessão para gerar o QR Code.';
+      if (whatsapp.session) {
+        placeholderText = whatsapp.connected
+          ? 'Conexão ativa. QR Code não necessário.'
+          : 'O QR Code aparecerá aqui quando o WhatsApp solicitar um novo pareamento.';
+      }
+      whatsappQrPlaceholderEl.textContent = placeholderText;
+      whatsappQrPlaceholderEl.removeAttribute('hidden');
+      if (whatsappQrUpdatedEl) {
+        whatsappQrUpdatedEl.textContent = '';
+        whatsappQrUpdatedEl.setAttribute('hidden', 'hidden');
+      }
+    }
+  }
+
+  if (resetWhatsappButton) {
+    resetWhatsappButton.disabled = !whatsapp.session || Boolean(resetWhatsappButton.dataset.loading);
+  }
+
+  if (runtimeStorageSummaryEl) {
+    runtimeStorageSummaryEl.textContent = state.status.googleConfigured
+      ? 'Integração com Google Sheets ativa'
+      : 'Armazenamento local habilitado';
+  }
+
+  if (runtimeHealthStatusEl) {
+    const statusLabel = (health.status || 'ok') === 'ok' ? 'Operacional' : health.status;
+    const uptimeMs = Math.max(0, Date.now() - (health.startedAt || Date.now()));
+    const uptimeMinutes = Math.floor(uptimeMs / 60000);
+    const uptimeText = uptimeMinutes ? formatDuration(uptimeMinutes) : 'menos de 1min';
+    const lastUpdated = formatRelativeTimestamp(health.lastUpdated);
+    runtimeHealthStatusEl.textContent = `Status geral: ${statusLabel} • Uptime ${uptimeText} • Atualizado ${lastUpdated}`;
+  }
+
+  if (runtimeStationsCountEl) {
+    runtimeStationsCountEl.textContent = websocket.clients ?? 0;
+  }
+
+  if (runtimeStationsListEl) {
+    runtimeStationsListEl.innerHTML = '';
+    const stations = Array.isArray(websocket.stations) ? websocket.stations.slice() : [];
+    stations.sort((a, b) => (b.lastSeenAt || 0) - (a.lastSeenAt || 0));
+    if (!stations.length) {
+      const empty = document.createElement('li');
+      empty.className = 'runtime-empty';
+      empty.textContent = 'Nenhuma estação conectada no momento.';
+      runtimeStationsListEl.appendChild(empty);
+    } else {
+      stations.forEach((station) => {
+        const item = document.createElement('li');
+        item.className = 'runtime-station';
+        const title = document.createElement('strong');
+        title.textContent = station.name || station.session || 'Estação sem identificação';
+        item.appendChild(title);
+        const details = [];
+        if (station.analystName) {
+          details.push(`Analista: ${station.analystName}`);
+        }
+        if (station.session) {
+          details.push(`Sessão: ${station.session}`);
+        }
+        if (station.hostname) {
+          details.push(station.hostname);
+        }
+        const meta = document.createElement('span');
+        meta.textContent = details.join(' • ') || 'Sem detalhes adicionais';
+        item.appendChild(meta);
+        const lastSeen = document.createElement('small');
+        const reference = station.lastSeenAt || station.connectedAt;
+        lastSeen.textContent = `Ativo ${formatRelativeTimestamp(reference)}`;
+        item.appendChild(lastSeen);
+        runtimeStationsListEl.appendChild(item);
+      });
+    }
+  }
+}
+
+function identifyRealtimeStation(force = false) {
+  if (!isRealtimeConnected()) {
+    return;
+  }
+  const payload = {
+    station: state.settings.whatsappSession || 'Estação sem sessão',
+    analystName: state.settings.analystName || '',
+    session: state.settings.whatsappSession || '',
+    hostname: window.location.hostname,
+    connected: Boolean(state.status.whatsapp?.connected),
+    active: Boolean(state.status.whatsapp?.active)
+  };
+  const signature = JSON.stringify(payload);
+  if (!force && signature === lastIdentifySignature) {
+    return;
+  }
+  lastIdentifySignature = signature;
+  try {
+    realtimeSocket?.send?.(JSON.stringify({ type: 'identify', payload }));
+  } catch (error) {
+    console.warn('Não foi possível enviar identificação em tempo real:', error);
+  }
+}
+
 function updateSettingsSummaryInfo() {
   if (!settingsStorageInfo || !settingsWhatsappInfo) {
     return;
@@ -309,7 +593,7 @@ function updateSettingsSummaryInfo() {
   settingsStorageInfo.textContent = storage;
   const whatsapp = state.status.whatsapp || {};
   const whatsappText = whatsapp.session
-    ? `${whatsapp.session} · ${whatsapp.active ? 'conectado' : 'aguardando conexão'}`
+    ? `${whatsapp.session} · ${whatsapp.connected ? 'conectado' : whatsapp.qrImage ? 'aguardando pareamento' : 'aguardando conexão'}`
     : 'Sessão não configurada';
   settingsWhatsappInfo.textContent = whatsappText;
 }
@@ -348,6 +632,27 @@ function setSettingsFeedback(message, status = 'info') {
   }
 }
 
+function setResetFeedback(message, status = 'info') {
+  if (!resetWhatsappFeedbackEl) {
+    return;
+  }
+  if (resetWhatsappFeedbackTimeout) {
+    clearTimeout(resetWhatsappFeedbackTimeout);
+  }
+  resetWhatsappFeedbackEl.textContent = message;
+  if (message) {
+    resetWhatsappFeedbackEl.dataset.status = status;
+  } else {
+    delete resetWhatsappFeedbackEl.dataset.status;
+  }
+  if (message) {
+    resetWhatsappFeedbackTimeout = setTimeout(() => {
+      resetWhatsappFeedbackEl.textContent = '';
+      delete resetWhatsappFeedbackEl.dataset.status;
+    }, 5000);
+  }
+}
+
 function toggleSettingsDrawer(open) {
   if (!settingsOverlay) {
     return;
@@ -366,6 +671,34 @@ function toggleSettingsDrawer(open) {
 function handleSettingsOverlayClick(event) {
   if (event.target === settingsOverlay) {
     toggleSettingsDrawer(false);
+  }
+}
+
+async function handleResetWhatsappSession() {
+  if (!resetWhatsappButton) {
+    return;
+  }
+  if (!state.status.whatsapp.session) {
+    setResetFeedback('Configure uma sessão do WhatsApp antes de gerar um novo QR Code.', 'warning');
+    return;
+  }
+  try {
+    resetWhatsappButton.dataset.loading = 'true';
+    resetWhatsappButton.disabled = true;
+    setResetFeedback('Solicitando novo QR Code...', 'info');
+    const data = await fetchJson('/api/whatsapp/reset-session', { method: 'POST' });
+    if (data?.status) {
+      applySystemStatus(data.status);
+      renderSummary();
+    }
+    setResetFeedback('Novo QR Code disponível. Escaneie para reconectar.', 'success');
+    identifyRealtimeStation(true);
+  } catch (error) {
+    console.error('Erro ao reiniciar sessão do WhatsApp', error);
+    setResetFeedback(error.message || 'Não foi possível reiniciar a sessão.', 'error');
+  } finally {
+    delete resetWhatsappButton.dataset.loading;
+    resetWhatsappButton.disabled = !state.status.whatsapp.session;
   }
 }
 
@@ -1152,6 +1485,7 @@ function connectRealtime() {
 
     socket.addEventListener('open', () => {
       syncAutoRefresh();
+      identifyRealtimeStation(true);
     });
 
     socket.addEventListener('message', handleRealtimeMessage);
@@ -1160,6 +1494,7 @@ function connectRealtime() {
       if (realtimeSocket === socket) {
         realtimeSocket = undefined;
       }
+      lastIdentifySignature = '';
       syncAutoRefresh();
       scheduleRealtimeReconnect();
     });
@@ -1202,6 +1537,7 @@ function bindEvents() {
   closeSettingsButton?.addEventListener('click', () => toggleSettingsDrawer(false));
   settingsOverlay?.addEventListener('click', handleSettingsOverlayClick);
   settingsForm?.addEventListener('submit', saveSettings);
+  resetWhatsappButton?.addEventListener('click', handleResetWhatsappSession);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && settingsOverlay?.classList.contains('is-open')) {
       toggleSettingsDrawer(false);

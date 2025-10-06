@@ -10,7 +10,8 @@ export function createHttpServer({
   keywordClassifier,
   analystManager,
   settingsManager,
-  getRuntimeStatus
+  getRuntimeStatus,
+  resetWhatsappSession
 }) {
   const app = express();
   app.use(express.json());
@@ -42,6 +43,32 @@ export function createHttpServer({
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: Date.now() });
+  });
+
+  app.post('/api/whatsapp/reset-session', async (req, res) => {
+    if (typeof resetWhatsappSession !== 'function') {
+      return res.status(503).json({
+        message: 'Reinício da sessão do WhatsApp não está disponível nesta instância.'
+      });
+    }
+    try {
+      const status = await resetWhatsappSession();
+      res.json({
+        message: 'Sessão do WhatsApp reiniciada. Escaneie o novo QR Code exibido no painel.',
+        status: getRuntimeStatus?.() ?? {},
+        whatsapp: status || {}
+      });
+    } catch (error) {
+      if (error.code === 'NO_SESSION') {
+        return res.status(400).json({
+          message: 'Nenhuma sessão ativa configurada para reiniciar.'
+        });
+      }
+      res.status(500).json({
+        message: 'Não foi possível reiniciar a sessão do WhatsApp.',
+        details: error.message
+      });
+    }
   });
 
   app.get('/api/tasks', async (req, res) => {

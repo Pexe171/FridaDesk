@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 import { KeywordClassifier } from './services/KeywordClassifier.js';
@@ -18,6 +19,29 @@ import { createWebSocketServer } from './server/websocketServer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function createWhatsappRuntime(session = '') {
+  return {
+    active: false,
+    session: session || '',
+    connected: false,
+    initializing: false,
+    qr: null,
+    qrImage: null,
+    qrGeneratedAt: null,
+    readyAt: null,
+    messageCount: 0,
+    lastMessageAt: null,
+    error: null
+  };
+}
+
+function createWebsocketRuntime() {
+  return {
+    clients: 0,
+    stations: []
+  };
+}
 
 async function createSheetsService(settings, basePath) {
   if (areGoogleCredentialsConfigured(settings)) {
@@ -43,31 +67,100 @@ async function createSheetsService(settings, basePath) {
   return localService;
 }
 
+function getLanAccessUrls(port) {
+  const interfaces = os.networkInterfaces();
+  const addresses = new Set();
+
+  Object.values(interfaces).forEach((iface = []) => {
+    iface
+      .filter((net) => net?.family === 'IPv4' && !net.internal)
+      .forEach((net) => {
+        addresses.add(`http://${net.address}:${port}`);
+      });
+  });
+
+  return Array.from(addresses);
+}
+
 async function bootstrap() {
-  const { PORT = 3000 } = process.env;
+  const { PORT = 3000, HOST = '0.0.0.0' } = process.env;
 
   const baseTmpPath = path.resolve(__dirname, '../tmp');
   const settingsManager = new SettingsManager({
     storagePath: path.resolve(baseTmpPath, 'app-settings.json')
   });
   const currentSettings = await settingsManager.load();
+  const runtimeStartedAt = Date.now();
 
   const keywordClassifier = new KeywordClassifier();
   await keywordClassifier.load();
 
+  const initialGoogleConfigured = areGoogleCredentialsConfigured(currentSettings);
   let runtimeStatus = {
-    storage: areGoogleCredentialsConfigured(currentSettings) ? 'google' : 'local',
-    googleConfigured: areGoogleCredentialsConfigured(currentSettings),
-    whatsapp: { active: false, session: currentSettings.whatsappSession || '' },
-    analystName: currentSettings.analystName || ''
+    storage: initialGoogleConfigured ? 'google' : 'local',
+    googleConfigured: initialGoogleConfigured,
+    whatsapp: createWhatsappRuntime(currentSettings.whatsappSession),
+    analystName: currentSettings.analystName || '',
+    websocket: createWebsocketRuntime(),
+    health: {
+      status: 'ok',
+      startedAt: runtimeStartedAt,
+      lastUpdated: runtimeStartedAt
+    }
   };
 
+  let realtimeNotifier;
+
+  function touchRuntime() {
+    runtimeStatus = {
+      ...runtimeStatus,
+      health: {
+        ...runtimeStatus.health,
+        lastUpdated: Date.now()
+      }
+    };
+    realtimeNotifier?.notifyRuntimeStatus();
+  }
+
+  function setStorageRuntime(googleConfiguredFlag, { notify = true } = {}) {
+    runtimeStatus = {
+      ...runtimeStatus,
+      storage: googleConfiguredFlag ? 'google' : 'local',
+      googleConfigured: googleConfiguredFlag
+    };
+    if (notify) {
+      touchRuntime();
+    }
+  }
+
+  function setWhatsappRuntime(partial = {}, { reset = false } = {}) {
+    const session = partial.session ?? runtimeStatus.whatsapp.session;
+    const base = reset ? createWhatsappRuntime(session) : runtimeStatus.whatsapp;
+    runtimeStatus = {
+      ...runtimeStatus,
+      whatsapp: {
+        ...base,
+        ...partial,
+        session: partial.session ?? base.session ?? session
+      }
+    };
+    touchRuntime();
+  }
+
+  function setWebsocketRuntime(summary = {}) {
+    runtimeStatus = {
+      ...runtimeStatus,
+      websocket: {
+        clients: summary.clients ?? 0,
+        stations: Array.isArray(summary.stations) ? summary.stations : []
+      }
+    };
+    touchRuntime();
+  }
+
+  setStorageRuntime(initialGoogleConfigured, { notify: false });
+
   let sheetsService = await createSheetsService(currentSettings, baseTmpPath);
-  runtimeStatus = {
-    ...runtimeStatus,
-    storage: areGoogleCredentialsConfigured(currentSettings) ? 'google' : 'local',
-    googleConfigured: areGoogleCredentialsConfigured(currentSettings)
-  };
 
   const taskManager = new TaskManager({ sheetsService });
   const analystManager = new AnalystManager({ sheetsService });
@@ -91,34 +184,40 @@ async function bootstrap() {
   await markAnalystAvailable(lastAnalystName);
 
   let whatsappService;
-  let realtimeNotifier;
+  let whatsappStatusListener;
+
+  function detachWhatsappListener() {
+    if (whatsappService && whatsappStatusListener) {
+      whatsappService.off('status', whatsappStatusListener);
+      whatsappStatusListener = undefined;
+    }
+  }
 
   async function applyWhatsAppSettings(settings) {
     const sessionId = (settings.whatsappSession || '').trim();
     if (!sessionId) {
       if (whatsappService) {
+        detachWhatsappListener();
         await whatsappService.shutdown();
         whatsappService = undefined;
       }
-      runtimeStatus = {
-        ...runtimeStatus,
-        whatsapp: { active: false, session: '' }
-      };
-      realtimeNotifier?.notifyRuntimeStatus();
+      setWhatsappRuntime({ session: '', active: false, connected: false }, { reset: true });
       return;
     }
 
     if (whatsappService && whatsappService.sessionId === sessionId) {
       whatsappService.updateLocalAnalystName(settings.analystName);
-      runtimeStatus = {
-        ...runtimeStatus,
-        whatsapp: { active: true, session: sessionId }
-      };
-      realtimeNotifier?.notifyRuntimeStatus();
+      const currentStatus = whatsappService.getStatus?.();
+      if (currentStatus) {
+        setWhatsappRuntime({ ...currentStatus, session: sessionId });
+      } else {
+        setWhatsappRuntime({ session: sessionId, active: true });
+      }
       return;
     }
 
     if (whatsappService) {
+      detachWhatsappListener();
       await whatsappService.shutdown();
       whatsappService = undefined;
     }
@@ -132,35 +231,57 @@ async function bootstrap() {
     });
 
     try {
-      await whatsappService.init();
-      console.log('Integração com WhatsApp iniciada.');
-      runtimeStatus = {
-        ...runtimeStatus,
-        whatsapp: { active: true, session: sessionId }
+      setWhatsappRuntime({ session: sessionId }, { reset: true });
+      whatsappStatusListener = (status) => {
+        setWhatsappRuntime({ ...status, session: sessionId });
       };
-      realtimeNotifier?.notifyRuntimeStatus();
+      whatsappService.on('status', whatsappStatusListener);
+      await whatsappService.init();
     } catch (error) {
       console.error('Não foi possível iniciar o cliente WhatsApp:', error);
-      runtimeStatus = {
-        ...runtimeStatus,
-        whatsapp: { active: false, session: sessionId }
-      };
-      realtimeNotifier?.notifyRuntimeStatus();
+      setWhatsappRuntime({ session: sessionId, active: false, connected: false });
     }
   }
 
   await applyWhatsAppSettings(currentSettings);
+
+  async function resetWhatsappSession() {
+    if (!whatsappService) {
+      const error = new Error('Nenhuma sessão ativa configurada para reiniciar.');
+      error.code = 'NO_SESSION';
+      throw error;
+    }
+    await whatsappService.resetSession();
+    const status = whatsappService.getStatus?.();
+    if (status) {
+      setWhatsappRuntime({ ...status });
+    }
+    return status;
+  }
 
   const app = createHttpServer({
     taskManager,
     keywordClassifier,
     analystManager,
     settingsManager,
-    getRuntimeStatus: () => ({ ...runtimeStatus })
+    getRuntimeStatus: () => ({ ...runtimeStatus }),
+    resetWhatsappSession
   });
-  const server = app.listen(PORT, () => {
-    console.log(`Servidor HTTP disponível em http://localhost:${PORT}`);
-    console.log('Acesse o painel em http://localhost:%s/panel', PORT);
+  const server = app.listen(PORT, HOST, () => {
+    const isWildcardHost = HOST === '0.0.0.0' || HOST === '::';
+    const displayHost = isWildcardHost ? 'localhost' : HOST;
+
+    console.log(`Servidor HTTP disponível em http://${displayHost}:${PORT}`);
+    console.log('Acesse o painel em http://%s:%s/panel', displayHost, PORT);
+
+    if (isWildcardHost) {
+      const lanUrls = getLanAccessUrls(PORT);
+      if (lanUrls.length > 0) {
+        console.log('Endereços disponíveis na rede local:');
+        lanUrls.forEach((url) => console.log(`  - ${url}`));
+        console.log('Painel disponível em cada endereço usando o sufixo /panel.');
+      }
+    }
   });
 
   realtimeNotifier = createWebSocketServer({
@@ -168,7 +289,8 @@ async function bootstrap() {
     taskManager,
     analystManager,
     settingsManager,
-    getRuntimeStatus: () => ({ ...runtimeStatus })
+    getRuntimeStatus: () => ({ ...runtimeStatus }),
+    onClientsChanged: setWebsocketRuntime
   });
   realtimeNotifier.notifyRuntimeStatus();
 
@@ -179,13 +301,12 @@ async function bootstrap() {
     await taskManager.setSheetsService(newService);
     await analystManager.setSheetsService(newService);
     sheetsService = newService;
+    setStorageRuntime(googleConfigured, { notify: false });
     runtimeStatus = {
       ...runtimeStatus,
-      storage: googleConfigured ? 'google' : 'local',
-      googleConfigured,
       analystName: updatedSettings.analystName || ''
     };
-    realtimeNotifier?.notifyRuntimeStatus();
+    touchRuntime();
 
     if (lastAnalystName && lastAnalystName !== updatedSettings.analystName) {
       await markAnalystAvailable(lastAnalystName);
@@ -217,7 +338,10 @@ async function bootstrap() {
     console.log('Encerrando CRM CCA...');
     Promise.resolve()
       .then(() => applyingUpdate)
-      .then(() => whatsappService?.shutdown())
+      .then(() => {
+        detachWhatsappListener();
+        return whatsappService?.shutdown();
+      })
       .then(() => realtimeNotifier?.close())
       .finally(() => {
         server.close(() => process.exit(0));
