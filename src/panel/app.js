@@ -12,6 +12,7 @@ const state = {
   viewMode: 'category',
   reminders: new Map(),
   autoRefresh: true,
+  lastUpdate: null,
   settings: {
     whatsappSession: '',
     analystName: '',
@@ -30,6 +31,8 @@ const state = {
 
 let autoRefreshHandle;
 let settingsFeedbackTimeout;
+let realtimeSocket;
+let realtimeReconnectTimeout;
 
 const summaryEl = document.getElementById('summary');
 const boardEl = document.getElementById('board');
@@ -50,6 +53,23 @@ const settingsForm = document.getElementById('settingsForm');
 const settingsFeedbackEl = document.getElementById('settingsFeedback');
 const settingsStorageInfo = document.getElementById('settingsStorageInfo');
 const settingsWhatsappInfo = document.getElementById('settingsWhatsappInfo');
+
+function isRealtimeConnected() {
+  return Boolean(realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN);
+}
+
+function isRealtimeConnecting() {
+  return Boolean(realtimeSocket && realtimeSocket.readyState === WebSocket.CONNECTING);
+}
+
+function updateLastUpdate(timestamp = Date.now()) {
+  state.lastUpdate = timestamp;
+  if (!lastUpdateEl) {
+    return;
+  }
+  const formatted = new Date(timestamp).toLocaleTimeString('pt-BR');
+  lastUpdateEl.textContent = `Última atualização: ${formatted}`;
+}
 
 async function fetchJson(url, options) {
   const response = await fetch(url, options);
@@ -1016,26 +1036,140 @@ function removeStaleReminders() {
   });
 }
 
-async function loadTasks(refresh = false) {
-  const query = refresh ? '?refresh=true' : '';
-  const data = await fetchJson(`/api/tasks${query}`);
-  state.tasks = data.tasks ?? [];
+function applyTasks(tasks, { timestamp } = {}) {
+  if (!Array.isArray(tasks)) {
+    return;
+  }
+  state.tasks = tasks;
   removeStaleReminders();
   renderSummary();
   renderFilters();
   renderBoard();
   renderInsights();
-  const now = new Date();
-  lastUpdateEl.textContent = `Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
+  updateLastUpdate(timestamp ?? Date.now());
+}
+
+async function loadTasks(refresh = false) {
+  const query = refresh ? '?refresh=true' : '';
+  const data = await fetchJson(`/api/tasks${query}`);
+  applyTasks(data.tasks ?? [], { timestamp: Date.now() });
 }
 
 function syncAutoRefresh() {
   clearInterval(autoRefreshHandle);
-  if (state.autoRefresh) {
+  if (state.autoRefresh && !isRealtimeConnected()) {
     autoRefreshHandle = setInterval(() => {
       loadTasks(true).catch(() => {});
       loadAnalysts().catch(() => {});
     }, 15000);
+  }
+}
+
+function scheduleRealtimeReconnect() {
+  if (realtimeReconnectTimeout) {
+    clearTimeout(realtimeReconnectTimeout);
+  }
+  realtimeReconnectTimeout = setTimeout(() => {
+    realtimeReconnectTimeout = undefined;
+    if (!isRealtimeConnected()) {
+      connectRealtime();
+    }
+  }, 5000);
+}
+
+function handleRealtimeMessage(event) {
+  let message;
+  try {
+    message = JSON.parse(event.data);
+  } catch (error) {
+    console.warn('Mensagem WebSocket inválida ignorada:', error);
+    return;
+  }
+
+  const { type, payload } = message || {};
+  switch (type) {
+    case 'init':
+      if (payload?.tasks) {
+        applyTasks(payload.tasks, { timestamp: Date.now() });
+      }
+      if (payload?.analysts) {
+        state.analysts = payload.analysts;
+        if (state.viewMode === 'analyst') {
+          renderBoard();
+        }
+        renderInsights();
+      }
+      if (payload?.settings) {
+        state.settings = payload.settings;
+        populateSettingsForm();
+      }
+      if (payload?.status) {
+        applySystemStatus(payload.status);
+        renderSummary();
+      }
+      break;
+    case 'tasks':
+      if (payload?.tasks) {
+        applyTasks(payload.tasks, { timestamp: Date.now() });
+      }
+      break;
+    case 'analysts':
+      if (payload?.analysts) {
+        state.analysts = payload.analysts;
+        if (state.viewMode === 'analyst') {
+          renderBoard();
+        }
+        renderInsights();
+      }
+      break;
+    case 'settings':
+      if (payload) {
+        state.settings = { ...state.settings, ...payload };
+        populateSettingsForm();
+        renderSummary();
+      }
+      break;
+    case 'status':
+      if (payload) {
+        applySystemStatus(payload);
+        renderSummary();
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+function connectRealtime() {
+  if (isRealtimeConnected() || isRealtimeConnecting()) {
+    return;
+  }
+
+  try {
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
+    realtimeSocket = socket;
+
+    socket.addEventListener('open', () => {
+      syncAutoRefresh();
+    });
+
+    socket.addEventListener('message', handleRealtimeMessage);
+
+    socket.addEventListener('close', () => {
+      if (realtimeSocket === socket) {
+        realtimeSocket = undefined;
+      }
+      syncAutoRefresh();
+      scheduleRealtimeReconnect();
+    });
+
+    socket.addEventListener('error', () => {
+      socket.close();
+    });
+  } catch (error) {
+    console.warn('Não foi possível conectar ao canal em tempo real:', error);
+    scheduleRealtimeReconnect();
   }
 }
 
@@ -1080,6 +1214,7 @@ async function bootstrap() {
   await loadSettings();
   await Promise.all([loadCategories(), loadAnalysts()]);
   await loadTasks(true);
+  connectRealtime();
   syncAutoRefresh();
 }
 

@@ -1,7 +1,10 @@
+import { EventEmitter } from 'events';
+
 const ANALYST_SHEET = 'Analistas';
 
-export class AnalystManager {
+export class AnalystManager extends EventEmitter {
   constructor({ sheetsService }) {
+    super();
     this.sheetsService = sheetsService;
     this.analysts = new Map();
   }
@@ -20,7 +23,12 @@ export class AnalystManager {
       const analyst = { id: rowNumber, name, category, status };
       this.analysts.set(name, analyst);
     });
-    return Array.from(this.analysts.values());
+    const analysts = this.listAnalysts();
+    this.emit('analysts:updated', {
+      type: 'refresh',
+      analysts
+    });
+    return analysts;
   }
 
   listAnalysts() {
@@ -74,6 +82,12 @@ export class AnalystManager {
       updated.status
     ]);
     this.analysts.set(name, updated);
+    const analysts = this.listAnalysts();
+    this.emit('analysts:updated', {
+      type: 'status',
+      analyst: updated,
+      analysts
+    });
     return updated;
   }
 }
