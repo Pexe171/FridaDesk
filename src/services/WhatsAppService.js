@@ -14,6 +14,9 @@ export class WhatsAppService {
   }
 
   async init() {
+    if (this.client) {
+      return;
+    }
     this.client = new Client({
       authStrategy: new LocalAuth({ clientId: this.sessionId }),
       puppeteer: {
@@ -44,6 +47,24 @@ export class WhatsAppService {
 
     await this.client.initialize();
     console.log('Cliente do WhatsApp iniciado.');
+  }
+
+  async shutdown() {
+    if (!this.client) {
+      return;
+    }
+    try {
+      await this.client.destroy();
+      console.log('Cliente do WhatsApp finalizado.');
+    } catch (error) {
+      console.warn('Não foi possível encerrar o cliente do WhatsApp:', error);
+    } finally {
+      this.client = undefined;
+    }
+  }
+
+  updateLocalAnalystName(name) {
+    this.localAnalystName = name;
   }
 
   composeAutoReply({ category, analystName, keyword }) {

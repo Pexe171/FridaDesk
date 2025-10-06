@@ -40,24 +40,7 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
 
 ## Preparação do ambiente
 
-1. Copie o arquivo `.env.example` para `.env` e preencha as variáveis:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   | Variável | Descrição |
-   | --- | --- |
-   | `PORT` | Porta HTTP da API/painel (padrão 3000). |
-   | `WHATSAPP_SESSION` | Identificador da sessão do WhatsApp (um por máquina/setor). |
-   | `ANALYST_NAME` | Nome do analista logado na estação. |
-   | `GOOGLE_SHEET_ID` | ID da planilha `Atendimentos CCA` no Google Sheets. |
-   | `GOOGLE_CLIENT_EMAIL` | E-mail do service account Google. |
-   | `GOOGLE_PRIVATE_KEY` | Chave privada do service account (com `\n` para quebras de linha). |
-   | `GOOGLE_PROJECT_ID` | Opcional, ID do projeto Google Cloud. |
-
-   > Caso as credenciais do Google não sejam fornecidas, o sistema utilizará automaticamente um arquivo local (`tmp/local-sheet-{sessão}.json`) para simular a planilha durante o desenvolvimento.
-
+1. (Opcional) Ajuste a porta HTTP criando um arquivo `.env` com a variável `PORT`. O valor padrão é `3000` e o arquivo `.env.example` traz esse único exemplo.
 2. Instale as dependências:
 
    ```bash
@@ -72,6 +55,25 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
 
    - A API e o painel serão disponibilizados em `http://localhost:PORT`.
    - A primeira execução exibirá um QR Code no terminal. Escaneie com o WhatsApp do setor correspondente.
+
+4. Acesse `http://localhost:PORT/panel`, clique em **Configurações** na barra superior e informe os dados da estação:
+
+   - Sessão do WhatsApp (um identificador por máquina/setor).
+   - Nome do analista logado.
+   - Credenciais do Google Sheets (opcionais) para sincronizar com a planilha oficial.
+
+5. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
+
+## Configurações pelo painel
+
+O painel web concentra todas as informações da estação. No canto superior direito há o botão **Configurações**, que abre um painel lateral para editar:
+
+- **Sessão do WhatsApp**: define o diretório de autenticação utilizado pelo `whatsapp-web.js` e o arquivo local de fallback.
+- **Analista desta estação**: usado para atualizar o status na planilha de analistas e identificar quem assumiu o atendimento.
+- **Credenciais do Google Sheets**: ao informar `ID da planilha`, e-mail e chave privada do service account, o sistema passa a sincronizar diretamente com a planilha oficial. A chave pode ser colada no formato original; o painel converte automaticamente as quebras de linha necessárias.
+- **ID do projeto (opcional)**: somente para contas Google que exigem o `project_id` explícito.
+
+O painel exibe o status atual da integração (modo local ou Google Sheets) e da sessão do WhatsApp, ajudando a verificar rapidamente se tudo está conectado.
 
 ## Planilha Google
 
@@ -125,9 +127,9 @@ As alterações são persistidas no arquivo JSON, garantindo que futuras execuç
 
 ## Execução em múltiplas máquinas
 
-- Configure `WHATSAPP_SESSION` com um identificador único para cada computador/linha de atendimento.
-- Defina `ANALYST_NAME` com o nome do analista responsável pela estação. O sistema atualiza automaticamente o status na planilha.
-- Todos os ambientes compartilham a mesma planilha do Google e, consequentemente, o mesmo painel atualizado em tempo real.
+- Defina uma sessão distinta para cada estação diretamente pelo painel de configurações.
+- Informe o nome do analista local para que o status seja atualizado automaticamente na aba `Analistas`.
+- Todas as estações podem compartilhar as mesmas credenciais do Google Sheets para manter a sincronização com a planilha oficial.
 
 ## Scripts disponíveis
 
