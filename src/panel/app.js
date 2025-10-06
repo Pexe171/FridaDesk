@@ -11,10 +11,25 @@ const state = {
   },
   viewMode: 'category',
   reminders: new Map(),
-  autoRefresh: true
+  autoRefresh: true,
+  settings: {
+    whatsappSession: '',
+    analystName: '',
+    googleSheetId: '',
+    googleClientEmail: '',
+    googlePrivateKey: '',
+    googleProjectId: ''
+  },
+  status: {
+    storage: 'local',
+    googleConfigured: false,
+    whatsapp: { active: false, session: '' },
+    analystName: ''
+  }
 };
 
 let autoRefreshHandle;
+let settingsFeedbackTimeout;
 
 const summaryEl = document.getElementById('summary');
 const boardEl = document.getElementById('board');
@@ -28,6 +43,13 @@ const categoryFiltersEl = document.getElementById('categoryFilters');
 const viewToggleEl = document.getElementById('viewToggle');
 const showCompletedInput = document.getElementById('showCompleted');
 const autoRefreshInput = document.getElementById('autoRefresh');
+const openSettingsButton = document.getElementById('openSettings');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const closeSettingsButton = document.getElementById('closeSettings');
+const settingsForm = document.getElementById('settingsForm');
+const settingsFeedbackEl = document.getElementById('settingsFeedback');
+const settingsStorageInfo = document.getElementById('settingsStorageInfo');
+const settingsWhatsappInfo = document.getElementById('settingsWhatsappInfo');
 
 async function fetchJson(url, options) {
   const response = await fetch(url, options);
@@ -37,6 +59,28 @@ async function fetchJson(url, options) {
     throw new Error(message);
   }
   return response.json();
+}
+
+function decodePrivateKey(value) {
+  return (value || '').replace(/\\n/g, '\n');
+}
+
+function encodePrivateKey(value) {
+  return (value || '').replace(/\r?\n/g, '\\n');
+}
+
+function applySystemStatus(status = {}) {
+  const whatsapp = status.whatsapp || {};
+  state.status = {
+    storage: status.storage || 'local',
+    googleConfigured: Boolean(status.googleConfigured),
+    whatsapp: {
+      active: Boolean(whatsapp.active),
+      session: whatsapp.session || ''
+    },
+    analystName: status.analystName || state.settings.analystName || ''
+  };
+  updateSettingsSummaryInfo();
 }
 
 function parseTaskDate(raw) {
@@ -206,12 +250,148 @@ function renderSummary() {
     }
   ];
 
+  const storageLabel = state.status.googleConfigured ? 'Google Sheets' : 'Armazenamento local';
+  const storageDetail = state.status.googleConfigured
+    ? 'Sincronização ativa com a planilha'
+    : 'Modo local para testes/desenvolvimento';
+  cards.push({
+    label: 'Integração de dados',
+    value: storageLabel,
+    detail: storageDetail
+  });
+
+  const whatsapp = state.status.whatsapp || {};
+  const whatsappLabel = whatsapp.session || 'Não configurada';
+  const whatsappDetail = whatsapp.session
+    ? whatsapp.active
+      ? 'Conectado ao WhatsApp'
+      : 'Aguardando pareamento'
+    : 'Informe uma sessão para iniciar';
+  cards.push({
+    label: 'Sessão WhatsApp',
+    value: whatsappLabel,
+    detail: whatsappDetail
+  });
+
   cards.forEach((card) => {
     const el = document.createElement('article');
     el.className = 'summary-card';
     el.innerHTML = `<span>${card.label}</span><strong>${card.value}</strong><small>${card.detail}</small>`;
     summaryEl.appendChild(el);
   });
+}
+
+function updateSettingsSummaryInfo() {
+  if (!settingsStorageInfo || !settingsWhatsappInfo) {
+    return;
+  }
+  const storage = state.status.googleConfigured ? 'Google Sheets' : 'Armazenamento local';
+  settingsStorageInfo.textContent = storage;
+  const whatsapp = state.status.whatsapp || {};
+  const whatsappText = whatsapp.session
+    ? `${whatsapp.session} · ${whatsapp.active ? 'conectado' : 'aguardando conexão'}`
+    : 'Sessão não configurada';
+  settingsWhatsappInfo.textContent = whatsappText;
+}
+
+function populateSettingsForm() {
+  if (!settingsForm) {
+    return;
+  }
+  const form = settingsForm.elements;
+  form.whatsappSession.value = state.settings.whatsappSession || '';
+  form.analystName.value = state.settings.analystName || '';
+  form.googleSheetId.value = state.settings.googleSheetId || '';
+  form.googleClientEmail.value = state.settings.googleClientEmail || '';
+  form.googlePrivateKey.value = decodePrivateKey(state.settings.googlePrivateKey || '');
+  form.googleProjectId.value = state.settings.googleProjectId || '';
+}
+
+function setSettingsFeedback(message, status = 'info') {
+  if (!settingsFeedbackEl) {
+    return;
+  }
+  if (settingsFeedbackTimeout) {
+    clearTimeout(settingsFeedbackTimeout);
+  }
+  settingsFeedbackEl.textContent = message;
+  if (message) {
+    settingsFeedbackEl.dataset.status = status;
+  } else {
+    delete settingsFeedbackEl.dataset.status;
+  }
+  if (message) {
+    settingsFeedbackTimeout = setTimeout(() => {
+      settingsFeedbackEl.textContent = '';
+      delete settingsFeedbackEl.dataset.status;
+    }, 4000);
+  }
+}
+
+function toggleSettingsDrawer(open) {
+  if (!settingsOverlay) {
+    return;
+  }
+  const shouldOpen = Boolean(open);
+  settingsOverlay.classList.toggle('is-open', shouldOpen);
+  settingsOverlay.setAttribute('aria-hidden', String(!shouldOpen));
+  if (shouldOpen) {
+    populateSettingsForm();
+    settingsForm?.elements.whatsappSession?.focus();
+  } else {
+    openSettingsButton?.focus();
+  }
+}
+
+function handleSettingsOverlayClick(event) {
+  if (event.target === settingsOverlay) {
+    toggleSettingsDrawer(false);
+  }
+}
+
+async function loadSettings() {
+  try {
+    const data = await fetchJson('/api/settings');
+    state.settings = data.settings ?? state.settings;
+    applySystemStatus(data.status ?? {});
+    populateSettingsForm();
+    renderSummary();
+  } catch (error) {
+    console.error('Erro ao carregar configurações', error);
+    setSettingsFeedback('Não foi possível carregar as configurações.', 'error');
+  }
+}
+
+async function saveSettings(event) {
+  event.preventDefault();
+  if (!settingsForm) {
+    return;
+  }
+  const formData = new FormData(settingsForm);
+  const payload = {
+    whatsappSession: formData.get('whatsappSession')?.toString().trim() || '',
+    analystName: formData.get('analystName')?.toString().trim() || '',
+    googleSheetId: formData.get('googleSheetId')?.toString().trim() || '',
+    googleClientEmail: formData.get('googleClientEmail')?.toString().trim() || '',
+    googlePrivateKey: encodePrivateKey(formData.get('googlePrivateKey')?.toString() || ''),
+    googleProjectId: formData.get('googleProjectId')?.toString().trim() || ''
+  };
+  try {
+    setSettingsFeedback('Salvando configurações...', 'info');
+    const data = await fetchJson('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    state.settings = data.settings ?? state.settings;
+    applySystemStatus(data.status ?? {});
+    populateSettingsForm();
+    renderSummary();
+    setSettingsFeedback('Configurações salvas com sucesso.', 'success');
+  } catch (error) {
+    console.error('Erro ao salvar configurações', error);
+    setSettingsFeedback(error.message, 'error');
+  }
 }
 
 function renderStatusFilters() {
@@ -884,10 +1064,20 @@ function bindEvents() {
     state.autoRefresh = event.target.checked;
     syncAutoRefresh();
   });
+  openSettingsButton?.addEventListener('click', () => toggleSettingsDrawer(true));
+  closeSettingsButton?.addEventListener('click', () => toggleSettingsDrawer(false));
+  settingsOverlay?.addEventListener('click', handleSettingsOverlayClick);
+  settingsForm?.addEventListener('submit', saveSettings);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && settingsOverlay?.classList.contains('is-open')) {
+      toggleSettingsDrawer(false);
+    }
+  });
 }
 
 async function bootstrap() {
   bindEvents();
+  await loadSettings();
   await Promise.all([loadCategories(), loadAnalysts()]);
   await loadTasks(true);
   syncAutoRefresh();

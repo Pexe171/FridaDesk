@@ -6,6 +6,11 @@ export class AnalystManager {
     this.analysts = new Map();
   }
 
+  async setSheetsService(sheetsService) {
+    this.sheetsService = sheetsService;
+    await this.refreshAnalysts();
+  }
+
   async refreshAnalysts() {
     const { rows } = await this.sheetsService.getRows(ANALYST_SHEET);
     this.analysts.clear();

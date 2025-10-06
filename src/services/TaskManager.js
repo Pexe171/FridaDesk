@@ -8,6 +8,11 @@ export class TaskManager {
     this.tasks = new Map();
   }
 
+  async setSheetsService(sheetsService) {
+    this.sheetsService = sheetsService;
+    await this.refreshTasks();
+  }
+
   async initialize() {
     await this.refreshTasks();
   }

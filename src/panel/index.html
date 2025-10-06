@@ -19,6 +19,7 @@
         <span class="topbar__subtitle">Central de relacionamento em tempo real</span>
       </div>
       <div class="topbar__actions">
+        <button id="openSettings" type="button" class="button">Configurações</button>
         <label class="switch" for="autoRefresh">
           <input type="checkbox" id="autoRefresh" checked />
           <span class="switch__label">Auto atualizar</span>
@@ -67,6 +68,94 @@
         <aside id="insights" class="insights"></aside>
       </div>
     </main>
+
+    <div id="settingsOverlay" class="settings-overlay" aria-hidden="true">
+      <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <header class="settings-panel__header">
+          <div>
+            <h2 id="settingsTitle">Configurações do CRM</h2>
+            <p class="settings-panel__subtitle">Atualize credenciais e identificação desta estação.</p>
+          </div>
+          <button type="button" id="closeSettings" class="button button--ghost">Fechar</button>
+        </header>
+        <div class="settings-panel__meta">
+          <div>
+            <span class="settings-panel__label">Integração de dados</span>
+            <strong id="settingsStorageInfo">Armazenamento local</strong>
+          </div>
+          <div>
+            <span class="settings-panel__label">Sessão WhatsApp</span>
+            <strong id="settingsWhatsappInfo">Sessão não configurada</strong>
+          </div>
+        </div>
+        <form id="settingsForm" class="settings-form">
+          <fieldset>
+            <legend>Identificação local</legend>
+            <label>
+              <span>Sessão do WhatsApp</span>
+              <input
+                type="text"
+                name="whatsappSession"
+                autocomplete="off"
+                placeholder="Ex.: financeiro-01"
+              />
+            </label>
+            <label>
+              <span>Analista desta estação</span>
+              <input
+                type="text"
+                name="analystName"
+                autocomplete="name"
+                placeholder="Nome do analista"
+              />
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Integração com Google Sheets</legend>
+            <label>
+              <span>ID da planilha</span>
+              <input
+                type="text"
+                name="googleSheetId"
+                autocomplete="off"
+                placeholder="Ex.: 1A2B3C..."
+              />
+            </label>
+            <label>
+              <span>E-mail do service account</span>
+              <input
+                type="email"
+                name="googleClientEmail"
+                autocomplete="email"
+                placeholder="nome@projeto.iam.gserviceaccount.com"
+              />
+            </label>
+            <label>
+              <span>Chave privada</span>
+              <textarea
+                name="googlePrivateKey"
+                rows="6"
+                spellcheck="false"
+                placeholder="Cole aqui a chave privada completa"
+              ></textarea>
+            </label>
+            <label>
+              <span>ID do projeto (opcional)</span>
+              <input
+                type="text"
+                name="googleProjectId"
+                autocomplete="off"
+                placeholder="project-id"
+              />
+            </label>
+          </fieldset>
+          <div class="settings-form__actions">
+            <span id="settingsFeedback" class="settings-feedback" role="status" aria-live="polite"></span>
+            <button type="submit" class="button button--primary">Salvar configurações</button>
+          </div>
+        </form>
+      </section>
+    </div>
 
     <template id="task-card">
       <article class="task-card">
