@@ -6,7 +6,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "NODE_ENV=development node src/index.js",
+    "dev": "cross-env NODE_ENV=development node src/index.js",
     "lint": "eslint ."
   },
   "keywords": [
@@ -28,6 +28,7 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "cross-env": "^7.0.3"
   }
 }
