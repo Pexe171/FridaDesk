@@ -38,7 +38,8 @@ const state = {
     status: 'all',
     search: '',
     categories: new Set(),
-    showCompleted: false
+    showCompleted: false,
+    privateOnly: true
   },
   viewMode: 'category',
   reminders: new Map(),
@@ -85,6 +86,7 @@ const statusFiltersEl = document.getElementById('statusFilters');
 const categoryFiltersEl = document.getElementById('categoryFilters');
 const viewToggleEl = document.getElementById('viewToggle');
 const showCompletedInput = document.getElementById('showCompleted');
+const filterPrivateInput = document.getElementById('filterPrivate');
 const autoRefreshInput = document.getElementById('autoRefresh');
 const openSettingsButton = document.getElementById('openSettings');
 const settingsOverlay = document.getElementById('settingsOverlay');
@@ -93,6 +95,62 @@ const settingsForm = document.getElementById('settingsForm');
 const settingsFeedbackEl = document.getElementById('settingsFeedback');
 const settingsStorageInfo = document.getElementById('settingsStorageInfo');
 const settingsWhatsappInfo = document.getElementById('settingsWhatsappInfo');
+const resetFiltersButton = document.getElementById('resetFilters');
+
+function isGroupIdentifier(value) {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.toString().toLowerCase();
+  if (normalized.includes('@g.us')) {
+    return true;
+  }
+  if (normalized.includes('@broadcast')) {
+    return true;
+  }
+  if (normalized.includes('-') && !/^[+]?\d+$/.test(normalized.replace(/@.+$/, ''))) {
+    return true;
+  }
+  return false;
+}
+
+function formatContactNumber(value) {
+  if (!value) {
+    return { display: 'Contato não identificado', copy: '', isGroup: false };
+  }
+  let normalized = value.toString().trim();
+  const isGroup = isGroupIdentifier(normalized);
+  if (normalized.includes('@')) {
+    normalized = normalized.replace(/@.+$/, '');
+  }
+  const digitsOnly = normalized.replace(/\D/g, '');
+  const copy = digitsOnly || normalized;
+  let display = normalized;
+  if (!display) {
+    display = isGroup ? 'Grupo do WhatsApp' : 'Contato não identificado';
+  }
+  if (!isGroup && digitsOnly.length >= 10) {
+    const national = digitsOnly.slice(-11);
+    const country = digitsOnly.length > national.length ? digitsOnly.slice(0, digitsOnly.length - national.length) : '55';
+    const area = national.slice(0, 2) || '00';
+    const subscriber = national.slice(2);
+    const leading = subscriber.slice(0, Math.max(subscriber.length - 4, 0)) || subscriber;
+    const trailing = subscriber.length > 4 ? subscriber.slice(-4) : '';
+    display = trailing
+      ? `+${country} (${area}) ${leading}-${trailing}`
+      : `+${country} (${area}) ${leading}`;
+  } else if (isGroup) {
+    display = `Grupo ${normalized}`;
+  }
+  return { display, copy, isGroup };
+}
+
+function getTasksUniverse() {
+  if (state.filters.privateOnly) {
+    return state.tasks.filter((task) => !task.isGroup);
+  }
+  return state.tasks.slice();
+}
 
 function isRealtimeConnected() {
   return Boolean(realtimeSocket && realtimeSocket.readyState === WebSocket.OPEN);
@@ -314,9 +372,12 @@ function getStatusClass(status) {
 }
 
 function getFilteredTasks() {
-  const { status, search, categories, showCompleted } = state.filters;
+  const { status, search, categories, showCompleted, privateOnly } = state.filters;
   const searchTerm = search.trim().toLowerCase();
   return state.tasks.filter((task) => {
+    if (privateOnly && task.isGroup) {
+      return false;
+    }
     if (!showCompleted && task.status === 'Concluído') {
       return false;
     }
@@ -329,7 +390,15 @@ function getFilteredTasks() {
     if (!searchTerm) {
       return true;
     }
-    const haystack = [task.number, task.message, task.category, task.analyst, task.status]
+    const haystack = [
+      task.displayNumber,
+      task.copyNumber,
+      task.number,
+      task.message,
+      task.category,
+      task.analyst,
+      task.status
+    ]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
@@ -339,47 +408,26 @@ function getFilteredTasks() {
 
 function renderSummary() {
   summaryEl.innerHTML = '';
-  const total = state.tasks.length;
-  const active = state.tasks.filter((task) => task.status !== 'Concluído').length;
-  const concluded = state.tasks.filter((task) => task.status === 'Concluído').length;
-  const today = state.tasks.filter((task) => isToday(task.date)).length;
-  const unattended = state.tasks.filter((task) => task.status !== 'Concluído' && !task.analyst).length;
-  const overdue = state.tasks.filter(
+  const baseTasks = getTasksUniverse();
+  const total = baseTasks.length;
+  const active = baseTasks.filter((task) => task.status !== 'Concluído').length;
+  const concluded = baseTasks.filter((task) => task.status === 'Concluído').length;
+  const today = baseTasks.filter((task) => isToday(task.date)).length;
+  const unattended = baseTasks.filter((task) => task.status !== 'Concluído' && !task.analyst).length;
+  const overdue = baseTasks.filter(
     (task) => task.status !== 'Concluído' && getTaskAgeInMinutes(task) >= 480
   ).length;
-
-  const cards = [
-    {
-      label: 'Atendimentos ativos',
-      value: active,
-      detail: `${total ? Math.round((active / total) * 100) : 0}% do total`
-    },
-    {
-      label: 'Finalizados',
-      value: concluded,
-      detail: `${concluded} concluídos recentemente`
-    },
-    {
-      label: 'Novos hoje',
-      value: today,
-      detail: today ? 'Monitorar fluxos de entrada' : 'Sem novos registros hoje'
-    },
-    {
-      label: 'Aguardando analista',
-      value: unattended,
-      detail: `${overdue} críticos (>8h)`
-    }
-  ];
+  const privateConversations = state.tasks.filter((task) => !task.isGroup).length;
+  const groupConversations = state.tasks.filter((task) => task.isGroup).length;
+  const privateRatio = state.tasks.length
+    ? Math.round((privateConversations / state.tasks.length) * 100)
+    : 0;
+  const groupRatio = state.tasks.length ? Math.round((groupConversations / state.tasks.length) * 100) : 0;
 
   const storageLabel = state.status.googleConfigured ? 'Google Sheets' : 'Armazenamento local';
   const storageDetail = state.status.googleConfigured
     ? 'Sincronização ativa com a planilha'
     : 'Modo local para testes/desenvolvimento';
-  cards.push({
-    label: 'Integração de dados',
-    value: storageLabel,
-    detail: storageDetail
-  });
 
   const whatsapp = state.status.whatsapp || {};
   const whatsappLabel = whatsapp.session || 'Não configurada';
@@ -401,16 +449,110 @@ function renderSummary() {
   } else {
     whatsappDetail = 'Sessão inativa no momento';
   }
-  cards.push({
-    label: 'Sessão WhatsApp',
-    value: whatsappLabel,
-    detail: whatsappDetail
-  });
+
+  const cards = [
+    {
+      type: 'active',
+      icon: '📞',
+      label: 'Atendimentos ativos',
+      value: active,
+      detail: `${total ? Math.round((active / total) * 100) : 0}% do total`,
+      badge: total ? `${total} no painel` : 'Sem fila'
+    },
+    {
+      type: 'done',
+      icon: '✅',
+      label: 'Finalizados',
+      value: concluded,
+      detail: concluded ? 'Últimas 24h em alta' : 'Sem fechamentos recentes'
+    },
+    {
+      type: 'new',
+      icon: '🆕',
+      label: 'Novos hoje',
+      value: today,
+      detail: today ? 'Acompanhe a entrada de leads' : 'Sem novos registros hoje'
+    },
+    {
+      type: 'alert',
+      icon: '⏱️',
+      label: 'Aguardando analista',
+      value: unattended,
+      detail: `${overdue} críticos (>8h)`
+    },
+    {
+      type: 'private',
+      icon: '🔒',
+      label: 'Conversas privadas',
+      value: privateConversations,
+      detail: `${privateRatio}% do volume total`,
+      badge: groupConversations ? `${groupConversations} grupos (${groupRatio}%)` : 'Sem grupos'
+    },
+    {
+      type: 'integration',
+      icon: '🔗',
+      label: 'Integração de dados',
+      value: storageLabel,
+      detail: storageDetail,
+      valueType: 'text'
+    },
+    {
+      type: 'whatsapp',
+      icon: '⚡',
+      label: 'Sessão WhatsApp',
+      value: whatsappLabel,
+      detail: whatsappDetail,
+      valueType: 'text'
+    }
+  ];
 
   cards.forEach((card) => {
     const el = document.createElement('article');
     el.className = 'summary-card';
-    el.innerHTML = `<span>${card.label}</span><strong>${card.value}</strong><small>${card.detail}</small>`;
+    if (card.type) {
+      el.dataset.type = card.type;
+    }
+    const icon = document.createElement('span');
+    icon.className = 'summary-card__icon';
+    icon.textContent = card.icon || 'ℹ️';
+
+    const body = document.createElement('div');
+    body.className = 'summary-card__body';
+
+    const top = document.createElement('div');
+    top.className = 'summary-card__top';
+    const label = document.createElement('span');
+    label.className = 'summary-card__label';
+    label.textContent = card.label;
+    top.appendChild(label);
+    if (card.badge) {
+      const badge = document.createElement('span');
+      badge.className = 'summary-card__badge';
+      badge.textContent = card.badge;
+      top.appendChild(badge);
+    }
+
+    const value = document.createElement('strong');
+    value.className = 'summary-card__value';
+    if (card.valueType === 'text') {
+      value.classList.add('is-text');
+      value.textContent = card.value;
+    } else if (typeof card.value === 'number' && Number.isFinite(card.value)) {
+      value.textContent = card.value.toLocaleString('pt-BR');
+    } else {
+      value.textContent = String(card.value ?? '--');
+    }
+
+    const detail = document.createElement('small');
+    detail.className = 'summary-card__detail';
+    detail.textContent = card.detail;
+
+    body.appendChild(top);
+    body.appendChild(value);
+    body.appendChild(detail);
+
+    el.appendChild(icon);
+    el.appendChild(body);
     summaryEl.appendChild(el);
   });
 }
@@ -749,7 +891,8 @@ async function saveSettings(event) {
 
 function renderStatusFilters() {
   statusFiltersEl.innerHTML = '';
-  const counts = state.tasks.reduce((acc, task) => {
+  const tasks = getTasksUniverse();
+  const counts = tasks.reduce((acc, task) => {
     acc[task.status] = (acc[task.status] || 0) + 1;
     return acc;
   }, {});
@@ -757,7 +900,7 @@ function renderStatusFilters() {
     state.filters.status = 'all';
   }
   const statuses = Object.keys(counts).sort();
-  const options = [{ value: 'all', label: `Todos (${state.tasks.length})` }];
+  const options = [{ value: 'all', label: `Todos (${tasks.length})` }];
   statuses.forEach((status) => {
     options.push({ value: status, label: `${status} (${counts[status]})` });
   });
@@ -780,7 +923,8 @@ function renderStatusFilters() {
 
 function renderCategoryFilters() {
   categoryFiltersEl.innerHTML = '';
-  const counts = state.tasks.reduce((acc, task) => {
+  const tasks = getTasksUniverse();
+  const counts = tasks.reduce((acc, task) => {
     const key = task.category || 'Sem categoria';
     acc[key] = (acc[key] || 0) + 1;
     return acc;
@@ -818,6 +962,30 @@ function renderFilters() {
   renderCategoryFilters();
   updateViewButtons();
   showCompletedInput.checked = state.filters.showCompleted;
+  if (filterPrivateInput) {
+    filterPrivateInput.checked = state.filters.privateOnly;
+  }
+}
+
+function resetFilters() {
+  state.filters.status = 'all';
+  state.filters.categories = new Set();
+  state.filters.search = '';
+  state.filters.showCompleted = false;
+  state.filters.privateOnly = true;
+  if (searchInput) {
+    searchInput.value = '';
+  }
+  if (showCompletedInput) {
+    showCompletedInput.checked = false;
+  }
+  if (filterPrivateInput) {
+    filterPrivateInput.checked = true;
+  }
+  renderSummary();
+  renderFilters();
+  renderBoard();
+  renderInsights();
 }
 
 function updateViewButtons() {
@@ -1004,7 +1172,13 @@ function createTaskCard(task) {
   const reminderButton = card.querySelector('.task-remind');
   const completeButton = card.querySelector('.task-complete');
 
-  numberEl.textContent = task.number || `ID ${task.id}`;
+  numberEl.textContent = task.displayNumber || task.number || `ID ${task.id}`;
+  if (task.isGroup) {
+    numberEl.classList.add('task-number--group');
+    card.dataset.origin = 'group';
+  } else {
+    card.dataset.origin = 'direct';
+  }
   const statusText = task.status || 'Status não informado';
   statusEl.textContent = statusText;
   statusEl.classList.add(getStatusClass(statusText));
@@ -1048,7 +1222,13 @@ function createTaskCard(task) {
     card.classList.add('task-card--reminder');
   }
 
-  copyButton.addEventListener('click', () => copyTaskNumber(task));
+  if (task.isGroup) {
+    copyButton.disabled = true;
+    copyButton.textContent = 'Grupo';
+    copyButton.title = 'Números de grupos não são copiados automaticamente.';
+  } else {
+    copyButton.addEventListener('click', () => copyTaskNumber(task));
+  }
   reminderButton.addEventListener('click', () => scheduleReminder(task));
   completeButton.addEventListener('click', () => concludeTask(task));
 
@@ -1062,10 +1242,11 @@ function createTaskCard(task) {
 }
 
 function renderInsights() {
+  const tasks = getTasksUniverse();
   insightsEl.innerHTML = '';
-  insightsEl.appendChild(createCategoryInsight());
-  insightsEl.appendChild(createAnalystInsight());
-  insightsEl.appendChild(createSlaInsight());
+  insightsEl.appendChild(createCategoryInsight(tasks));
+  insightsEl.appendChild(createAnalystInsight(tasks));
+  insightsEl.appendChild(createSlaInsight(tasks));
   const reminderInsight = createReminderInsight();
   if (reminderInsight) {
     insightsEl.appendChild(reminderInsight);
@@ -1081,11 +1262,11 @@ function createInsightCard(title) {
   return card;
 }
 
-function createCategoryInsight() {
+function createCategoryInsight(tasks) {
   const card = createInsightCard('Categorias em destaque');
   const list = document.createElement('div');
   list.className = 'insight-list';
-  const openTasks = state.tasks.filter((task) => task.status !== 'Concluído');
+  const openTasks = tasks.filter((task) => task.status !== 'Concluído');
   if (!openTasks.length) {
     const empty = document.createElement('span');
     empty.textContent = 'Nenhum atendimento aberto no momento.';
@@ -1123,7 +1304,7 @@ function createCategoryInsight() {
   return card;
 }
 
-function createAnalystInsight() {
+function createAnalystInsight(tasks) {
   const card = createInsightCard('Status dos analistas');
   const list = document.createElement('div');
   list.className = 'insight-list';
@@ -1132,7 +1313,7 @@ function createAnalystInsight() {
     empty.textContent = 'Sem informações de analistas disponíveis.';
     list.appendChild(empty);
   } else {
-    const tasksByAnalyst = state.tasks.reduce((acc, task) => {
+    const tasksByAnalyst = tasks.reduce((acc, task) => {
       const key = task.analyst || 'Sem analista definido';
       acc[key] = (acc[key] || 0) + (task.status === 'Concluído' ? 0 : 1);
       return acc;
@@ -1178,7 +1359,7 @@ function createAnalystInsight() {
   return card;
 }
 
-function createSlaInsight() {
+function createSlaInsight(tasks) {
   const card = createInsightCard('Monitor de SLA');
   const list = document.createElement('div');
   list.className = 'insight-list';
@@ -1188,7 +1369,7 @@ function createSlaInsight() {
     entreQuatroEOito: 0,
     acimaOitoHoras: 0
   };
-  const openTasks = state.tasks.filter((task) => task.status !== 'Concluído');
+  const openTasks = tasks.filter((task) => task.status !== 'Concluído');
   openTasks.forEach((task) => {
     const age = getTaskAgeInMinutes(task);
     if (age <= 120) {
@@ -1245,7 +1426,7 @@ function createReminderInsight() {
       const item = document.createElement('div');
       item.className = 'insight-list__item';
       const label = document.createElement('span');
-      label.textContent = task.number || String(task.id);
+      label.textContent = task.displayNumber || task.number || String(task.id);
       const value = document.createElement('span');
       value.textContent = formatReminderTime(reminder.dueAt);
       item.appendChild(label);
@@ -1262,7 +1443,11 @@ function createReminderInsight() {
 }
 
 function copyTaskNumber(task) {
-  const value = task.number || String(task.id);
+  const value = task.copyNumber || task.number || String(task.id);
+  if (!value) {
+    alert('Número do contato indisponível para cópia.');
+    return;
+  }
   if (navigator.clipboard?.writeText) {
     navigator.clipboard
       .writeText(value)
@@ -1283,8 +1468,9 @@ function scheduleReminder(task) {
     ? Math.round((existingReminder.dueAt - Date.now()) / 60000)
     : 30;
   const defaultMinutes = Number.isFinite(baseMinutes) && baseMinutes > 0 ? baseMinutes : 30;
+  const label = task.displayNumber || task.number || task.id;
   const input = window.prompt(
-    `Em quantos minutos devemos lembrar sobre o atendimento ${task.number || task.id}?`,
+    `Em quantos minutos devemos lembrar sobre o atendimento ${label}?`,
     String(defaultMinutes)
   );
   if (!input) {
@@ -1300,7 +1486,8 @@ function scheduleReminder(task) {
   }
   const dueAt = Date.now() + minutes * 60000;
   const timeout = setTimeout(() => {
-    alert(`Lembrete: revisar atendimento ${task.number || task.id}.`);
+    const reminderLabel = task.displayNumber || task.number || task.id;
+    alert(`Lembrete: revisar atendimento ${reminderLabel}.`);
     state.reminders.delete(task.id);
     renderBoard();
     renderInsights();
@@ -1373,7 +1560,15 @@ function applyTasks(tasks, { timestamp } = {}) {
   if (!Array.isArray(tasks)) {
     return;
   }
-  state.tasks = tasks;
+  state.tasks = tasks.map((task) => {
+    const formatted = formatContactNumber(task.number);
+    return {
+      ...task,
+      displayNumber: formatted.display,
+      copyNumber: formatted.copy,
+      isGroup: formatted.isGroup
+    };
+  });
   removeStaleReminders();
   renderSummary();
   renderFilters();
@@ -1520,6 +1715,13 @@ function bindEvents() {
     renderBoard();
     renderInsights();
   });
+  filterPrivateInput?.addEventListener('change', (event) => {
+    state.filters.privateOnly = event.target.checked;
+    renderSummary();
+    renderFilters();
+    renderBoard();
+    renderInsights();
+  });
   viewToggleEl.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-view]');
     if (!button) {
@@ -1538,6 +1740,7 @@ function bindEvents() {
   settingsOverlay?.addEventListener('click', handleSettingsOverlayClick);
   settingsForm?.addEventListener('submit', saveSettings);
   resetWhatsappButton?.addEventListener('click', handleResetWhatsappSession);
+  resetFiltersButton?.addEventListener('click', resetFilters);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && settingsOverlay?.classList.contains('is-open')) {
       toggleSettingsDrawer(false);

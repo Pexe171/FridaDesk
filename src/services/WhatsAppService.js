@@ -212,24 +212,50 @@ export class WhatsAppService extends EventEmitter {
     return { ...this.status };
   }
 
-  composeAutoReply({ category, analystName, keyword }) {
+  composeAutoReply({ category, analystName, keyword, suggestions = [] }) {
+    const normalizedSuggestions = Array.isArray(suggestions)
+      ? suggestions.filter((item, index, array) => item && array.indexOf(item) === index)
+      : [];
     if (!category) {
-      return 'Recebemos sua mensagem e direcionamos o atendimento para a equipe responsável.';
+      let fallback = 'Recebemos sua mensagem e direcionamos o atendimento para a equipe responsável.';
+      if (normalizedSuggestions.length) {
+        fallback += `\n\nPortas de atendimento disponíveis:\n${normalizedSuggestions
+          .slice(0, 4)
+          .map((name, index) => `${index + 1}. ${name}`)
+          .join('\n')}`;
+        fallback += '\n\nBasta responder com a palavra-chave correspondente para seguirmos com o suporte.';
+      }
+      return fallback;
     }
 
+    let message;
     if (analystName) {
-      return `Olá! Identificamos que sua mensagem trata de ${category}. O analista ${analystName} continuará o atendimento em instantes.`;
+      message = `Olá! Identificamos que sua mensagem trata de ${category}. O analista ${analystName} continuará o atendimento em instantes.`;
+    } else if (keyword) {
+      message = `Obrigado por entrar em contato sobre ${category}. Nossa equipe já foi notificada e retornará em breve.`;
+    } else {
+      message = 'Obrigado pelo contato! Encaminhamos sua solicitação para o setor responsável e retornaremos em breve.';
     }
 
-    if (keyword) {
-      return `Obrigado por entrar em contato sobre ${category}. Nossa equipe já foi notificada e retornará em breve.`;
+    if (normalizedSuggestions.length) {
+      message += `\n\nPortas de atendimento disponíveis:\n${normalizedSuggestions
+        .slice(0, 4)
+        .map((name, index) => `${index + 1}. ${name}`)
+        .join('\n')}`;
+      message += '\n\nResponda com a opção desejada ou envie a palavra-chave correspondente.';
     }
-
-    return 'Obrigado pelo contato! Encaminhamos sua solicitação para o setor responsável e retornaremos em breve.';
+    return message;
   }
 
   async handleIncomingMessage(message) {
     if (message.fromMe) {
+      return false;
+    }
+    if (message.isStatus) {
+      return false;
+    }
+    if (typeof message.from === 'string' && message.from.endsWith('@g.us')) {
+      console.log('Mensagem recebida em grupo ignorada.', message.from);
       return false;
     }
     const body = (message.body || '').trim();
@@ -241,6 +267,17 @@ export class WhatsAppService extends EventEmitter {
     await this.analystManager.refreshAnalysts();
 
     const classification = this.keywordClassifier.classify(body);
+    const availableCategories = this.keywordClassifier
+      .listCategories()
+      .map((category) => category.name)
+      .filter(Boolean);
+    if (this.keywordClassifier.defaultCategory) {
+      availableCategories.push(this.keywordClassifier.defaultCategory);
+    }
+    const suggestions = availableCategories
+      .filter((name) => name !== classification.category)
+      .filter((name, index, array) => array.indexOf(name) === index)
+      .slice(0, 4);
     const preferredAnalyst = this.localAnalystName;
     const analyst = await this.analystManager.assignAnalyst(classification.category, preferredAnalyst);
 
@@ -270,7 +307,8 @@ export class WhatsAppService extends EventEmitter {
     const reply = this.composeAutoReply({
       category: classification.category,
       analystName,
-      keyword: keywordUsed
+      keyword: keywordUsed,
+      suggestions
     });
 
     await message.reply(reply);
