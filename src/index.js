@@ -2,6 +2,8 @@ import 'dotenv/config';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import readline from 'readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
 
 import { KeywordClassifier } from './services/KeywordClassifier.js';
 import { GoogleSheetsService } from './services/GoogleSheetsService.js';
@@ -352,7 +354,68 @@ async function bootstrap() {
   process.on('SIGTERM', shutdown);
 }
 
-bootstrap().catch((error) => {
+async function resolveRuntimeRole() {
+  const roleFromEnv = (process.env.CRM_ROLE || process.env.CRM_MODE || '').trim().toLowerCase();
+  const validRoles = new Set(['host', 'user']);
+
+  if (validRoles.has(roleFromEnv)) {
+    return roleFromEnv;
+  }
+
+  if (!process.stdin.isTTY) {
+    console.log('Entrada não interativa detectada. Assumindo papel "host".');
+    return 'host';
+  }
+
+  const rl = readline.createInterface({ input, output });
+  try {
+    let answer = '';
+    do {
+      answer = (await rl.question('Esta estação será o host ou um usuário? [host/user]: ')).trim().toLowerCase();
+      if (!validRoles.has(answer)) {
+        console.log('Resposta inválida. Informe "host" ou "user".');
+      }
+    } while (!validRoles.has(answer));
+
+    return answer;
+  } finally {
+    rl.close();
+  }
+}
+
+async function runUserMode() {
+  const defaultHint = 'http://IP_DO_HOST:PORT/panel';
+  let remoteAddress = (process.env.CRM_REMOTE || '').trim();
+
+  if (!remoteAddress && process.stdin.isTTY) {
+    const rl = readline.createInterface({ input, output });
+    try {
+      const answer = (await rl.question('Informe o endereço do host (ex.: http://192.168.0.10:3000): ')).trim();
+      remoteAddress = answer || '';
+    } finally {
+      rl.close();
+    }
+  }
+
+  const displayAddress = remoteAddress || defaultHint;
+
+  console.log('Modo usuário selecionado.');
+  console.log('Abra o navegador nesta máquina e acesse: %s', displayAddress);
+  console.log('Certifique-se de que a estação host esteja com o servidor ativo via "npm run dev" ou "npm start".');
+}
+
+async function main() {
+  const role = await resolveRuntimeRole();
+
+  if (role === 'user') {
+    await runUserMode();
+    return;
+  }
+
+  await bootstrap();
+}
+
+main().catch((error) => {
   console.error('Erro ao iniciar o CRM CCA:', error);
   process.exit(1);
 });
