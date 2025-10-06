@@ -49,7 +49,14 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
    npm install
    ```
 
-4. Inicie o servidor:
+4. Ao iniciar a aplicação você deve informar o papel desta máquina:
+
+   - **host**: é a máquina que ficará responsável por executar o servidor Node.js e concentrar o painel.
+   - **user**: apenas consome o painel exposto por um host existente. Ao selecionar esse papel o processo pergunta (se possível) o endereço do host e finaliza mostrando como acessar o painel pelo navegador.
+
+   Você pode definir o papel antecipadamente usando a variável de ambiente `CRM_ROLE` (`host` ou `user`). Para automatizar o acesso direto a um host específico, defina também `CRM_REMOTE` com a URL do painel (ex.: `http://192.168.0.10:3000/panel`). Toda a solução roda em Node.js, portanto não é necessário instalar Java ou outras runtimes para criar o servidor local.
+
+5. Inicie o servidor (modo host):
 
    ```bash
    npm run dev
@@ -58,15 +65,15 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
 - A API e o painel serão disponibilizados em `http://localhost:PORT` e também pelos endereços `http://IP_DA_MAQUINA:PORT` exibidos no terminal ao iniciar o servidor quando `HOST=0.0.0.0`.
   - Após configurar uma sessão no painel, o QR Code para pareamento fica disponível diretamente na interface web. Utilize o botão **Gerar novo QR Code** sempre que precisar renovar o pareamento.
 
-5. Acesse `http://localhost:PORT/panel`, clique em **Configurações** na barra superior e informe os dados da estação:
+6. Acesse `http://localhost:PORT/panel`, clique em **Configurações** na barra superior e informe os dados da estação:
 
    - Sessão do WhatsApp (um identificador por máquina/setor).
    - Nome do analista logado.
    - Credenciais do Google Sheets (opcionais) para sincronizar com a planilha oficial.
 
-6. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
+7. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
 
-7. Ao abrir o painel, cada estação estabelece automaticamente uma conexão WebSocket segura com `ws://localhost:PORT/ws` (ou `wss://` em produção) para receber atualizações em tempo real.
+8. Ao abrir o painel, cada estação estabelece automaticamente uma conexão WebSocket segura com `ws://localhost:PORT/ws` (ou `wss://` em produção) para receber atualizações em tempo real.
 
 ## Configurações pelo painel
 
@@ -134,11 +141,21 @@ As alterações são persistidas no arquivo JSON, garantindo que futuras execuç
 
 ## Execução em múltiplas máquinas
 
-- Escolha uma máquina para ser o **host** do CRM e mantenha o servidor em execução nela. As demais estações devem acessar `http://IP_DO_HOST:PORT/panel` (o IP é informado no terminal do host).
+- Escolha uma máquina para ser o **host** do CRM (responda `host` quando o processo iniciar ou defina `CRM_ROLE=host`) e mantenha o servidor em execução nela. As demais estações podem responder `user` ou definir `CRM_ROLE=user` para receber apenas as instruções de acesso ao painel remoto.
 - Defina uma sessão distinta para cada estação diretamente pelo painel de configurações.
 - Informe o nome do analista local para que o status seja atualizado automaticamente na aba `Analistas`.
 - Todas as estações podem compartilhar as mesmas credenciais do Google Sheets para manter a sincronização com a planilha oficial.
 - Alterações realizadas em qualquer estação (novas tarefas, conclusão de atendimentos, mudanças nas configurações ou status dos analistas) são propagadas instantaneamente para todas as demais via WebSocket.
+
+### Acesso remoto fora da empresa
+
+Quando você estiver fora da rede local da empresa existem três abordagens principais para continuar utilizando o painel:
+
+1. **VPN corporativa** – Ao conectar-se a uma VPN que entregue acesso à rede interna, o painel continua disponível pelo mesmo endereço `http://IP_DO_HOST:PORT/panel`. Esta é a alternativa mais segura porque mantém o tráfego dentro da infraestrutura da empresa.
+2. **Túnel seguro temporário** – Serviços como [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/), [Tailscale Funnel](https://tailscale.com/funnel) ou [ngrok](https://ngrok.com/) podem ser configurados na máquina host para expor o servidor HTTP da aplicação temporariamente na internet pública com autenticação. Utilize essa opção apenas se a política de segurança da empresa permitir.
+3. **Publicar em um servidor externo** – Também é possível hospedar o CRM em uma máquina na nuvem (por exemplo, uma VPS) e parear o WhatsApp nessa instância. Nesse cenário recomenda-se habilitar HTTPS, restringir o acesso com firewall e manter o arquivo `.env` configurado com `HOST=0.0.0.0` e uma porta segura.
+
+Independentemente da opção escolhida, sempre garanta que somente pessoas autorizadas possam acessar o painel e que o pareamento do WhatsApp esteja protegido (por exemplo, protegendo o QR Code por autenticação adicional quando exposto fora da rede interna).
 
 ## Canal em tempo real
 
