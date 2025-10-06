@@ -42,30 +42,31 @@ Sistema de CRM focado no atendimento automatizado via WhatsApp Web com registro 
 ## Preparação do ambiente
 
 1. (Opcional) Ajuste a porta HTTP criando um arquivo `.env` com a variável `PORT`. O valor padrão é `3000` e o arquivo `.env.example` traz esse único exemplo.
-2. Instale as dependências:
+2. (Opcional) Defina a interface de rede usada pelo servidor HTTP com a variável `HOST`. O valor padrão é `0.0.0.0`, permitindo que outras máquinas da rede local acessem o painel utilizando o IP do computador host.
+3. Instale as dependências:
 
    ```bash
    npm install
    ```
 
-3. Inicie o servidor:
+4. Inicie o servidor:
 
    ```bash
    npm run dev
    ```
 
-   - A API e o painel serão disponibilizados em `http://localhost:PORT`.
-   - A primeira execução exibirá um QR Code no terminal. Escaneie com o WhatsApp do setor correspondente.
+- A API e o painel serão disponibilizados em `http://localhost:PORT` e também pelos endereços `http://IP_DA_MAQUINA:PORT` exibidos no terminal ao iniciar o servidor quando `HOST=0.0.0.0`.
+  - Após configurar uma sessão no painel, o QR Code para pareamento fica disponível diretamente na interface web. Utilize o botão **Gerar novo QR Code** sempre que precisar renovar o pareamento.
 
-4. Acesse `http://localhost:PORT/panel`, clique em **Configurações** na barra superior e informe os dados da estação:
+5. Acesse `http://localhost:PORT/panel`, clique em **Configurações** na barra superior e informe os dados da estação:
 
    - Sessão do WhatsApp (um identificador por máquina/setor).
    - Nome do analista logado.
    - Credenciais do Google Sheets (opcionais) para sincronizar com a planilha oficial.
 
-5. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
+6. As configurações ficam salvas em `tmp/app-settings.json`. Sem credenciais válidas do Google, o sistema opera automaticamente em modo local (`tmp/local-sheet-<sessão>.json`).
 
-6. Ao abrir o painel, cada estação estabelece automaticamente uma conexão WebSocket segura com `ws://localhost:PORT/ws` (ou `wss://` em produção) para receber atualizações em tempo real.
+7. Ao abrir o painel, cada estação estabelece automaticamente uma conexão WebSocket segura com `ws://localhost:PORT/ws` (ou `wss://` em produção) para receber atualizações em tempo real.
 
 ## Configurações pelo painel
 
@@ -77,6 +78,8 @@ O painel web concentra todas as informações da estação. No canto superior di
 - **ID do projeto (opcional)**: somente para contas Google que exigem o `project_id` explícito.
 
 O painel exibe o status atual da integração (modo local ou Google Sheets) e da sessão do WhatsApp, ajudando a verificar rapidamente se tudo está conectado.
+ 
+Cartões de monitoramento adicionais mostram em tempo real se o WhatsApp está conectado, quantas mensagens foram registradas, o QR Code vigente para pareamento e quais estações estão conectadas ao servidor.
 
 ## Planilha Google
 
@@ -126,10 +129,12 @@ As alterações são persistidas no arquivo JSON, garantindo que futuras execuç
 - Acesse `http://localhost:PORT/panel`.
 - Cada categoria possui uma coluna com cor distinta.
 - Botões **Concluir atendimento** atualizam o status diretamente na planilha.
+- Um painel de status na parte superior apresenta a saúde do servidor, a conectividade com o WhatsApp (incluindo total de mensagens recebidas) e o QR Code atualizado para pareamento sem precisar abrir o terminal.
 - As tarefas e o status dos analistas são atualizados em tempo real via WebSocket. O botão **Atualizar agora** e o modo de atualização automática a cada 15 segundos permanecem disponíveis como fallback caso o canal em tempo real esteja indisponível.
 
 ## Execução em múltiplas máquinas
 
+- Escolha uma máquina para ser o **host** do CRM e mantenha o servidor em execução nela. As demais estações devem acessar `http://IP_DO_HOST:PORT/panel` (o IP é informado no terminal do host).
 - Defina uma sessão distinta para cada estação diretamente pelo painel de configurações.
 - Informe o nome do analista local para que o status seja atualizado automaticamente na aba `Analistas`.
 - Todas as estações podem compartilhar as mesmas credenciais do Google Sheets para manter a sincronização com a planilha oficial.
