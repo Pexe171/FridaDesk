@@ -4,33 +4,93 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRM CCA - Painel de Atendimento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/panel/style.css" />
   </head>
   <body>
     <header class="topbar">
-      <h1>CRM CCA · Painel de Atendimento</h1>
+      <div class="topbar__brand">
+        <h1>CRM CCA · Painel de Atendimento</h1>
+        <span class="topbar__subtitle">Central de relacionamento em tempo real</span>
+      </div>
       <div class="topbar__actions">
-        <button id="refreshTasks" type="button">Atualizar agora</button>
-        <span id="lastUpdate">Última atualização: --</span>
+        <label class="switch" for="autoRefresh">
+          <input type="checkbox" id="autoRefresh" checked />
+          <span class="switch__label">Auto atualizar</span>
+        </label>
+        <button id="refreshTasks" type="button" class="button button--primary">Atualizar agora</button>
+        <span id="lastUpdate" class="last-update">Última atualização: --</span>
       </div>
     </header>
     <main>
       <section class="summary" id="summary"></section>
-      <section id="board" class="board"></section>
+
+      <section class="controls">
+        <div class="controls__search">
+          <input
+            type="search"
+            id="searchTasks"
+            placeholder="Buscar por número, mensagem ou analista..."
+            aria-label="Buscar atendimento"
+          />
+        </div>
+        <div class="controls__filters">
+          <div class="filter-group">
+            <span class="filter-group__label">Status</span>
+            <div id="statusFilters" class="filter-pills"></div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-group__label">Categorias</span>
+            <div id="categoryFilters" class="filter-chips"></div>
+          </div>
+          <label class="toggle" for="showCompleted">
+            <input type="checkbox" id="showCompleted" />
+            <span>Mostrar concluídos</span>
+          </label>
+        </div>
+        <div class="controls__view">
+          <span class="filter-group__label">Visualização</span>
+          <div class="view-toggle" id="viewToggle">
+            <button type="button" data-view="category" class="is-active">Por categoria</button>
+            <button type="button" data-view="analyst">Por analista</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="dashboard">
+        <section id="board" class="board"></section>
+        <aside id="insights" class="insights"></aside>
+      </div>
     </main>
 
     <template id="task-card">
       <article class="task-card">
-        <header>
-          <span class="task-number"></span>
-          <span class="task-status"></span>
+        <header class="task-card__header">
+          <div class="task-card__badges">
+            <span class="task-number badge badge--id"></span>
+            <span class="task-status badge"></span>
+          </div>
+          <span class="task-priority"></span>
         </header>
-        <div class="task-body">
-          <p class="task-message"></p>
+        <div class="task-card__meta">
+          <span class="task-category chip"></span>
+          <span class="task-created"></span>
+          <span class="task-age"></span>
         </div>
-        <footer>
-          <span class="task-analyst"></span>
-          <button class="task-complete">Concluir atendimento</button>
+        <p class="task-message"></p>
+        <div class="task-reminder"></div>
+        <footer class="task-card__footer">
+          <div class="task-analyst"></div>
+          <div class="task-actions">
+            <button class="task-copy" type="button">Copiar Nº</button>
+            <button class="task-remind" type="button">Definir lembrete</button>
+            <button class="task-complete" type="button">Concluir atendimento</button>
+          </div>
         </footer>
       </article>
     </template>
