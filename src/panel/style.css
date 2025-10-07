@@ -1356,11 +1356,136 @@ main {
   font-size: 0.9rem;
 }
 
+.insight-empty {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .insight-list__item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.75rem;
+}
+
+.insight-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.insight-table thead th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0 0 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.insight-table tbody td {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.insight-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.insight-table__analyst {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.insight-table__name {
+  font-weight: 600;
+}
+
+.insight-table__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-primary-dark);
+}
+
+.insight-table__status[data-state='Disponível'] {
+  background: rgba(22, 163, 74, 0.18);
+  color: var(--color-success-dark);
+}
+
+.insight-table__status[data-state='Em atendimento'],
+.insight-table__status[data-state='Ocupado'] {
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-primary-dark);
+}
+
+.insight-table__status[data-state='Ausente'],
+.insight-table__status[data-state='Offline'] {
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--warning);
+}
+
+.insight-table__status[data-state='Indisponível'] {
+  background: rgba(220, 38, 38, 0.18);
+  color: var(--danger);
+}
+
+.insight-table__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+
+.insight-table__metric-value {
+  font-weight: 600;
+}
+
+.insight-table__metric-detail,
+.insight-table__load-detail {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.insight-table__load-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.16);
+  color: var(--color-primary-dark);
+}
+
+.insight-table__load-badge[data-level='attention'] {
+  background: rgba(14, 165, 233, 0.18);
+  color: var(--info);
+}
+
+.insight-table__load-badge[data-level='high'] {
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--warning);
+}
+
+.insight-table__load-badge[data-level='critical'] {
+  background: rgba(220, 38, 38, 0.18);
+  color: var(--danger);
+}
+
+.insight-table__load-badge[data-level='idle'] {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--muted);
 }
 
 .insight-analyst__info {
