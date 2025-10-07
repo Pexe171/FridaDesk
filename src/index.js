@@ -261,13 +261,60 @@ async function bootstrap() {
     return status;
   }
 
+  async function logoutWhatsappSession() {
+    if (!whatsappService) {
+      const error = new Error('Nenhuma sessão ativa configurada para logout.');
+      error.code = 'NO_SESSION';
+      throw error;
+    }
+    const status = await whatsappService.logout();
+    if (status) {
+      setWhatsappRuntime({ ...status });
+    }
+    return status;
+  }
+
+  async function markAllTasksAsRead() {
+    return taskManager.markAllAsRead();
+  }
+
+  async function completeAllTasks() {
+    const result = await taskManager.completeAllTasks();
+    const analystsToRelease = new Set(
+      (result.updatedTasks || [])
+        .map((task) => task.analyst?.trim())
+        .filter((name) => name)
+    );
+
+    if (analystsToRelease.size) {
+      try {
+        await analystManager.refreshAnalysts();
+      } catch (error) {
+        console.warn('Não foi possível atualizar lista de analistas antes de liberar status:', error.message);
+      }
+
+      for (const name of analystsToRelease) {
+        try {
+          await analystManager.updateAnalystStatus(name, 'Disponível');
+        } catch (error) {
+          console.warn(`Não foi possível marcar analista ${name} como disponível:`, error.message);
+        }
+      }
+    }
+
+    return result;
+  }
+
   const app = createHttpServer({
     taskManager,
     keywordClassifier,
     analystManager,
     settingsManager,
     getRuntimeStatus: () => ({ ...runtimeStatus }),
-    resetWhatsappSession
+    resetWhatsappSession,
+    logoutWhatsappSession,
+    markAllTasksAsRead,
+    completeAllTasks
   });
   const server = app.listen(PORT, HOST, () => {
     const isWildcardHost = HOST === '0.0.0.0' || HOST === '::';

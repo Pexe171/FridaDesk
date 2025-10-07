@@ -61,6 +61,7 @@ let settingsFeedbackTimeout;
 let realtimeSocket;
 let realtimeReconnectTimeout;
 let resetWhatsappFeedbackTimeout;
+let bulkActionsFeedbackTimeout;
 let lastIdentifySignature = '';
 let navigationFeedbackTimeout;
 let navigationFeedbackHideTimeout;
@@ -79,6 +80,10 @@ const whatsappQrPlaceholderEl = document.getElementById('whatsappQrPlaceholder')
 const whatsappQrUpdatedEl = document.getElementById('whatsappQrUpdatedAt');
 const resetWhatsappButton = document.getElementById('resetWhatsappSession');
 const resetWhatsappFeedbackEl = document.getElementById('resetWhatsappFeedback');
+const logoutWhatsappButton = document.getElementById('logoutWhatsappSession');
+const markAllReadButton = document.getElementById('markAllRead');
+const completeAllTasksButton = document.getElementById('completeAllTasks');
+const bulkActionsFeedbackEl = document.getElementById('bulkActionsFeedback');
 const runtimeStorageSummaryEl = document.getElementById('runtimeStorageSummary');
 const runtimeHealthStatusEl = document.getElementById('runtimeHealthStatus');
 const runtimeStationsListEl = document.getElementById('runtimeStationsList');
@@ -606,6 +611,28 @@ function renderSummary() {
     el.appendChild(body);
     summaryEl.appendChild(el);
   });
+
+  updateBulkActionsAvailability();
+}
+
+function updateBulkActionsAvailability() {
+  const tasks = Array.isArray(state.tasks) ? state.tasks : [];
+  const unread = tasks.filter((task) => {
+    const status = (task.status || '').toString().toLowerCase();
+    return !status.includes('concl') && !status.includes('lido');
+  }).length;
+  const open = tasks.filter((task) => {
+    const status = (task.status || '').toString().toLowerCase();
+    return !status.includes('concl');
+  }).length;
+
+  if (markAllReadButton && !markAllReadButton.dataset.loading) {
+    markAllReadButton.disabled = unread === 0;
+  }
+
+  if (completeAllTasksButton && !completeAllTasksButton.dataset.loading) {
+    completeAllTasksButton.disabled = open === 0;
+  }
 }
 
 function renderRuntimeStatus() {
@@ -694,6 +721,12 @@ function renderRuntimeStatus() {
 
   if (resetWhatsappButton) {
     resetWhatsappButton.disabled = !whatsapp.session || Boolean(resetWhatsappButton.dataset.loading);
+  }
+
+  if (logoutWhatsappButton) {
+    const isLoading = Boolean(logoutWhatsappButton.dataset.loading);
+    const hasSession = Boolean(whatsapp.session);
+    logoutWhatsappButton.disabled = !hasSession || isLoading || whatsapp.initializing;
   }
 
   if (runtimeStorageSummaryEl) {
@@ -846,6 +879,27 @@ function setResetFeedback(message, status = 'info') {
   }
 }
 
+function setBulkActionsFeedback(message, status = 'info') {
+  if (!bulkActionsFeedbackEl) {
+    return;
+  }
+  if (bulkActionsFeedbackTimeout) {
+    clearTimeout(bulkActionsFeedbackTimeout);
+  }
+  bulkActionsFeedbackEl.textContent = message;
+  if (message) {
+    bulkActionsFeedbackEl.dataset.status = status;
+  } else {
+    delete bulkActionsFeedbackEl.dataset.status;
+  }
+  if (message) {
+    bulkActionsFeedbackTimeout = setTimeout(() => {
+      bulkActionsFeedbackEl.textContent = '';
+      delete bulkActionsFeedbackEl.dataset.status;
+    }, 5000);
+  }
+}
+
 function toggleSettingsDrawer(open) {
   if (!settingsOverlay) {
     return;
@@ -892,6 +946,114 @@ async function handleResetWhatsappSession() {
   } finally {
     delete resetWhatsappButton.dataset.loading;
     resetWhatsappButton.disabled = !state.status.whatsapp.session;
+  }
+}
+
+async function handleLogoutWhatsappSession() {
+  if (!logoutWhatsappButton) {
+    return;
+  }
+  if (!state.status.whatsapp.session) {
+    setResetFeedback('Configure uma sessão do WhatsApp antes de encerrar o acesso.', 'warning');
+    return;
+  }
+  if (!confirm('Deseja encerrar a sessão do WhatsApp desta estação?')) {
+    return;
+  }
+  try {
+    logoutWhatsappButton.dataset.loading = 'true';
+    logoutWhatsappButton.disabled = true;
+    setResetFeedback('Encerrando sessão do WhatsApp...', 'info');
+    const data = await fetchJson('/api/whatsapp/logout', { method: 'POST' });
+    if (data?.status) {
+      applySystemStatus(data.status);
+      renderSummary();
+    }
+    setResetFeedback(data?.message || 'Sessão do WhatsApp encerrada com sucesso.', 'success');
+    identifyRealtimeStation(true);
+  } catch (error) {
+    console.error('Erro ao encerrar sessão do WhatsApp', error);
+    setResetFeedback(error.message || 'Não foi possível encerrar a sessão do WhatsApp.', 'error');
+  } finally {
+    delete logoutWhatsappButton.dataset.loading;
+    renderRuntimeStatus();
+  }
+}
+
+function countUnreadTasks() {
+  return (state.tasks || []).filter((task) => {
+    const status = (task.status || '').toString().toLowerCase();
+    return !status.includes('concl') && !status.includes('lido');
+  }).length;
+}
+
+function countOpenTasks() {
+  return (state.tasks || []).filter((task) => {
+    const status = (task.status || '').toString().toLowerCase();
+    return !status.includes('concl');
+  }).length;
+}
+
+async function handleMarkAllRead() {
+  if (!markAllReadButton) {
+    return;
+  }
+  if (!countUnreadTasks()) {
+    setBulkActionsFeedback('Nenhum atendimento disponível para marcar como lido.', 'warning');
+    return;
+  }
+  if (!confirm('Deseja marcar todos os atendimentos pendentes como lidos?')) {
+    return;
+  }
+  try {
+    markAllReadButton.dataset.loading = 'true';
+    markAllReadButton.disabled = true;
+    setBulkActionsFeedback('Marcando atendimentos como lidos...', 'info');
+    const data = await fetchJson('/api/tasks/mark-all-read', { method: 'POST' });
+    if (Array.isArray(data.tasks)) {
+      applyTasks(data.tasks, { timestamp: Date.now() });
+    } else {
+      await loadTasks(true);
+    }
+    setBulkActionsFeedback(data?.message || 'Atendimentos marcados como lidos.', 'success');
+  } catch (error) {
+    console.error('Erro ao marcar atendimentos como lidos', error);
+    setBulkActionsFeedback(error.message || 'Não foi possível marcar os atendimentos como lidos.', 'error');
+  } finally {
+    delete markAllReadButton.dataset.loading;
+    updateBulkActionsAvailability();
+  }
+}
+
+async function handleCompleteAllTasks() {
+  if (!completeAllTasksButton) {
+    return;
+  }
+  if (!countOpenTasks()) {
+    setBulkActionsFeedback('Nenhum atendimento pendente para concluir.', 'warning');
+    return;
+  }
+  if (!confirm('Deseja marcar todos os atendimentos como concluídos?')) {
+    return;
+  }
+  try {
+    completeAllTasksButton.dataset.loading = 'true';
+    completeAllTasksButton.disabled = true;
+    setBulkActionsFeedback('Concluindo atendimentos em lote...', 'info');
+    const data = await fetchJson('/api/tasks/complete-all', { method: 'POST' });
+    if (Array.isArray(data.tasks)) {
+      applyTasks(data.tasks, { timestamp: Date.now() });
+    } else {
+      await loadTasks(true);
+    }
+    setBulkActionsFeedback(data?.message || 'Todos os atendimentos foram concluídos.', 'success');
+    loadAnalysts().catch(() => {});
+  } catch (error) {
+    console.error('Erro ao concluir atendimentos em lote', error);
+    setBulkActionsFeedback(error.message || 'Não foi possível concluir os atendimentos.', 'error');
+  } finally {
+    delete completeAllTasksButton.dataset.loading;
+    updateBulkActionsAvailability();
   }
 }
 
@@ -2130,6 +2292,9 @@ function bindEvents() {
   settingsOverlay?.addEventListener('click', handleSettingsOverlayClick);
   settingsForm?.addEventListener('submit', saveSettings);
   resetWhatsappButton?.addEventListener('click', handleResetWhatsappSession);
+  logoutWhatsappButton?.addEventListener('click', handleLogoutWhatsappSession);
+  markAllReadButton?.addEventListener('click', handleMarkAllRead);
+  completeAllTasksButton?.addEventListener('click', handleCompleteAllTasks);
   resetFiltersButton?.addEventListener('click', resetFilters);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && settingsOverlay?.classList.contains('is-open')) {
