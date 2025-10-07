@@ -11,7 +11,10 @@ export function createHttpServer({
   analystManager,
   settingsManager,
   getRuntimeStatus,
-  resetWhatsappSession
+  resetWhatsappSession,
+  logoutWhatsappSession,
+  markAllTasksAsRead,
+  completeAllTasks
 }) {
   const app = express();
   app.use(express.json());
@@ -71,6 +74,32 @@ export function createHttpServer({
     }
   });
 
+  app.post('/api/whatsapp/logout', async (req, res) => {
+    if (typeof logoutWhatsappSession !== 'function') {
+      return res.status(503).json({
+        message: 'Logout do WhatsApp não está disponível nesta instância.'
+      });
+    }
+    try {
+      const status = await logoutWhatsappSession();
+      res.json({
+        message: 'Sessão do WhatsApp encerrada. Configure novamente para reconectar.',
+        status: getRuntimeStatus?.() ?? {},
+        whatsapp: status || {}
+      });
+    } catch (error) {
+      if (error.code === 'NO_SESSION') {
+        return res.status(400).json({
+          message: 'Nenhuma sessão ativa configurada para logout.'
+        });
+      }
+      res.status(500).json({
+        message: 'Não foi possível encerrar a sessão do WhatsApp.',
+        details: error.message
+      });
+    }
+  });
+
   app.get('/api/tasks', async (req, res) => {
     const { status } = req.query;
     try {
@@ -81,6 +110,48 @@ export function createHttpServer({
       res.json({ tasks });
     } catch (error) {
       res.status(500).json({ message: 'Não foi possível listar as tarefas.', details: error.message });
+    }
+  });
+
+  app.post('/api/tasks/mark-all-read', async (req, res) => {
+    if (typeof markAllTasksAsRead !== 'function') {
+      return res.status(503).json({ message: 'Marcação em lote não está disponível nesta instância.' });
+    }
+    try {
+      const result = await markAllTasksAsRead();
+      res.json({
+        message:
+          result.updated > 0
+            ? `${result.updated} atendimentos marcados como lidos.`
+            : 'Nenhum atendimento disponível para marcar como lido.',
+        ...result
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Não foi possível marcar os atendimentos como lidos.',
+        details: error.message
+      });
+    }
+  });
+
+  app.post('/api/tasks/complete-all', async (req, res) => {
+    if (typeof completeAllTasks !== 'function') {
+      return res.status(503).json({ message: 'Conclusão em lote não está disponível nesta instância.' });
+    }
+    try {
+      const result = await completeAllTasks();
+      res.json({
+        message:
+          result.updated > 0
+            ? `${result.updated} atendimentos concluídos.`
+            : 'Nenhum atendimento pendente para concluir.',
+        ...result
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: 'Não foi possível concluir os atendimentos.',
+        details: error.message
+      });
     }
   });
 

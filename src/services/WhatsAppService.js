@@ -169,21 +169,20 @@ export class WhatsAppService extends EventEmitter {
   }
 
   async resetSession() {
-    if (!this.client) {
-      throw new Error('Cliente WhatsApp não está inicializado.');
-    }
     console.log('Reiniciando sessão do WhatsApp e aguardando novo QR Code.');
-    try {
-      await this.client.logout();
-    } catch (error) {
-      console.warn('Não foi possível efetuar logout da sessão atual:', error.message);
+    if (this.client) {
+      try {
+        await this.client.logout();
+      } catch (error) {
+        console.warn('Não foi possível efetuar logout da sessão atual:', error.message);
+      }
+      try {
+        await this.client.destroy();
+      } catch (error) {
+        console.warn('Não foi possível destruir cliente atual durante reset:', error.message);
+      }
+      this.client = undefined;
     }
-    try {
-      await this.client.destroy();
-    } catch (error) {
-      console.warn('Não foi possível destruir cliente atual durante reset:', error.message);
-    }
-    this.client = undefined;
     this.updateStatus({
       active: false,
       connected: false,
@@ -197,6 +196,41 @@ export class WhatsAppService extends EventEmitter {
       error: null
     });
     await this.init();
+  }
+
+  async logout() {
+    if (!this.client) {
+      this.updateStatus({
+        active: false,
+        connected: false,
+        initializing: false,
+        qr: null,
+        qrImage: null,
+        qrGeneratedAt: null,
+        readyAt: null
+      });
+      return this.getStatus();
+    }
+
+    console.log('Efetuando logout da sessão do WhatsApp.');
+    try {
+      await this.client.logout();
+    } catch (error) {
+      console.warn('Não foi possível realizar logout do WhatsApp:', error.message);
+    }
+
+    await this.shutdown();
+    this.updateStatus({
+      qr: null,
+      qrImage: null,
+      qrGeneratedAt: null,
+      readyAt: null,
+      messageCount: 0,
+      lastMessageAt: null,
+      error: null
+    });
+
+    return this.getStatus();
   }
 
   updateStatus(patch = {}) {

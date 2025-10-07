@@ -126,9 +126,14 @@
                 Sessão não configurada
               </p>
             </div>
-            <button id="resetWhatsappSession" type="button" class="button button--ghost" disabled>
-              Gerar novo QR Code
-            </button>
+            <div class="runtime-card__actions">
+              <button id="logoutWhatsappSession" type="button" class="button button--ghost" disabled>
+                Sair da conta
+              </button>
+              <button id="resetWhatsappSession" type="button" class="button button--ghost" disabled>
+                Gerar novo QR Code
+              </button>
+            </div>
           </header>
           <div class="runtime-card__body">
             <div class="runtime-card__metrics">
@@ -175,7 +180,17 @@
             <p>Monitore a fila, refine por tags e mantenha o foco no que é prioritário.</p>
           </div>
           <div class="controls__actions">
-            <button id="resetFilters" type="button" class="button button--ghost">Limpar filtros</button>
+            <div class="controls__bulk">
+              <button id="resetFilters" type="button" class="button button--ghost">Limpar filtros</button>
+              <button id="markAllRead" type="button" class="button button--ghost">Ler todas</button>
+              <button id="completeAllTasks" type="button" class="button button--danger">Atender todas</button>
+              <span
+                id="bulkActionsFeedback"
+                class="runtime-feedback controls__feedback"
+                role="status"
+                aria-live="polite"
+              ></span>
+            </div>
             <button type="button" class="button button--primary">Filtrar</button>
           </div>
         </div>

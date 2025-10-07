@@ -245,6 +245,13 @@ body {
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
 }
 
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .button--primary {
   background: var(--primary);
   color: #fff;
@@ -261,6 +268,22 @@ body {
 .button--ghost:hover {
   background: rgba(255, 255, 255, 0.08);
   transform: none;
+}
+
+.button--danger {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
+}
+
+.button--danger:hover {
+  background: #b91c1c;
+  box-shadow: 0 16px 34px rgba(220, 38, 38, 0.4);
+}
+
+.button--danger:disabled {
+  background: rgba(220, 38, 38, 0.55);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 main {
@@ -461,6 +484,14 @@ main {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+}
+
+.runtime-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .runtime-card__header h2 {
@@ -708,6 +739,24 @@ main {
   gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.controls__actions > .button--primary {
+  margin-left: auto;
+}
+
+.controls__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.controls__feedback {
+  flex-basis: 100%;
+  min-height: 1.25rem;
+  display: flex;
+  align-items: center;
 }
 
 .controls__actions .button--ghost {

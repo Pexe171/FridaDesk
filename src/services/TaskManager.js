@@ -10,6 +10,11 @@ export class TaskManager extends EventEmitter {
     this.tasks = new Map();
   }
 
+  isTaskCompleted(task) {
+    const status = (task?.status || '').toString().toLowerCase();
+    return status.includes('concl');
+  }
+
   async setSheetsService(sheetsService) {
     this.sheetsService = sheetsService;
     await this.refreshTasks();
@@ -112,5 +117,90 @@ export class TaskManager extends EventEmitter {
     });
 
     return updated;
+  }
+
+  async markAllAsRead() {
+    let updatedCount = 0;
+    const updatedTasks = [];
+
+    for (const task of this.tasks.values()) {
+      if (this.isTaskCompleted(task)) {
+        continue;
+      }
+      const status = (task.status || '').toString().toLowerCase();
+      if (status.includes('lido')) {
+        continue;
+      }
+
+      const updated = { ...task, status: 'Lido' };
+      await this.sheetsService.updateRow(ATTENDANCE_SHEET, task.id, [
+        updated.date,
+        updated.number,
+        updated.category,
+        updated.message,
+        updated.status,
+        updated.analyst
+      ]);
+      this.tasks.set(task.id, updated);
+      updatedTasks.push(updated);
+      updatedCount += 1;
+    }
+
+    const snapshot = this.listTasks();
+    if (updatedCount) {
+      this.emit('tasks:updated', {
+        type: 'bulk-update',
+        tasks: snapshot
+      });
+    }
+
+    return {
+      total: snapshot.length,
+      updated: updatedCount,
+      updatedTasks,
+      tasks: snapshot
+    };
+  }
+
+  async completeAllTasks({ analyst } = {}) {
+    let updatedCount = 0;
+    const updatedTasks = [];
+
+    for (const task of this.tasks.values()) {
+      if (this.isTaskCompleted(task)) {
+        continue;
+      }
+      const updated = {
+        ...task,
+        status: 'Concluído',
+        analyst: analyst ?? task.analyst
+      };
+      await this.sheetsService.updateRow(ATTENDANCE_SHEET, task.id, [
+        updated.date,
+        updated.number,
+        updated.category,
+        updated.message,
+        updated.status,
+        updated.analyst
+      ]);
+      this.tasks.set(task.id, updated);
+      updatedTasks.push(updated);
+      updatedCount += 1;
+    }
+
+    const snapshot = this.listTasks();
+    if (updatedCount) {
+      this.emit('tasks:updated', {
+        type: 'bulk-update',
+        tasks: snapshot
+      });
+    }
+
+    return {
+      total: snapshot.length,
+      updated: updatedCount,
+      updatedTasks,
+      tasks: snapshot
+    };
   }
 }
