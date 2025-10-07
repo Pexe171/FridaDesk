@@ -62,7 +62,10 @@ let realtimeSocket;
 let realtimeReconnectTimeout;
 let resetWhatsappFeedbackTimeout;
 let lastIdentifySignature = '';
+let navigationFeedbackTimeout;
+let navigationFeedbackHideTimeout;
 
+const topbarEl = document.querySelector('.topbar');
 const summaryEl = document.getElementById('summary');
 const boardEl = document.getElementById('board');
 const insightsEl = document.getElementById('insights');
@@ -96,6 +99,11 @@ const settingsFeedbackEl = document.getElementById('settingsFeedback');
 const settingsStorageInfo = document.getElementById('settingsStorageInfo');
 const settingsWhatsappInfo = document.getElementById('settingsWhatsappInfo');
 const resetFiltersButton = document.getElementById('resetFilters');
+const navigationFeedbackEl = document.getElementById('navigationFeedback');
+const navigationButtons = Array.from(
+  document.querySelectorAll('.sidebar__link[data-action]')
+);
+const navigationToneClasses = ['app-toast--info', 'app-toast--warning'];
 
 function isGroupIdentifier(value) {
   if (!value) {
@@ -1919,6 +1927,172 @@ function connectRealtime() {
   }
 }
 
+function hideNavigationFeedback() {
+  if (!navigationFeedbackEl) {
+    return;
+  }
+
+  navigationFeedbackEl.classList.remove('is-visible');
+  navigationFeedbackHideTimeout = window.setTimeout(() => {
+    navigationFeedbackHideTimeout = undefined;
+    navigationFeedbackEl.hidden = true;
+    navigationFeedbackEl.textContent = '';
+    navigationToneClasses.forEach((className) => {
+      navigationFeedbackEl.classList.remove(className);
+    });
+  }, 220);
+}
+
+function showNavigationFeedback(message, tone = 'info', duration = 3200) {
+  if (!navigationFeedbackEl) {
+    return;
+  }
+
+  window.clearTimeout(navigationFeedbackTimeout);
+  window.clearTimeout(navigationFeedbackHideTimeout);
+
+  navigationToneClasses.forEach((className) => {
+    navigationFeedbackEl.classList.remove(className);
+  });
+
+  const toneClass = tone === 'warning' ? 'app-toast--warning' : 'app-toast--info';
+  navigationFeedbackEl.classList.add(toneClass);
+  navigationFeedbackEl.textContent = message;
+  navigationFeedbackEl.hidden = false;
+
+  window.requestAnimationFrame(() => {
+    navigationFeedbackEl.classList.add('is-visible');
+  });
+
+  navigationFeedbackTimeout = window.setTimeout(() => {
+    hideNavigationFeedback();
+  }, duration);
+}
+
+function getTopbarOffset() {
+  if (!topbarEl) {
+    return 0;
+  }
+
+  const rect = topbarEl.getBoundingClientRect();
+  const offset = rect.height + 24;
+  return Number.isFinite(offset) ? offset : 0;
+}
+
+function focusSection(section) {
+  if (!section) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    section.setAttribute('tabindex', '-1');
+    section.focus({ preventScroll: true });
+    window.setTimeout(() => {
+      section.removeAttribute('tabindex');
+    }, 250);
+  });
+}
+
+function scrollToSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) {
+    showNavigationFeedback('Essa seção ainda não está disponível.', 'warning');
+    return false;
+  }
+
+  const topOffset = getTopbarOffset();
+  const target = section.getBoundingClientRect().top + window.scrollY - topOffset;
+  window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+  focusSection(section);
+  return true;
+}
+
+function updateActiveNavigation(activeAction) {
+  navigationButtons.forEach((button) => {
+    const action = button.dataset.action;
+    const parent = button.closest('li');
+    const isActive = action === activeAction;
+    if (parent) {
+      parent.classList.toggle('is-active', isActive);
+    }
+    if (isActive) {
+      button.setAttribute('aria-current', 'page');
+    } else {
+      button.removeAttribute('aria-current');
+    }
+  });
+}
+
+const navigationHandlers = {
+  dashboard: () => scrollToSection('summary'),
+  relatorios: () => scrollToSection('runtimeStatus'),
+  paineis: () => scrollToSection('board'),
+  atendimentos: () => {
+    const navigated = scrollToSection('board');
+    if (navigated && searchInput) {
+      window.setTimeout(() => {
+        searchInput.focus();
+      }, 400);
+    }
+    return navigated;
+  },
+  respostasRapidas: () => {
+    showNavigationFeedback('As respostas rápidas estarão disponíveis em breve.', 'info');
+    return false;
+  },
+  tagsCampanhas: () => {
+    showNavigationFeedback('Gestão de tags e campanhas em desenvolvimento.', 'info');
+    return false;
+  },
+  configuracoes: () => {
+    toggleSettingsDrawer(true);
+    return false;
+  },
+  integracoes: () => {
+    showNavigationFeedback('Integrações avançadas estarão disponíveis em breve.', 'info');
+    return false;
+  },
+  arquivos: () => {
+    showNavigationFeedback('Central de arquivos será lançada em uma atualização futura.', 'info');
+    return false;
+  },
+};
+
+function handleNavigationAction(action) {
+  if (!action) {
+    return;
+  }
+
+  const handler = navigationHandlers[action];
+  if (!handler) {
+    showNavigationFeedback('Esse recurso ainda não está disponível.', 'warning');
+    return;
+  }
+
+  const shouldHighlight = handler();
+  if (shouldHighlight !== false) {
+    updateActiveNavigation(action);
+  }
+}
+
+function registerNavigation() {
+  if (!navigationButtons.length) {
+    return;
+  }
+
+  navigationButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      handleNavigationAction(button.dataset.action);
+    });
+  });
+
+  const currentActive = navigationButtons.find((button) => {
+    return button.closest('li')?.classList.contains('is-active');
+  });
+
+  updateActiveNavigation(currentActive?.dataset.action || 'dashboard');
+}
+
 function bindEvents() {
   refreshButton.addEventListener('click', () => loadTasks(true));
   searchInput.addEventListener('input', (event) => {
@@ -1962,6 +2136,8 @@ function bindEvents() {
       toggleSettingsDrawer(false);
     }
   });
+
+  registerNavigation();
 }
 
 async function bootstrap() {
