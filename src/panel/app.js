@@ -232,6 +232,27 @@ function parseTaskDate(raw) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function parseTaskTimestamp(raw) {
+  if (!raw) {
+    return null;
+  }
+  if (raw instanceof Date) {
+    return raw;
+  }
+  if (typeof raw === 'number') {
+    const fromNumber = new Date(raw);
+    return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
+  }
+  if (typeof raw === 'string') {
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+    return parseTaskDate(raw);
+  }
+  return null;
+}
+
 function getTaskAgeInMinutes(task) {
   const createdAt = parseTaskDate(task.date);
   if (!createdAt) {
@@ -239,6 +260,28 @@ function getTaskAgeInMinutes(task) {
   }
   const diff = Date.now() - createdAt.getTime();
   return Math.max(0, Math.floor(diff / 60000));
+}
+
+function getTaskResolutionMinutes(task) {
+  if (!task) {
+    return null;
+  }
+  const rawResolution = task.resolutionMinutes ?? task.resolutionTime ?? task.durationMinutes;
+  if (Number.isFinite(rawResolution)) {
+    return Math.max(0, Math.round(rawResolution));
+  }
+  const completedAt =
+    parseTaskTimestamp(task.completedAt ?? task.closedAt ?? task.finishedAt ?? task.resolvedAt) ?? null;
+  const createdAt = parseTaskTimestamp(task.date);
+  if (completedAt && createdAt) {
+    const diff = completedAt.getTime() - createdAt.getTime();
+    return diff > 0 ? Math.floor(diff / 60000) : 0;
+  }
+  if (task.status === 'Concluído' && createdAt) {
+    const diff = Date.now() - createdAt.getTime();
+    return diff > 0 ? Math.floor(diff / 60000) : 0;
+  }
+  return null;
 }
 
 function formatDuration(minutes) {
@@ -1246,6 +1289,7 @@ function renderInsights() {
   insightsEl.innerHTML = '';
   insightsEl.appendChild(createCategoryInsight(tasks));
   insightsEl.appendChild(createAnalystInsight(tasks));
+  insightsEl.appendChild(createAnalystProductivityInsight(tasks));
   insightsEl.appendChild(createSlaInsight(tasks));
   const reminderInsight = createReminderInsight();
   if (reminderInsight) {
@@ -1356,6 +1400,178 @@ function createAnalystInsight(tasks) {
     }
   }
   card.appendChild(list);
+  return card;
+}
+
+function createAnalystProductivityInsight(tasks) {
+  const card = createInsightCard('Estatísticas de Produtividade do Analista');
+  const productivityByAnalyst = new Map();
+
+  function ensureAnalystEntry(name) {
+    const trimmed = name?.trim();
+    if (!trimmed) {
+      return null;
+    }
+    if (!productivityByAnalyst.has(trimmed)) {
+      productivityByAnalyst.set(trimmed, {
+        name: trimmed,
+        status: '',
+        open: 0,
+        resolved: 0,
+        total: 0,
+        resolutionSamples: []
+      });
+    }
+    return productivityByAnalyst.get(trimmed);
+  }
+
+  state.analysts.forEach((analyst) => {
+    const entry = ensureAnalystEntry(analyst.name);
+    if (entry) {
+      entry.status = analyst.status || entry.status || '';
+    }
+  });
+
+  tasks.forEach((task) => {
+    const entry = ensureAnalystEntry(task.analyst);
+    if (!entry) {
+      return;
+    }
+    entry.total += 1;
+    if (task.status === 'Concluído') {
+      entry.resolved += 1;
+      const resolutionMinutes = getTaskResolutionMinutes(task);
+      if (Number.isFinite(resolutionMinutes)) {
+        entry.resolutionSamples.push(resolutionMinutes);
+      }
+    } else {
+      entry.open += 1;
+    }
+  });
+
+  const dataset = Array.from(productivityByAnalyst.values()).map((entry) => {
+    const averageMinutes = entry.resolutionSamples.length
+      ? Math.round(
+          entry.resolutionSamples.reduce((total, value) => total + value, 0) /
+            entry.resolutionSamples.length
+        )
+      : null;
+    return {
+      ...entry,
+      averageMinutes
+    };
+  });
+
+  if (!dataset.length) {
+    const empty = document.createElement('span');
+    empty.className = 'insight-empty';
+    empty.textContent = 'Sem dados de produtividade disponíveis.';
+    card.appendChild(empty);
+    return card;
+  }
+
+  dataset.sort((a, b) => {
+    if (b.open !== a.open) {
+      return b.open - a.open;
+    }
+    const aAverage = Number.isFinite(a.averageMinutes) ? a.averageMinutes : Number.POSITIVE_INFINITY;
+    const bAverage = Number.isFinite(b.averageMinutes) ? b.averageMinutes : Number.POSITIVE_INFINITY;
+    if (aAverage !== bAverage) {
+      return aAverage - bAverage;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  const table = document.createElement('table');
+  table.className = 'insight-table';
+
+  const head = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  ['Analista', 'Tempo Médio de Resolução', 'Carga de Atendimentos'].forEach((label) => {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = label;
+    headRow.appendChild(th);
+  });
+  head.appendChild(headRow);
+  table.appendChild(head);
+
+  const body = document.createElement('tbody');
+
+  const getWorkloadLevel = (open) => {
+    if (open >= 10) {
+      return 'critical';
+    }
+    if (open >= 6) {
+      return 'high';
+    }
+    if (open >= 3) {
+      return 'attention';
+    }
+    if (open > 0) {
+      return 'normal';
+    }
+    return 'idle';
+  };
+
+  dataset.forEach((entry) => {
+    const row = document.createElement('tr');
+
+    const analystCell = document.createElement('td');
+    const analystInfo = document.createElement('div');
+    analystInfo.className = 'insight-table__analyst';
+    const name = document.createElement('strong');
+    name.className = 'insight-table__name';
+    name.textContent = entry.name;
+    analystInfo.appendChild(name);
+    if (entry.status) {
+      const badge = document.createElement('span');
+      badge.className = 'insight-table__status';
+      badge.dataset.state = entry.status;
+      badge.textContent = entry.status;
+      analystInfo.appendChild(badge);
+    }
+    analystCell.appendChild(analystInfo);
+    row.appendChild(analystCell);
+
+    const averageCell = document.createElement('td');
+    averageCell.className = 'insight-table__metric';
+    const averageValue = document.createElement('span');
+    averageValue.className = 'insight-table__metric-value';
+    averageValue.textContent = entry.averageMinutes
+      ? formatDuration(entry.averageMinutes)
+      : 'Sem histórico';
+    averageCell.appendChild(averageValue);
+    if (entry.resolved) {
+      const averageDetail = document.createElement('span');
+      averageDetail.className = 'insight-table__metric-detail';
+      averageDetail.textContent = `${entry.resolved} concluído${entry.resolved > 1 ? 's' : ''}`;
+      averageCell.appendChild(averageDetail);
+    }
+    row.appendChild(averageCell);
+
+    const workloadCell = document.createElement('td');
+    workloadCell.className = 'insight-table__metric';
+    const badge = document.createElement('span');
+    badge.className = 'insight-table__load-badge';
+    badge.dataset.level = getWorkloadLevel(entry.open);
+    badge.textContent = `${entry.open}`;
+    workloadCell.appendChild(badge);
+    const detail = document.createElement('span');
+    detail.className = 'insight-table__load-detail';
+    detail.textContent = entry.total
+      ? `${entry.open} em aberto · ${entry.total} no total`
+      : entry.open
+        ? 'Atendimentos em aberto'
+        : 'Sem atendimentos';
+    workloadCell.appendChild(detail);
+    row.appendChild(workloadCell);
+
+    body.appendChild(row);
+  });
+
+  table.appendChild(body);
+  card.appendChild(table);
   return card;
 }
 
