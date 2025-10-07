@@ -27,19 +27,19 @@
             <span class="sidebar__group-title">Gerência</span>
             <ul>
               <li class="is-active">
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="dashboard">
                   <span class="sidebar__icon" aria-hidden="true">📊</span>
                   <span>Dashboard</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="relatorios">
                   <span class="sidebar__icon" aria-hidden="true">📑</span>
                   <span>Relatórios</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="paineis">
                   <span class="sidebar__icon" aria-hidden="true">🧭</span>
                   <span>Painéis</span>
                 </button>
@@ -50,19 +50,19 @@
             <span class="sidebar__group-title">Comunicação</span>
             <ul>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="atendimentos">
                   <span class="sidebar__icon" aria-hidden="true">💬</span>
                   <span>Atendimentos</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="respostasRapidas">
                   <span class="sidebar__icon" aria-hidden="true">⚡</span>
                   <span>Respostas rápidas</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="tagsCampanhas">
                   <span class="sidebar__icon" aria-hidden="true">🏷️</span>
                   <span>Tags e campanhas</span>
                 </button>
@@ -73,19 +73,19 @@
             <span class="sidebar__group-title">Administração</span>
             <ul>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="configuracoes">
                   <span class="sidebar__icon" aria-hidden="true">⚙️</span>
                   <span>Configurações</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="integracoes">
                   <span class="sidebar__icon" aria-hidden="true">🔌</span>
                   <span>Integrações</span>
                 </button>
               </li>
               <li>
-                <button type="button" class="sidebar__link">
+                <button type="button" class="sidebar__link" data-action="arquivos">
                   <span class="sidebar__icon" aria-hidden="true">📂</span>
                   <span>Arquivos</span>
                 </button>
@@ -216,11 +216,18 @@
         </div>
       </section>
 
-      <div class="dashboard">
-        <section id="board" class="board"></section>
-        <aside id="insights" class="insights"></aside>
-      </div>
-        </main>
+        <div class="dashboard">
+          <section id="board" class="board"></section>
+          <aside id="insights" class="insights"></aside>
+        </div>
+      </main>
+        <div
+          id="navigationFeedback"
+          class="app-toast"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
       </div>
     </div>
 
